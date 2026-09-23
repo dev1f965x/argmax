@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "desktop",
+  "description": "Updating in place, which only the installed Windows build does (ADR 8)",
+  "platforms": ["windows", "linux", "macOS"],
+  "windows": ["main"],
+  "permissions": ["updater:default", "process:allow-restart"]
+}
