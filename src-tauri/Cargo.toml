@@ -1,6 +1,6 @@
 [package]
 name = "argmax"
-version = "0.1.0"
+version = "1.0.0"
 description = "Picks one for you when you cannot decide"
 authors = ["dev1f965x"]
 edition = "2021"
