@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import "./design/base.css";
 import "./App.css";
 import { OptionList } from "./components/OptionList";
@@ -24,13 +24,15 @@ export interface AppProps {
  */
 export default function App({ store, random }: AppProps) {
   const topics = useTopics(store);
-  const [picked, setPicked] = useState<Option>();
+  const [picked, setPicked] = useState<{ topicId: string; option: Option }>();
   const open = topics.open;
+  // A pick belongs to the topic it came from: switching away leaves it behind.
+  const shown = picked?.topicId === open?.id ? picked?.option : undefined;
 
-  // A pick belongs to the topic it came from, and to the options as they were.
-  useEffect(() => {
-    setPicked(undefined);
-  }, [open?.id]);
+  const draw = () => {
+    const option = open && pick(open.options, random);
+    setPicked(option && open ? { topicId: open.id, option } : undefined);
+  };
 
   return (
     <div className="app">
@@ -59,14 +61,14 @@ export default function App({ store, random }: AppProps) {
               }}
             />
 
-            {picked ? (
-              <Result option={picked} onAgain={() => setPicked(pick(open.options, random))} />
+            {shown ? (
+              <Result option={shown} onAgain={draw} />
             ) : (
               <button
                 type="button"
                 className="app__pick"
                 disabled={open.options.length === 0}
-                onClick={() => setPicked(pick(open.options, random))}
+                onClick={draw}
               >
                 {PICK_LABELS.pick}
               </button>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { TOPIC_LABELS } from "../domain/labels";
 import type { Topic } from "../domain/topics";
+import { takeFocus } from "./takeFocus";
 import "./TopicHeader.css";
 
 interface Props {
@@ -29,12 +30,11 @@ export function TopicHeader({ topic, onRename, onRemove }: Props) {
   return (
     <header className="topic">
       {editing ? (
-        // biome-ignore lint/a11y/noAutofocus: the field replaces the title that was just clicked
         <input
+          ref={takeFocus}
           className="topic__field"
           value={name}
           aria-label={TOPIC_LABELS.rename}
-          autoFocus
           onChange={(event) => setName(event.target.value)}
           onBlur={commit}
           onKeyDown={(event) => {

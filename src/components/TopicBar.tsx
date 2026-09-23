@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { OPTION_LABELS, TOPIC_LABELS } from "../domain/labels";
 import { isNewName, type Topic } from "../domain/topics";
+import { takeFocus } from "./takeFocus";
 import "./TopicBar.css";
 
 interface Props {
@@ -43,13 +44,12 @@ export function TopicBar({ topics, open, onShow, onAdd }: Props) {
 
       {adding ? (
         <form className="topics__form" onSubmit={submit}>
-          {/* biome-ignore lint/a11y/noAutofocus: the field opens in place of the button that was just pressed */}
           <input
+            ref={takeFocus}
             className="topics__field"
             value={name}
             placeholder={TOPIC_LABELS.addPlaceholder}
             aria-label={TOPIC_LABELS.add}
-            autoFocus
             onChange={(event) => setName(event.target.value)}
             onBlur={() => !name && setAdding(false)}
           />
