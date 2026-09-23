@@ -19,6 +19,7 @@
 }
 
 .app__version {
+  margin-right: auto;
   color: var(--text-faint);
   font-size: var(--text-small);
 }

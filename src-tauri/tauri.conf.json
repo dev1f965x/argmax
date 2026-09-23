@@ -13,23 +13,52 @@
     "windows": [
       {
         "title": "argmax",
-        "width": 800,
-        "height": 600
+        "width": 420,
+        "height": 780,
+        "minWidth": 360,
+        "minHeight": 560,
+        "resizable": true,
+        "center": true
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:"
     }
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": [
+      "nsis"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "publisher": "dev1f965x",
+    "shortDescription": "Picks one for you",
+    "windows": {
+      "nsis": {
+        "installMode": "perMachine",
+        "languages": [
+          "Korean",
+          "English"
+        ]
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/dev1f965x/argmax/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      },
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUxNEI1RERCOUVFMENDNTQKUldSVXpPQ2UyMTFMNFFHWkh0MnROVC9xa2NDQkRGeG5jcHdyeXBPMkN5V3NvdTFhaDdVZnNzZmQK"
+    }
   }
 }

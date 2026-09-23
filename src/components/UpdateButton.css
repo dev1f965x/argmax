@@ -1,0 +1,47 @@
+.update {
+  display: flex;
+}
+
+.update__button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 var(--space-3) 0 10px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--surface-base);
+  cursor: pointer;
+  font-size: var(--text-small);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.update__button:hover {
+  filter: brightness(1.08);
+}
+
+.update__button svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+/* Downloading, the pill empties and fills back up with the download. */
+.update__button[data-status="installing"] {
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--accent) 30%, transparent) calc(var(--progress) * 100%),
+    transparent 0
+  );
+  color: var(--accent);
+  cursor: default;
+  filter: none;
+}
