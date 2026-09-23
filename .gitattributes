@@ -1,0 +1,7 @@
+# One line ending everywhere. Windows editors handle LF fine, and the formatter,
+# the linter, and CI all disagree with CRLF.
+* text=auto eol=lf
+*.png binary
+*.ico binary
+*.icns binary
+*.svg text eol=lf

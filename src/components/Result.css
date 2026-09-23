@@ -1,0 +1,52 @@
+.result {
+  /* Takes the place the pick button had, so the answer lands where the thumb was. */
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-medium);
+  background: var(--accent-quiet);
+  text-align: center;
+}
+
+.result__label {
+  color: var(--text-muted);
+  font-size: var(--text-small);
+}
+
+/* The answer arrives rather than fades in: it is the one thing the app is for. */
+.result__name {
+  color: var(--text-strong);
+  font-size: var(--text-result);
+  font-weight: 700;
+  line-height: var(--leading-title);
+  overflow-wrap: anywhere;
+  animation: result-arrive 220ms ease-out;
+}
+
+@keyframes result-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+}
+
+.result__again {
+  margin-top: var(--space-2);
+  height: 36px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  color: var(--text-body);
+  cursor: pointer;
+  font-size: var(--text-small);
+}
+
+.result__again:hover {
+  border-color: var(--accent);
+  color: var(--text-strong);
+}
