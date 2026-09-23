@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "screens": "tsx scripts/screens.ts",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "art:icon": "tsx scripts/draw-icon.ts"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
