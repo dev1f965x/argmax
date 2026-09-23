@@ -87,10 +87,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          apk=$(ls src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk | head -1)
+          apk=src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
           cp "$apk" "argmax_${GITHUB_REF_NAME#v}.apk"
-          curl --fail -X POST \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Content-Type: application/vnd.android.package-archive" \
-            --data-binary "@argmax_${GITHUB_REF_NAME#v}.apk" \
-            "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/$(curl -s -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/tags/${GITHUB_REF_NAME}" | grep -m1 '"id"' | grep -o '[0-9]*')/assets?name=argmax_${GITHUB_REF_NAME#v}.apk"
+          node scripts/attach-to-release.mjs "$GITHUB_REF_NAME" "argmax_${GITHUB_REF_NAME#v}.apk"
