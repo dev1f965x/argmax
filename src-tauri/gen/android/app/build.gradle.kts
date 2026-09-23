@@ -13,6 +13,15 @@ val tauriProperties = Properties().apply {
     }
 }
 
+
+/** The release keystore, which lives outside the repository (ADR 8). */
+val keyProperties = Properties().apply {
+    val propFile = rootProject.file("key.properties")
+    if (propFile.exists()) {
+        propFile.inputStream().use { load(it) }
+    }
+}
+
 android {
     compileSdk = 36
     namespace = "io.github.dev1f965x.argmax"
@@ -48,6 +57,10 @@ android {
             }
         }
         getByName("release") {
+            // An unsigned release build is still useful locally; CI writes key.properties.
+            if (keyProperties.getProperty("storeFile") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             proguardFiles(
                 *fileTree(".") { include("**/*.pro") }
