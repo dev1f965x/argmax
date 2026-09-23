@@ -1,0 +1,52 @@
+.topic {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* The name is the title and the way to rename it, so it looks like a title until hovered. */
+.topic__name {
+  min-width: 0;
+  padding: var(--space-1) var(--space-2);
+  margin-left: calc(var(--space-2) * -1);
+  border-radius: var(--radius-small);
+  color: var(--text-strong);
+  cursor: text;
+  text-align: left;
+}
+
+.topic__name h2 {
+  font-size: var(--text-title);
+  overflow-wrap: anywhere;
+}
+
+.topic__name:hover {
+  background: var(--surface-raised);
+}
+
+.topic__field {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-small);
+  background: var(--surface-sunken);
+  color: var(--text-strong);
+  font-size: var(--text-title);
+  font-weight: 600;
+  outline: none;
+}
+
+.topic__remove {
+  flex-shrink: 0;
+  color: var(--text-faint);
+  cursor: pointer;
+  font-size: var(--text-small);
+}
+
+.topic__remove:hover {
+  color: var(--text-strong);
+  text-decoration: underline;
+}

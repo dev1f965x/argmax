@@ -1,0 +1,47 @@
+/* Floats over the list, close to the thumb on a phone and out of the way of the pick. */
+.undo {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  left: var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-medium);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-raised);
+  animation: undo-rise 160ms ease-out;
+}
+
+@keyframes undo-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.undo__message {
+  color: var(--text-body);
+  font-size: var(--text-small);
+  overflow-wrap: anywhere;
+}
+
+.undo__action {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--accent-quiet);
+  color: var(--accent-strong);
+  cursor: pointer;
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+.undo__action:hover {
+  background: var(--accent);
+  color: var(--surface-base);
+}
