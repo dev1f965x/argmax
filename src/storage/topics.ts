@@ -13,7 +13,7 @@ export const localTopics: TopicStore = {
     try {
       return topicsFrom(JSON.parse(localStorage.getItem(KEY) ?? "[]"));
     } catch {
-      // A blocked or full storage is not worth an error screen; an empty list is honest.
+      // Blocked or full storage is reported as an empty list rather than as an error.
       return [];
     }
   },
@@ -26,8 +26,10 @@ export const localTopics: TopicStore = {
 };
 
 /**
- * Keeps only what this build understands. A file edited by hand, or written by a version
- * that stored something else, leaves the app with fewer topics rather than a broken screen.
+ * Keeps only what this build understands.
+ *
+ * An entry written by another version, or edited by hand, is dropped on its own rather
+ * than failing the read.
  */
 export function topicsFrom(stored: unknown): Topic[] {
   if (!Array.isArray(stored)) return [];

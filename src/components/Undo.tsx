@@ -11,7 +11,7 @@ interface Props {
 /** How long a removed topic can be brought back before the offer goes away. */
 const OFFERED_FOR_MS = 6000;
 
-/** The one thing that cannot be retyped in a second: a topic and everything in it. */
+/** A removed topic cannot be retyped quickly, since its options go with it. */
 export function Undo({ message, onUndo, onDismiss }: Props) {
   useEffect(() => {
     const timer = setTimeout(onDismiss, OFFERED_FOR_MS);

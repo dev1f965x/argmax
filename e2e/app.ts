@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-/** Opens the app with `topics` already stored, as a returning visitor would find it. */
+/** Opens the app with `topics` already stored, as someone returning to it would find it. */
 export async function openApp(page: Page, topics: unknown[] = []) {
   await page.addInitScript(
     (stored) => window.localStorage.setItem("argmax.topics", JSON.stringify(stored)),

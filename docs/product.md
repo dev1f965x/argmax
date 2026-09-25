@@ -2,14 +2,13 @@
 
 ## Problem
 
-"점심 뭐 먹지." The list is short, the stakes are low, and the deciding still eats ten
-minutes and someone's patience. Writing the options down does not help; what is missing is
-something to take the last step.
+"점심 뭐 먹지." The list is short and the stakes are low, but the deciding still takes ten
+minutes. Writing the options down does not settle it; what is missing is the last step.
 
 ## Who it is for
 
-Anyone who keeps having the same small argument with themselves, or with two friends who
-both say "아무거나". They want an answer, not a survey.
+Anyone who repeats the same small decision, alone or with people who answer "아무거나".
+What is wanted is one answer, not a list to weigh.
 
 ## 1.0.0 scope
 

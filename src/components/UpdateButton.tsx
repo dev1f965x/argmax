@@ -10,8 +10,10 @@ interface Props {
 
 /**
  * A pill beside the app's name while a newer release is waiting, on the installed Windows
- * build only: the page and the Android app are replaced elsewhere (ADR 8). While the
- * release downloads the pill fills with its progress; after a failure it offers to retry.
+ * build only; the page and the Android app are replaced elsewhere (ADR 8).
+ *
+ * While the release downloads the pill fills with its progress, and after a failure it
+ * offers to retry.
  */
 export function UpdateButton({ update, onInstall }: Props) {
   if (update.status === "current") return null;

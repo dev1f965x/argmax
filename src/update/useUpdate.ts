@@ -13,8 +13,8 @@ export const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 /**
  * Looks for a newer release on launch and every six hours, and installs it on request.
  *
- * A failed check says nothing: being offline, or no release existing yet, is not
- * something the player needs to hear about. A failed install does, since they asked.
+ * A failed check is silent, since being offline or having no release yet is ordinary. A
+ * failed install is reported, since it was asked for.
  */
 export function useUpdate(source: UpdateSource) {
   const [state, setState] = useState<UpdateState>({ status: "current" });

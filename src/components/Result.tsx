@@ -7,7 +7,7 @@ interface Props {
   onAgain: () => void;
 }
 
-/** What was chosen, said plainly enough to act on. */
+/** What was chosen. */
 export function Result({ option, onAgain }: Props) {
   return (
     <section className="result" aria-live="polite">

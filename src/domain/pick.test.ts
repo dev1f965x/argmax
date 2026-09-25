@@ -8,7 +8,7 @@ const options: Option[] = [
   { id: "c", name: "국밥" },
 ];
 
-/** A source that hands out exactly these numbers, so a draw can be checked, not guessed. */
+/** A source that returns exactly these numbers, so a draw can be checked rather than sampled. */
 function handing(...numbers: number[]) {
   let next = 0;
   return () => numbers[next++ % numbers.length];
