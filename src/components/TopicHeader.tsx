@@ -10,7 +10,7 @@ interface Props {
   onRemove: () => void;
 }
 
-/** The topic on screen: its name, edited in place, and the one way to get rid of it. */
+/** The topic on screen: its name, edited in place, and the control that removes it. */
 export function TopicHeader({ topic, onRename, onRemove }: Props) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(topic.name);

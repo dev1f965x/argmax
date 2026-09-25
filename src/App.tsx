@@ -22,10 +22,7 @@ export interface AppProps {
   onInstallUpdate?: () => void;
 }
 
-/**
- * The whole app: the topics along the top, the options of the one on screen, and the
- * button that ends the argument.
- */
+/** The whole app: the topics along the top, the options of the one on screen, and the pick. */
 export default function App({
   store,
   random,
@@ -35,7 +32,7 @@ export default function App({
   const topics = useTopics(store);
   const [picked, setPicked] = useState<{ topicId: string; option: Option }>();
   const open = topics.open;
-  // A pick belongs to the topic it came from: switching away leaves it behind.
+  // A pick belongs to the topic it came from, so switching away clears it.
   const shown = picked?.topicId === open?.id ? picked?.option : undefined;
 
   const draw = () => {

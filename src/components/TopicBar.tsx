@@ -11,7 +11,7 @@ interface Props {
   onAdd: (name: string) => void;
 }
 
-/** The topics, side by side, with the one on screen marked and room to add another. */
+/** The topics, side by side, with the one on screen marked and a way to add another. */
 export function TopicBar({ topics, open, onShow, onAdd }: Props) {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");

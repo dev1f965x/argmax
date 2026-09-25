@@ -9,7 +9,7 @@ interface Props {
   onRemove: (optionId: string) => void;
 }
 
-/** The options of the topic on screen, newest at the bottom, with a line to add another. */
+/** The options of the topic on screen, newest last, with a line to add another. */
 export function OptionList({ topic, onAdd, onRemove }: Props) {
   const [name, setName] = useState("");
 

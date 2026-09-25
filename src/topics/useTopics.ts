@@ -12,8 +12,8 @@ interface Removed {
 /**
  * Every topic, the one on screen, and the last removal.
  *
- * The store is written on every change rather than on a save button: the app is a list
- * someone edits in passing, and a list that loses an edit is worse than no list.
+ * The store is written on every change rather than behind a save button, since the list
+ * is edited in passing and an unsaved edit would be lost.
  */
 export function useTopics(store: TopicStore) {
   const [topics, setTopics] = useState<Topic[]>(() => store.read());

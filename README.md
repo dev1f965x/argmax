@@ -59,19 +59,19 @@
   <img src="docs/app.png" alt="A topic, its options, and the pick" width="340">
 </div>
 
-"점심 뭐 먹지." The list is short, the stakes are low, and the deciding still eats ten
-minutes and someone's patience.
+"점심 뭐 먹지." The list is short and the stakes are low, but the deciding still takes ten
+minutes.
 
 argmax holds the list and takes the last step.
 
 - A **topic** is one recurring question — 점심 메뉴, 주말 게임 — and holds the options for it.
-- Options go in a line at a time, and out with one tap. A topic is renamed by clicking its
-  title; deleting one can be undone, options and all.
-- One button picks one option and says it large. The draw is uniform: every option has
-  exactly the same chance every time, with the biased tail of the random source thrown
-  away rather than folded in.
+- Options go in a line at a time and out with one tap. A topic is renamed by clicking its
+  title; deleting one can be undone, options included.
+- One button picks one option and shows it. The draw is uniform: every option has the same
+  chance every time, with the biased tail of the random source discarded rather than
+  folded in.
 - Everything stays on the device. No account, no sync, no analytics, and no network calls
-  at all beyond the desktop build checking for its own update.
+  beyond the desktop build checking for its own update.
 
 The same app runs as a page, as a Windows window, and as an Android app, from one code
 base.

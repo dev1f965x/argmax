@@ -25,7 +25,7 @@ const lunch: Topic = {
   ],
 };
 
-/** Always the second option, so a test can say what the pick will be. */
+/** Always the second option, so a test can state what the pick will be. */
 const second = () => 1;
 
 describe("App", () => {

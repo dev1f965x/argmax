@@ -1,4 +1,4 @@
-/** One option inside a topic. Its id survives a rename of anything else. */
+/** One option inside a topic. Its id is stable across renames. */
 export interface Option {
   id: string;
   name: string;
@@ -29,7 +29,7 @@ export function removeTopic(topics: readonly Topic[], id: string): Topic[] {
   return topics.filter((topic) => topic.id !== id);
 }
 
-/** Puts a removed topic back where it was, for the undo the window offers. */
+/** Puts a removed topic back at the position it held. */
 export function restoreTopic(topics: readonly Topic[], topic: Topic, at: number): Topic[] {
   const kept = topics.filter((each) => each.id !== topic.id);
   return [...kept.slice(0, at), topic, ...kept.slice(at)];
@@ -58,7 +58,7 @@ function withOptions(
   );
 }
 
-/** A name worth keeping: not blank, and not the same as one already there. */
+/** A usable name: not blank, and not already taken. */
 export function isNewName(topics: readonly Topic[], name: string): boolean {
   const trimmed = name.trim();
   return trimmed !== "" && !topics.some((topic) => topic.name === trimmed);
