@@ -42,11 +42,11 @@ const games = {
   ],
 };
 
-const pick = (page: Page) => page.getByRole("button", { name: "고르기" }).click();
+const pick = (page: Page) => page.getByRole("button", { name: "선택" }).click();
 
 const SHOTS: Shot[] = [
   { name: "empty" },
-  { name: "topic-new", act: (page) => page.getByRole("button", { name: "주제 만들기" }).click() },
+  { name: "topic-new", act: (page) => page.getByRole("button", { name: "주제 추가" }).click() },
   { name: "options-empty", topics: [{ id: "1", name: "점심 메뉴", options: [] }] },
   { name: "options", topics: [lunch, games] },
   { name: "picked", topics: [lunch, games], act: pick },
