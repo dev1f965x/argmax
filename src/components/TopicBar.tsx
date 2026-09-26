@@ -49,7 +49,7 @@ export function TopicBar({ topics, open, onShow, onAdd }: Props) {
             className="topics__field"
             value={name}
             placeholder={TOPIC_LABELS.addPlaceholder}
-            aria-label={TOPIC_LABELS.add}
+            aria-label={TOPIC_LABELS.addLabel}
             onChange={(event) => setName(event.target.value)}
             onBlur={() => !name && setAdding(false)}
           />

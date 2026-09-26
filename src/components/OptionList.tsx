@@ -57,7 +57,7 @@ export function OptionList({ topic, onAdd, onRemove }: Props) {
           className="options__field"
           value={name}
           placeholder={OPTION_LABELS.addPlaceholder}
-          aria-label={OPTION_LABELS.addPlaceholder}
+          aria-label={OPTION_LABELS.addLabel}
           onChange={(event) => setName(event.target.value)}
         />
         <button type="submit" className="options__add" disabled={!isNewOption(topic, name)}>

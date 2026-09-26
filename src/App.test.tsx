@@ -32,16 +32,16 @@ describe("App", () => {
   it("asks for a topic when there is none", () => {
     render(<App store={memoryStore()} />);
 
-    expect(screen.getByText("주제를 하나 만들어 주세요")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "고르기" })).not.toBeInTheDocument();
+    expect(screen.getByText("주제가 없습니다")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "선택" })).not.toBeInTheDocument();
   });
 
   it("makes a topic and opens it", async () => {
     const store = memoryStore();
     render(<App store={store} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "주제 만들기" }));
-    await userEvent.type(screen.getByLabelText("주제 만들기"), "점심 메뉴");
+    await userEvent.click(screen.getByRole("button", { name: "주제 추가" }));
+    await userEvent.type(screen.getByLabelText("주제 이름"), "점심 메뉴");
     await userEvent.click(screen.getByRole("button", { name: "추가" }));
 
     expect(screen.getByRole("heading", { name: "점심 메뉴" })).toBeInTheDocument();
@@ -51,15 +51,15 @@ describe("App", () => {
   it("waits for options before it offers a pick", () => {
     render(<App store={memoryStore([{ id: "1", name: "점심 메뉴", options: [] }])} />);
 
-    expect(screen.getByText("후보를 두 개 이상 적어 주세요")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "고르기" })).toBeDisabled();
+    expect(screen.getByText("후보가 2개 이상 필요합니다")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "선택" })).toBeDisabled();
   });
 
   it("adds an option and counts it", async () => {
     const store = memoryStore([{ id: "1", name: "점심 메뉴", options: [] }]);
     render(<App store={store} />);
 
-    await userEvent.type(screen.getByLabelText("후보 적기"), "국밥");
+    await userEvent.type(screen.getByLabelText("후보 이름"), "국밥");
     await userEvent.click(screen.getByRole("button", { name: "추가" }));
 
     expect(screen.getByText("국밥")).toBeInTheDocument();
@@ -70,7 +70,7 @@ describe("App", () => {
   it("refuses an option it already has", async () => {
     render(<App store={memoryStore([lunch])} />);
 
-    await userEvent.type(screen.getByLabelText("후보 적기"), "국밥");
+    await userEvent.type(screen.getByLabelText("후보 이름"), "국밥");
 
     expect(screen.getByRole("button", { name: "추가" })).toBeDisabled();
   });
@@ -78,20 +78,20 @@ describe("App", () => {
   it("picks one and offers another go", async () => {
     render(<App store={memoryStore([lunch])} random={second} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "고르기" }));
+    await userEvent.click(screen.getByRole("button", { name: "선택" }));
 
-    const result = screen.getByText("이걸로 해요").closest("section");
+    const result = screen.getByText("선택 결과").closest("section");
     expect(result && within(result).getByText("파스타")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "다시 고르기" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "다시 선택" })).toBeInTheDocument();
   });
 
   it("forgets the pick when the options change", async () => {
     render(<App store={memoryStore([lunch])} random={second} />);
-    await userEvent.click(screen.getByRole("button", { name: "고르기" }));
+    await userEvent.click(screen.getByRole("button", { name: "선택" }));
 
-    await userEvent.click(screen.getByRole("button", { name: "파스타 지우기" }));
+    await userEvent.click(screen.getByRole("button", { name: "파스타 삭제" }));
 
-    expect(screen.queryByText("이걸로 해요")).not.toBeInTheDocument();
+    expect(screen.queryByText("선택 결과")).not.toBeInTheDocument();
   });
 
   it("renames a topic in place", async () => {
@@ -99,7 +99,7 @@ describe("App", () => {
     render(<App store={store} />);
 
     await userEvent.click(screen.getByRole("heading", { name: "점심 메뉴" }));
-    const field = screen.getByLabelText("이름 바꾸기");
+    const field = screen.getByLabelText("이름 변경");
     await userEvent.clear(field);
     await userEvent.type(field, "저녁 메뉴{Enter}");
 
@@ -111,10 +111,10 @@ describe("App", () => {
     vi.spyOn(window, "confirm").mockReturnValue(true);
     render(<App store={memoryStore([lunch])} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "주제 지우기" }));
-    expect(screen.getByText("주제를 하나 만들어 주세요")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "주제 삭제" }));
+    expect(screen.getByText("주제가 없습니다")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "되돌리기" }));
+    await userEvent.click(screen.getByRole("button", { name: "실행 취소" }));
 
     expect(screen.getByRole("heading", { name: "점심 메뉴" })).toBeInTheDocument();
     expect(screen.getByText("파스타")).toBeInTheDocument();
