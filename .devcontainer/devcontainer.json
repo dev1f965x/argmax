@@ -12,6 +12,6 @@
     "CLAUDE_CONFIG_DIR": "/home/node/.claude"
   },
   "onCreateCommand": "sudo chown node:node /home/node/.claude",
-  "postCreateCommand": "npm install -g pnpm@12.8.1 && pnpm install --frozen-lockfile && pnpm exec playwright install --with-deps chromium",
+  "postCreateCommand": "npm install -g pnpm@12.8.1 && pnpm install --frozen-lockfile && pnpm exec playwright install --with-deps chromium && pnpm exec playwright-mcp install-browser chrome-for-testing",
   "forwardPorts": [5173]
 }
