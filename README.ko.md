@@ -23,6 +23,8 @@ pnpm dev
 | `pnpm check` | 포맷 검사와 린트(Biome) |
 | `pnpm format` | 파일 포맷 |
 | `pnpm typecheck` | 타입 검사 |
+| `pnpm test` | 단위·컴포넌트 테스트 실행(Vitest) |
+| `pnpm test:e2e` | 빌드 후 E2E·접근성 테스트 실행(Playwright, axe-core) |
 
 ## 라이선스
 

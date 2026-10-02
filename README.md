@@ -23,6 +23,8 @@ pnpm dev
 | `pnpm check` | Format check and lint (Biome) |
 | `pnpm format` | Format files |
 | `pnpm typecheck` | Type-check |
+| `pnpm test` | Run unit and component tests (Vitest) |
+| `pnpm test:e2e` | Build and run end-to-end and accessibility tests (Playwright, axe-core) |
 
 ## License
 
