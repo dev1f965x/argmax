@@ -1,6 +1,7 @@
 {
   "name": "Argmax",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:24-trixie",
+  "runArgs": ["--ulimit", "core=0"],
   "features": {
     "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
   },
@@ -11,6 +12,6 @@
     "CLAUDE_CONFIG_DIR": "/home/node/.claude"
   },
   "onCreateCommand": "sudo chown node:node /home/node/.claude",
-  "postCreateCommand": "npm install -g pnpm@12.8.1",
+  "postCreateCommand": "npm install -g pnpm@12.8.1 && pnpm install --frozen-lockfile && pnpm exec playwright install --with-deps chromium",
   "forwardPorts": [5173]
 }
