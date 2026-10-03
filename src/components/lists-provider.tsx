@@ -99,7 +99,9 @@ export function ListsProvider({
   // Operations read the latest state synchronously, even before React re-renders.
   const stateRef = useRef(initial.state);
   const editable = issue?.kind !== "invalid";
-  // Compared by kind: a failed save repeating the problem found on start is not news.
+  // Compared by kind: a failed save repeating the problem found on start is not
+  // news. A problem found on start cannot clear through a save (the repository
+  // refuses to save until a load succeeds), so the same kind never means a new one.
   const issueFoundAtLoad = issue !== null && issue.kind === initial.issue?.kind;
 
   const change = useCallback(

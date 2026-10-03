@@ -26,9 +26,14 @@ export function StorageBanner() {
   const { t } = useTranslation();
   const { issue, issueFoundAtLoad } = useLists();
   const { pathname } = useLocation();
-  // The confirmation belongs to the screen where the data was deleted.
-  const [discardedOn, setDiscardedOn] = useState<string | null>(null);
-  const discarded = discardedOn === pathname;
+  const [discarded, setDiscarded] = useState(false);
+  // The confirmation is cleared on the first navigation, so returning to the
+  // screen does not bring it back or move focus to it.
+  const [shownOn, setShownOn] = useState(pathname);
+  if (pathname !== shownOn) {
+    setShownOn(pathname);
+    setDiscarded(false);
+  }
   const discardedRef = useRef<HTMLParagraphElement>(null);
 
   // The dialog and its trigger are gone after a discard, so focus moves to the confirmation.
@@ -85,7 +90,7 @@ export function StorageBanner() {
         {issue.kind === "invalid" && (
           <InvalidDataActions
             raw={issue.raw}
-            onDiscarded={() => setDiscardedOn(pathname)}
+            onDiscarded={() => setDiscarded(true)}
           />
         )}
       </div>

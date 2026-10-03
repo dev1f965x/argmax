@@ -191,6 +191,38 @@ describe("ListsPage", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  it("alerts each time saving fails after storage worked in between", async () => {
+    const { storage, failures } = memoryStorage();
+    failures.set = new DOMException("Quota exceeded", "QuotaExceededError");
+    const repository = createRepository(() => storage);
+    const router = createMemoryRouter([
+      {
+        Component: RootLayout,
+        children: [{ index: true, Component: ListsPage }],
+      },
+    ]);
+    render(
+      <ListsProvider repository={repository} context={testContext()}>
+        <RouterProvider router={router} />
+      </ListsProvider>,
+    );
+    const user = userEvent.setup();
+
+    await user.type(nameField(), "One{Enter}");
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Storage in this browser is full",
+    );
+    failures.set = undefined;
+    await user.type(nameField(), "Two{Enter}");
+    expect(screen.queryByText("Lists can’t be saved")).not.toBeInTheDocument();
+    failures.set = new DOMException("Quota exceeded", "QuotaExceededError");
+    await user.type(nameField(), "Three{Enter}");
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Storage in this browser is full",
+    );
+  });
+
   it("warns when storage is full", async () => {
     const { storage, failures } = memoryStorage();
     const { user } = renderApp(storage);
@@ -256,6 +288,12 @@ describe("ListsPage", () => {
       expect(
         screen.queryByText(/Deleted the saved data/),
       ).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole("link", { name: "All lists" }));
+      expect(
+        screen.queryByText(/Deleted the saved data/),
+      ).not.toBeInTheDocument();
+      expect(nameField()).toBeInTheDocument();
     });
   });
 });
