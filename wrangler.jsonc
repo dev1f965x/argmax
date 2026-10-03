@@ -6,6 +6,9 @@
   // No usage telemetry and no dependency list uploaded with deployments.
   "send_metrics": false,
   "dependencies_instrumentation": { "enabled": false },
+  // Required by `wrangler preview`, which Workers Builds runs for non-production branches.
+  // Empty because previews use the top-level assets and compatibility settings.
+  "previews": {},
   "assets": {
     "directory": "./dist",
     // Unknown paths return index.html so client-side routes and the not found page work.
