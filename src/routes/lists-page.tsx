@@ -1,7 +1,8 @@
 import { ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
+import { useAnnouncer } from "@/components/announcer";
 import { useLists } from "@/components/lists-provider";
 import { Note } from "@/components/note";
 import { TextEntryForm } from "@/components/text-entry-form";
@@ -12,9 +13,18 @@ export function ListsPage() {
   const { t } = useTranslation();
   const { state, editable, change } = useLists();
   const atLimit = state.lists.length >= limits.lists;
-  // Lives outside the form, so creating the 100th list is still announced
-  // after the limit message replaces the form.
-  const [created, setCreated] = useState<string | null>(null);
+  const limitMessage = t("lists.limitReached", { limit: limits.lists });
+  // Outside the form, so creating the 100th list is still announced after the
+  // limit message replaces the form; that message then takes focus.
+  const { announce, region } = useAnnouncer();
+  const limitNote = useRef<HTMLParagraphElement>(null);
+  const [focusLimit, setFocusLimit] = useState(false);
+
+  useEffect(() => {
+    if (!focusLimit) return;
+    limitNote.current?.focus();
+    setFocusLimit(false);
+  }, [focusLimit]);
   // Newest first, so a list just created appears right under the form.
   const lists = state.lists.toReversed();
 
@@ -23,13 +33,19 @@ export function ListsPage() {
       createList(current, name, context),
     );
     if (result.ok) {
-      setCreated(name.trim());
+      const created = t("lists.created", { name: name.trim() });
+      if (state.lists.length + 1 >= limits.lists) {
+        announce(`${created} ${limitMessage}`);
+        setFocusLimit(true);
+      } else {
+        announce(created);
+      }
       return { ok: true } as const;
     }
     const message = {
       empty: t("lists.errors.empty"),
       "too-long": t("lists.errors.tooLong", { limit: limits.textLength }),
-      "list-limit": t("lists.limitReached", { limit: limits.lists }),
+      "list-limit": limitMessage,
       "not-found": t("common.saveFailed"),
       "read-only": t("common.saveFailed"),
     }[result.error];
@@ -40,7 +56,9 @@ export function ListsPage() {
     <div className="max-w-160">
       <h1 className="mb-4 text-title font-bold">{t("lists.title")}</h1>
       {atLimit ? (
-        <Note strong>{t("lists.limitReached", { limit: limits.lists })}</Note>
+        <Note strong ref={limitNote}>
+          {limitMessage}
+        </Note>
       ) : (
         <TextEntryForm
           label={t("lists.nameLabel")}
@@ -49,9 +67,7 @@ export function ListsPage() {
           onSubmit={create}
         />
       )}
-      <p role="status" className="sr-only">
-        {created && t("lists.created", { name: created })}
-      </p>
+      {region}
       <Note>{t("lists.storedLocally")}</Note>
 
       {/* While invalid data is kept, the empty state's advice to create a list would not work. */}

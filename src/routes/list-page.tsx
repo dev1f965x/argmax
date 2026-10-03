@@ -2,6 +2,7 @@ import { ChevronLeft, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router";
+import { useAnnouncer } from "@/components/announcer";
 import { useLists } from "@/components/lists-provider";
 import { Note } from "@/components/note";
 import {
@@ -13,31 +14,36 @@ import { addItem, editItem, type ItemError, removeItem } from "@/lib/lists";
 import { type Item, limits } from "@/lib/storage";
 import { NotFoundPage } from "@/routes/not-found-page";
 
-/** Where focus goes after a change that removes or replaces the focused control. */
-type FocusTarget =
-  | { control: "edit" | "remove"; itemId: string }
-  | { control: "add" }
-  | null;
+/**
+ * Where focus goes after a change that removes the focused control: a row's
+ * Edit button, or the add field (the limit message when the field is gone).
+ */
+type FocusTarget = { itemId: string } | "entry" | null;
 
 export function ListPage() {
   const { t } = useTranslation();
   const { id } = useParams();
   const { state, editable, change } = useLists();
+  // One row is edited at a time; opening another row's editor discards an unsaved draft.
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [announcement, setAnnouncement] = useState<string | null>(null);
   const [focusTarget, setFocusTarget] = useState<FocusTarget>(null);
-  const buttons = useRef(new Map<string, HTMLButtonElement>());
+  const { announce, region } = useAnnouncer();
+  const editButtons = useRef(new Map<string, HTMLButtonElement>());
+  const editButtonRefs = useRef(
+    new Map<string, (element: HTMLButtonElement | null) => void>(),
+  );
   const addField = useRef<HTMLInputElement>(null);
+  const limitNote = useRef<HTMLParagraphElement>(null);
 
   const list = state.lists.find((candidate) => candidate.id === id);
 
   useEffect(() => {
     if (!focusTarget) return;
-    if (focusTarget.control === "add") addField.current?.focus();
-    else
-      buttons.current
-        .get(`${focusTarget.control}:${focusTarget.itemId}`)
-        ?.focus();
+    const button =
+      focusTarget === "entry"
+        ? undefined
+        : editButtons.current.get(focusTarget.itemId);
+    (button ?? addField.current ?? limitNote.current)?.focus();
     setFocusTarget(null);
   }, [focusTarget]);
 
@@ -46,6 +52,7 @@ export function ListPage() {
   // Newest first, matching the Lists screen, so an added item appears right under the form.
   const items = list.items.toReversed();
   const atLimit = list.items.length >= limits.itemsPerList;
+  const limitMessage = t("list.limitReached", { limit: limits.itemsPerList });
 
   function outcome(
     result: { ok: true } | { ok: false; error: ItemError | "read-only" },
@@ -54,7 +61,7 @@ export function ListPage() {
     const message = {
       empty: t("list.errors.empty"),
       "too-long": t("list.errors.tooLong", { limit: limits.textLength }),
-      "item-limit": t("list.limitReached", { limit: limits.itemsPerList }),
+      "item-limit": limitMessage,
       "not-found": t("common.saveFailed"),
       "read-only": t("common.saveFailed"),
     }[result.error];
@@ -65,7 +72,16 @@ export function ListPage() {
     const result = change((current, context) =>
       addItem(current, listId, text, context),
     );
-    if (result.ok) setAnnouncement(t("list.added", { text: text.trim() }));
+    if (result.ok) {
+      const added = t("list.added", { text: text.trim() });
+      if (list && list.items.length + 1 >= limits.itemsPerList) {
+        // The limit message replaces the field, so it takes focus and is announced.
+        announce(`${added} ${limitMessage}`);
+        setFocusTarget("entry");
+      } else {
+        announce(added);
+      }
+    }
     return outcome(result);
   }
 
@@ -75,15 +91,15 @@ export function ListPage() {
     );
     if (result.ok) {
       setEditingId(null);
-      setAnnouncement(t("list.saved", { text: text.trim() }));
-      setFocusTarget({ control: "edit", itemId: item.id });
+      announce(t("list.saved", { text: text.trim() }));
+      setFocusTarget({ itemId: item.id });
     }
     return outcome(result);
   }
 
   function cancelEdit(item: Item) {
     setEditingId(null);
-    setFocusTarget({ control: "edit", itemId: item.id });
+    setFocusTarget({ itemId: item.id });
   }
 
   function remove(item: Item, index: number) {
@@ -91,24 +107,34 @@ export function ListPage() {
       removeItem(current, listId, item.id, context),
     );
     if (!result.ok) {
-      setAnnouncement(t("common.saveFailed"));
+      announce(t("common.saveFailed"));
       return;
     }
-    setAnnouncement(t("list.removed", { text: item.text }));
-    // The next row takes the removed row's place; the previous one if it was last.
-    const neighbor = items[index + 1] ?? items[index - 1];
-    setFocusTarget(
-      neighbor
-        ? { control: "remove", itemId: neighbor.id }
-        : { control: "add" },
-    );
+    announce(t("list.removed", { text: item.text }));
+    // Focus moves to the Edit button of the row that takes the removed row's
+    // place (the previous one if it was last), skipping a row being edited.
+    // Edit rather than Remove, so holding Enter cannot remove row after row.
+    const neighbor = [
+      ...items.slice(index + 1),
+      ...items.slice(0, index).reverse(),
+    ].find((candidate) => candidate.id !== editingId);
+    setFocusTarget(neighbor ? { itemId: neighbor.id } : "entry");
   }
 
-  function register(key: string) {
-    return (element: HTMLButtonElement | null) => {
-      if (element) buttons.current.set(key, element);
-      else buttons.current.delete(key);
-    };
+  // Stable per item, so rows do not detach and reattach their refs on every render.
+  function editButtonRef(itemId: string) {
+    let callback = editButtonRefs.current.get(itemId);
+    if (!callback) {
+      callback = (element) => {
+        if (element) editButtons.current.set(itemId, element);
+        else {
+          editButtons.current.delete(itemId);
+          editButtonRefs.current.delete(itemId);
+        }
+      };
+      editButtonRefs.current.set(itemId, callback);
+    }
+    return callback;
   }
 
   return (
@@ -122,13 +148,13 @@ export function ListPage() {
       </Link>
       <h1 className="text-title font-bold wrap-anywhere">{list.name}</h1>
       <p className="mt-0.5 text-sm text-muted-foreground">
-        {t("lists.itemCount", { count: list.items.length })}
+        {t("list.itemCount", { count: list.items.length })}
       </p>
 
       <div className="mt-5">
         {atLimit ? (
-          <Note strong>
-            {t("list.limitReached", { limit: limits.itemsPerList })}
+          <Note strong ref={limitNote}>
+            {limitMessage}
           </Note>
         ) : (
           <TextEntryForm
@@ -140,9 +166,7 @@ export function ListPage() {
           />
         )}
       </div>
-      <p role="status" className="sr-only">
-        {announcement}
-      </p>
+      {region}
 
       {items.length === 0 ? (
         <div className="mt-6 rounded-xl bg-surface px-4 py-9 text-center text-muted-foreground">
@@ -175,7 +199,7 @@ export function ListPage() {
                     {item.text}
                   </span>
                   <Button
-                    ref={register(`edit:${item.id}`)}
+                    ref={editButtonRef(item.id)}
                     variant="ghost"
                     size="icon"
                     disabled={!editable}
@@ -186,7 +210,6 @@ export function ListPage() {
                     <Pencil aria-hidden="true" />
                   </Button>
                   <Button
-                    ref={register(`remove:${item.id}`)}
                     variant="ghost"
                     size="icon"
                     disabled={!editable}

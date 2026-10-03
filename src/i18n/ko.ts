@@ -29,6 +29,10 @@ export const ko: Resources = {
   },
   list: {
     allLists: "전체 목록",
+    // Korean has no plural forms; the one and other keys exist to match the English resources.
+    itemCount_zero: "항목 0개",
+    itemCount_one: "항목 {{count, number}}개",
+    itemCount_other: "항목 {{count, number}}개",
     addLabel: "항목 추가",
     add: "추가",
     added: "“{{text}}” 항목을 추가했습니다.",

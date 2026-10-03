@@ -81,7 +81,7 @@ describe("ListPage", () => {
     renderList([]);
 
     expect(screen.getByRole("heading", { name: "Lunch" })).toBeInTheDocument();
-    expect(screen.getByText("No items yet")).toBeInTheDocument();
+    expect(screen.getByText("0 items")).toBeInTheDocument();
     expect(screen.getByText("This list is empty")).toBeInTheDocument();
   });
 
@@ -181,20 +181,67 @@ describe("ListPage", () => {
     expect(storedItems()).toEqual(["Ramen"]);
   });
 
-  it("removes items and moves focus to the next row, then to the add field", async () => {
+  it("after a removal, focuses the next row's Edit button, then the add field", async () => {
     const { user, storedItems } = renderList(["Ramen", "Sushi"]);
 
     // Newest first: Sushi is shown above Ramen.
     await user.click(screen.getByRole("button", { name: "Remove “Sushi”" }));
     expect(storedItems()).toEqual(["Ramen"]);
     expect(screen.getByText("Removed “Sushi”.")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Remove “Ramen”" }),
-    ).toHaveFocus();
+    // Edit, not Remove, so pressing Enter again cannot remove another item.
+    expect(screen.getByRole("button", { name: "Edit “Ramen”" })).toHaveFocus();
 
-    await user.keyboard("{Enter}");
+    await user.click(screen.getByRole("button", { name: "Remove “Ramen”" }));
     expect(storedItems()).toEqual([]);
     expect(addField()).toHaveFocus();
     expect(screen.getByText("This list is empty")).toBeInTheDocument();
+  });
+
+  it("focuses the previous row after removing the bottom row", async () => {
+    const { user } = renderList(["Ramen", "Sushi"]);
+
+    await user.click(screen.getByRole("button", { name: "Remove “Ramen”" }));
+
+    expect(screen.getByRole("button", { name: "Edit “Sushi”" })).toHaveFocus();
+  });
+
+  it("skips a row being edited when moving focus after a removal", async () => {
+    // Shown newest first: C, B, A.
+    const { user } = renderList(["A", "B", "C"]);
+
+    await user.click(screen.getByRole("button", { name: "Edit “B”" }));
+    await user.click(screen.getByRole("button", { name: "Remove “C”" }));
+
+    expect(screen.getByRole("button", { name: "Edit “A”" })).toHaveFocus();
+  });
+
+  it("moves focus to the limit message when the last allowed item is added", async () => {
+    const { user } = renderList(
+      Array.from({ length: limits.itemsPerList - 1 }, (_, index) => `${index}`),
+    );
+
+    await user.type(addField(), "Last{Enter}");
+
+    expect(
+      screen.getByText(/^This list has 1,000 items/, { selector: "p" }),
+    ).toHaveFocus();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Added “Last”. This list has 1,000 items, the maximum.",
+    );
+  });
+
+  it("announces a repeated error and a repeated addition again", async () => {
+    const { user } = renderList([]);
+
+    await user.type(addField(), "{Enter}");
+    const firstAlert = screen.getByRole("alert");
+    await user.type(addField(), "{Enter}");
+    expect(screen.getByRole("alert")).not.toBe(firstAlert);
+
+    await user.type(addField(), "Ramen{Enter}");
+    const firstMessage = screen.getByText("Added “Ramen”.");
+    await user.type(addField(), "Ramen{Enter}");
+    // A new element is what makes screen readers read the same text again.
+    expect(screen.getByText("Added “Ramen”.")).not.toBe(firstMessage);
   });
 });

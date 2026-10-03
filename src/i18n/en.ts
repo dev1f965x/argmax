@@ -26,6 +26,9 @@ export const en = {
   },
   list: {
     allLists: "All lists",
+    itemCount_zero: "0 items",
+    itemCount_one: "{{count, number}} item",
+    itemCount_other: "{{count, number}} items",
     addLabel: "Add an item",
     add: "Add",
     added: "Added “{{text}}”.",
