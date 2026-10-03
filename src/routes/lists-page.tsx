@@ -1,3 +1,7 @@
+import { useTranslation } from "react-i18next";
+
 export function ListsPage() {
-  return <h1 className="text-title font-bold">Lists</h1>;
+  const { t } = useTranslation();
+
+  return <h1 className="text-title font-bold">{t("lists.title")}</h1>;
 }
