@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Assets-only Worker: no script, so _headers applies to every response.
+  "name": "argmax",
+  "compatibility_date": "2026-10-01",
+  // No usage telemetry and no dependency list uploaded with deployments.
+  "send_metrics": false,
+  "dependencies_instrumentation": { "enabled": false },
+  "assets": {
+    "directory": "./dist",
+    // Unknown paths return index.html so client-side routes and the not found page work.
+    "not_found_handling": "single-page-application"
+  }
+}

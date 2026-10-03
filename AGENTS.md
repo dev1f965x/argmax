@@ -28,11 +28,11 @@ pnpm dev        # http://127.0.0.1:5173
 | `pnpm test:e2e` | Production build, then end-to-end, accessibility, and security header tests (Playwright, axe-core) |
 | `pnpm build` | Type check, production build to `dist/`, and `dist/third-party-notices.txt` |
 | `pnpm preview` | Serve `dist/` with the production security headers |
-| `pnpm licenses` | Dependency license check only |
+| `pnpm check:licenses` | Dependency license check only |
 
 Run `check`, `typecheck`, `test`, `build`, and `test:e2e` before handing off any change. After a dependency change, run all of them even if the change looks unrelated.
 
-CI (`.github/workflows/ci.yml`) runs the same commands on every pull request; both jobs are required checks for `main`. CI takes the Node.js major version from `.node-version` and pnpm from `packageManager`; the Dev Container image follows the same Node.js major version, so patch versions can differ until the container is rebuilt. Renovate (`renovate.json`) proposes dependency updates.
+CI (`.github/workflows/ci.yml`) runs the same commands on every pull request; both jobs are required checks for `main`. CI takes the Node.js major version from `.node-version` and pnpm from `packageManager`; the Dev Container image follows the same Node.js major version, so patch versions can differ until the container is rebuilt. Renovate (`renovate.json`) proposes dependency updates. Cloudflare Workers Builds deploys `main` to production without waiting for CI, so CI must pass before merging; deployment settings are in README.md.
 
 ## Structure
 

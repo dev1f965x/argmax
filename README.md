@@ -26,6 +26,23 @@ pnpm dev
 | `pnpm test` | Run unit and component tests (Vitest) |
 | `pnpm test:e2e` | Build and run end-to-end and accessibility tests (Playwright, axe-core) |
 
+## Deployment
+
+The app is deployed to Cloudflare Workers as static assets, configured in `wrangler.jsonc`. When Cloudflare Workers Builds is connected to this repository, a merge to `main` deploys to production at <https://argmax.dev1f965x.workers.dev>, and other branches get a Worker Preview whose URL is posted on the pull request. Preview URLs are public.
+
+Workers Builds settings:
+
+| Setting | Value |
+| --- | --- |
+| Build command | `pnpm build` |
+| Deploy command | `npx wrangler deploy` |
+| Non-production branch deploy command | `npx wrangler preview` |
+| Build variable | `PNPM_VERSION=12.8.1` (the build image defaults to an older pnpm; keep it equal to `packageManager`) |
+
+Node.js comes from `.node-version`. Production deploys do not wait for GitHub CI; the `main` ruleset makes CI pass before anything is merged.
+
+To roll back, open the Worker's **Deployments** in the Cloudflare dashboard and roll back to an earlier version, or run `pnpm exec wrangler rollback` after `pnpm exec wrangler login`. The next merge to `main` deploys again over a rollback.
+
 ## Privacy
 
 Argmax does not collect personal data. There are no accounts, cookies, analytics, or tracking. Lists and the language choice are saved only in the browser's local storage and are never sent anywhere. The hosting provider, Cloudflare, processes technical request data such as IP addresses to deliver and protect the site.
