@@ -1,7 +1,7 @@
-import { ChevronLeft, Pencil, Trash2 } from "lucide-react";
+import { ChevronLeft, Ellipsis, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import { useAnnouncer } from "@/components/announcer";
 import { useLists } from "@/components/lists-provider";
 import { Note } from "@/components/note";
@@ -9,21 +9,55 @@ import {
   type SubmitOutcome,
   TextEntryForm,
 } from "@/components/text-entry-form";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { addItem, editItem, type ItemError, removeItem } from "@/lib/lists";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  addItem,
+  deleteList,
+  editItem,
+  type ItemError,
+  type ListError,
+  removeItem,
+  renameList,
+} from "@/lib/lists";
 import { type Item, limits } from "@/lib/storage";
+import { cn } from "@/lib/utils";
 import { NotFoundPage } from "@/routes/not-found-page";
 
 /**
  * Where focus goes after a change that removes the focused control: a row's
- * Edit button, or the add field (the limit message when the field is gone).
+ * Edit button, the List actions button, or the add field (the limit message
+ * when the field is gone).
  */
-type FocusTarget = { itemId: string } | "entry" | null;
+type FocusTarget = { itemId: string } | "actions" | "entry" | null;
+
+/** Navigation state that tells the Lists screen which list was just deleted. */
+export interface DeletedListState {
+  deletedListName: string;
+}
 
 export function ListPage() {
   const { t } = useTranslation();
   const { id } = useParams();
   const { state, editable, change } = useLists();
+  const navigate = useNavigate();
+  const [renaming, setRenaming] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const actionsButton = useRef<HTMLButtonElement>(null);
   // One row is edited at a time; opening another row's editor discards an unsaved draft.
   const [editingId, setEditingId] = useState<string | null>(null);
   const [focusTarget, setFocusTarget] = useState<FocusTarget>(null);
@@ -39,11 +73,14 @@ export function ListPage() {
 
   useEffect(() => {
     if (!focusTarget) return;
-    const button =
-      focusTarget === "entry"
-        ? undefined
-        : editButtons.current.get(focusTarget.itemId);
-    (button ?? addField.current ?? limitNote.current)?.focus();
+    if (focusTarget === "actions") actionsButton.current?.focus();
+    else {
+      const button =
+        focusTarget === "entry"
+          ? undefined
+          : editButtons.current.get(focusTarget.itemId);
+      (button ?? addField.current ?? limitNote.current)?.focus();
+    }
     setFocusTarget(null);
   }, [focusTarget]);
 
@@ -53,6 +90,37 @@ export function ListPage() {
   const items = list.items.toReversed();
   const atLimit = list.items.length >= limits.itemsPerList;
   const limitMessage = t("list.limitReached", { limit: limits.itemsPerList });
+
+  function rename(name: string): SubmitOutcome {
+    const result = change((current, context) =>
+      renameList(current, listId, name, context),
+    );
+    if (result.ok) {
+      setRenaming(false);
+      announce(t("list.renamed", { name: name.trim() }));
+      setFocusTarget("actions");
+      return { ok: true };
+    }
+    const message: Record<ListError | "read-only", string> = {
+      empty: t("lists.errors.empty"),
+      "too-long": t("lists.errors.tooLong", { limit: limits.textLength }),
+      "list-limit": t("common.saveFailed"),
+      "not-found": t("common.saveFailed"),
+      "read-only": t("common.saveFailed"),
+    };
+    return { ok: false, message: message[result.error] };
+  }
+
+  function confirmDelete(name: string) {
+    const result = change((current) => deleteList(current, listId));
+    setConfirmingDelete(false);
+    if (!result.ok) {
+      announce(t("common.saveFailed"));
+      return;
+    }
+    const navigationState: DeletedListState = { deletedListName: name };
+    navigate("/", { state: navigationState });
+  }
 
   function outcome(
     result: { ok: true } | { ok: false; error: ItemError | "read-only" },
@@ -146,8 +214,91 @@ export function ListPage() {
         <ChevronLeft aria-hidden="true" className="size-4" />
         {t("list.allLists")}
       </Link>
-      <h1 className="text-title font-bold wrap-anywhere">{list.name}</h1>
-      <p className="mt-0.5 text-sm text-muted-foreground">
+      {renaming ? (
+        <>
+          {/* Keeps the page heading for screen readers while the title is a field. */}
+          <h1 className="sr-only">{list.name}</h1>
+          <div className="pt-1">
+            <TextEntryForm
+              label={t("list.nameLabel")}
+              submitLabel={t("list.save")}
+              initialValue={list.name}
+              autoFocus
+              onSubmit={rename}
+              cancel={{
+                label: t("list.cancel"),
+                onCancel: () => {
+                  setRenaming(false);
+                  setFocusTarget("actions");
+                },
+              }}
+            />
+          </div>
+        </>
+      ) : (
+        <div className="flex items-start justify-between gap-2">
+          <h1 className="pt-1 text-title font-bold wrap-anywhere">
+            {list.name}
+          </h1>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  ref={actionsButton}
+                  variant="ghost"
+                  size="icon"
+                  disabled={!editable}
+                  aria-label={t("list.actions")}
+                  className="shrink-0 text-muted-foreground"
+                />
+              }
+            >
+              <Ellipsis aria-hidden="true" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setRenaming(true)}>
+                <Pencil aria-hidden="true" />
+                {t("list.rename")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setConfirmingDelete(true)}
+              >
+                <Trash2 aria-hidden="true" />
+                {t("list.delete")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+      <AlertDialog open={confirmingDelete} onOpenChange={setConfirmingDelete}>
+        {/* Opened from the menu, so focus returns to the List actions button. */}
+        <AlertDialogContent finalFocus={actionsButton}>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="wrap-anywhere">
+              {t("list.deleteTitle", { name: list.name })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("list.deleteBody", { count: list.items.length })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("list.cancel")}</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={() => confirmDelete(list.name)}
+            >
+              {t("list.delete")}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <p
+        className={cn(
+          "text-sm text-muted-foreground",
+          renaming ? "mt-3" : "mt-0.5",
+        )}
+      >
         {t("list.itemCount", { count: list.items.length })}
       </p>
 

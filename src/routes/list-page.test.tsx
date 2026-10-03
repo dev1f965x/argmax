@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { describe, expect, it } from "vitest";
@@ -12,6 +12,7 @@ import {
 } from "@/lib/storage";
 import { memoryStorage } from "@/test/memory-storage";
 import { ListPage } from "./list-page";
+import { ListsPage } from "./lists-page";
 import { RootLayout } from "./root-layout";
 
 function testContext(): Context {
@@ -48,7 +49,7 @@ function renderList(items: string[], path = "/lists/lunch") {
       {
         Component: RootLayout,
         children: [
-          { index: true, element: <h1>Lists</h1> },
+          { index: true, Component: ListsPage },
           { path: "lists/:id", Component: ListPage },
         ],
       },
@@ -63,11 +64,15 @@ function renderList(items: string[], path = "/lists/lunch") {
       <RouterProvider router={router} />
     </ListsProvider>,
   );
+  const storedLists = () =>
+    JSON.parse(data.get(storageKey) ?? "").lists as {
+      name: string;
+    }[];
   const storedItems = () =>
     JSON.parse(data.get(storageKey) ?? "").lists[0].items.map(
       (item: { text: string }) => item.text,
     );
-  return { user: userEvent.setup(), storedItems };
+  return { user: userEvent.setup(), storedItems, storedLists, router };
 }
 
 const addField = () => screen.getByRole("textbox", { name: "Add an item" });
@@ -243,5 +248,90 @@ describe("ListPage", () => {
     await user.type(addField(), "Ramen{Enter}");
     // A new element is what makes screen readers read the same text again.
     expect(screen.getByText("Added “Ramen”.")).not.toBe(firstMessage);
+  });
+
+  describe("list actions", () => {
+    const actions = () => screen.getByRole("button", { name: "List actions" });
+
+    it("renames the list with the keyboard and returns focus to List actions", async () => {
+      const { user, storedLists } = renderList(["Ramen"]);
+
+      actions().focus();
+      await user.keyboard("{Enter}");
+      await user.click(await screen.findByRole("menuitem", { name: "Rename" }));
+      const field = screen.getByRole("textbox", { name: "List name" });
+      expect(field).toHaveFocus();
+      expect(field).toHaveValue("Lunch");
+
+      await user.keyboard("{Control>}a{/Control}  Dinner {Enter}");
+
+      expect(storedLists()[0]?.name).toBe("Dinner");
+      expect(screen.getByRole("heading", { name: "Dinner" })).toBeVisible();
+      expect(actions()).toHaveFocus();
+      expect(
+        screen.getByText("Renamed the list to “Dinner”."),
+      ).toBeInTheDocument();
+    });
+
+    it("rejects an empty name and cancels with Escape", async () => {
+      const { user, storedLists } = renderList([]);
+
+      await user.click(actions());
+      await user.click(await screen.findByRole("menuitem", { name: "Rename" }));
+      await user.keyboard("{Control>}a{/Control}{Backspace}{Enter}");
+      expect(screen.getByRole("alert")).toHaveTextContent("Enter a list name.");
+      // The page keeps its heading while the title is a field.
+      expect(
+        screen.getByRole("heading", { name: "Lunch" }),
+      ).toBeInTheDocument();
+
+      await user.keyboard("{Escape}");
+      expect(storedLists()[0]?.name).toBe("Lunch");
+      expect(actions()).toHaveFocus();
+    });
+
+    it("asks before deleting, stating the item count, and keeps the list on Cancel", async () => {
+      const { user, storedLists } = renderList(["Ramen", "Sushi"]);
+
+      await user.click(actions());
+      await user.click(
+        await screen.findByRole("menuitem", { name: "Delete list" }),
+      );
+      const dialog = await screen.findByRole("alertdialog", {
+        name: "Delete “Lunch”?",
+      });
+      expect(dialog).toHaveTextContent(
+        "2 items will be deleted with it. This can’t be undone.",
+      );
+
+      await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+      expect(storedLists()).toHaveLength(1);
+      await waitFor(() => expect(actions()).toHaveFocus());
+    });
+
+    it("deletes the list, returns to the Lists screen, and confirms with focus", async () => {
+      const { user, storedLists, router } = renderList([]);
+
+      await user.click(actions());
+      await user.click(
+        await screen.findByRole("menuitem", { name: "Delete list" }),
+      );
+      const dialog = await screen.findByRole("alertdialog");
+      expect(dialog).toHaveTextContent(
+        "The list will be deleted. This can’t be undone.",
+      );
+      await user.click(
+        within(dialog).getByRole("button", { name: "Delete list" }),
+      );
+
+      expect(storedLists()).toEqual([]);
+      expect(router.state.location.pathname).toBe("/");
+      expect(
+        screen.getByRole("heading", { name: "Lists" }),
+      ).toBeInTheDocument();
+      expect(screen.getByText("Deleted “Lunch”.")).toHaveFocus();
+      // The history entry is cleared, so a reload or Back does not repeat it.
+      expect(router.state.location.state).toBeNull();
+    });
   });
 });

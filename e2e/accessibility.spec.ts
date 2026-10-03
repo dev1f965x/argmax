@@ -86,5 +86,35 @@ for (const locale of ["en-US", "ko-KR"]) {
         .analyze();
       expect(results.violations).toEqual([]);
     });
+
+    test("/lists/lunch with the menu and the delete dialog open has no detectable WCAG 2.2 AA violations", async ({
+      page,
+    }) => {
+      await page.goto("/");
+      await page.evaluate(
+        (stored) => localStorage.setItem("argmax", stored),
+        storedStates[0]?.value ?? "",
+      );
+      await page.goto("/lists/lunch");
+      // Menus and dialogs fade; contrast is measured once they have settled.
+      const analyze = async () => {
+        await page.waitForFunction(() => document.getAnimations().length === 0);
+        return new AxeBuilder({ page })
+          .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+          .analyze();
+      };
+
+      await page
+        .getByRole("button")
+        .filter({ has: page.locator("svg.lucide-ellipsis") })
+        .click();
+      await expect(page.getByRole("menu")).toBeVisible();
+      expect((await analyze()).violations).toEqual([]);
+
+      await page.getByRole("menuitem").last().click();
+      await expect(page.getByRole("alertdialog")).toBeVisible();
+      await expect(page.getByRole("menu")).toBeHidden();
+      expect((await analyze()).violations).toEqual([]);
+    });
   });
 }

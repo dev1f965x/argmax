@@ -1,13 +1,20 @@
 import { ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useAnnouncer } from "@/components/announcer";
 import { useLists } from "@/components/lists-provider";
 import { Note } from "@/components/note";
 import { TextEntryForm } from "@/components/text-entry-form";
 import { createList } from "@/lib/lists";
 import { limits } from "@/lib/storage";
+import type { DeletedListState } from "@/routes/list-page";
+
+function deletedListName(state: unknown): string | null {
+  if (typeof state !== "object" || state === null) return null;
+  const name = (state as Partial<DeletedListState>).deletedListName;
+  return typeof name === "string" ? name : null;
+}
 
 export function ListsPage() {
   const { t } = useTranslation();
@@ -19,6 +26,19 @@ export function ListsPage() {
   const { announce, region } = useAnnouncer();
   const limitNote = useRef<HTMLParagraphElement>(null);
   const [focusLimit, setFocusLimit] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  // Read once: the history entry is then cleared, so a reload or Back does not
+  // show the confirmation again.
+  const [deleted] = useState(() => deletedListName(location.state));
+  const deletedNotice = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (!deleted) return;
+    // The deleted list's screen is gone, so focus moves to the confirmation.
+    deletedNotice.current?.focus();
+    navigate(location.pathname, { replace: true, state: null });
+  }, [deleted, navigate, location.pathname]);
 
   useEffect(() => {
     if (!focusLimit) return;
@@ -54,6 +74,16 @@ export function ListsPage() {
 
   return (
     <div className="max-w-160">
+      {deleted && (
+        <p
+          ref={deletedNotice}
+          tabIndex={-1}
+          role="status"
+          className="mb-5 rounded-xl bg-surface px-3.5 py-3 outline-none wrap-anywhere"
+        >
+          {t("lists.deleted", { name: deleted })}
+        </p>
+      )}
       <h1 className="mb-4 text-title font-bold">{t("lists.title")}</h1>
       {atLimit ? (
         <Note strong ref={limitNote}>
