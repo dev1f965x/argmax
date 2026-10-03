@@ -1,3 +1,3 @@
 export function ListsPage() {
-  return <h1 className="font-heading text-2xl font-semibold">Lists</h1>;
+  return <h1 className="text-title font-bold">Lists</h1>;
 }
