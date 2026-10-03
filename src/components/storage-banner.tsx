@@ -1,0 +1,146 @@
+import { TriangleAlert } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useLists } from "@/components/lists-provider";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+/** Persistent notice for storage problems, shown at the top of each screen. */
+export function StorageBanner() {
+  const { t } = useTranslation();
+  const { issue } = useLists();
+  const [discarded, setDiscarded] = useState(false);
+  const discardedRef = useRef<HTMLParagraphElement>(null);
+
+  // The dialog and its trigger are gone after a discard, so focus moves to the confirmation.
+  useEffect(() => {
+    if (discarded) discardedRef.current?.focus();
+  }, [discarded]);
+
+  if (!issue) {
+    return discarded ? (
+      <p
+        ref={discardedRef}
+        tabIndex={-1}
+        role="status"
+        className="mb-5 rounded-xl bg-surface px-3.5 py-3 outline-none"
+      >
+        {t("storage.discarded")}
+      </p>
+    ) : null;
+  }
+
+  const invalid = issue.kind === "invalid";
+  const title = {
+    unavailable: t("storage.unavailableTitle"),
+    full: t("storage.fullTitle"),
+    invalid: t("storage.invalidTitle"),
+  }[issue.kind];
+  const body = {
+    unavailable: t("storage.unavailableBody"),
+    full: t("storage.fullBody"),
+    invalid: t("storage.invalidBody"),
+  }[issue.kind];
+
+  return (
+    <div
+      role="alert"
+      className={cn(
+        "mb-5 flex gap-2.5 rounded-xl px-3.5 py-3",
+        invalid ? "bg-destructive-soft" : "bg-warning-soft",
+      )}
+    >
+      <TriangleAlert
+        aria-hidden="true"
+        className={cn(
+          "mt-0.5 size-5 shrink-0",
+          invalid ? "text-destructive" : "text-warning",
+        )}
+      />
+      <div className="min-w-0">
+        <p className="font-semibold">{title}</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">{body}</p>
+        {issue.kind === "invalid" && (
+          <InvalidDataActions
+            raw={issue.raw}
+            onDiscarded={() => setDiscarded(true)}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function InvalidDataActions({
+  raw,
+  onDiscarded,
+}: {
+  raw: string;
+  onDiscarded: () => void;
+}) {
+  const { t } = useTranslation();
+  const { discardInvalidData } = useLists();
+  const [message, setMessage] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(raw);
+      setMessage(t("storage.copied"));
+    } catch (error) {
+      console.error("Copying the stored lists failed.", error);
+      setMessage(t("storage.copyFailed"));
+    }
+  }
+
+  return (
+    <>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button variant="outline" onClick={() => void copy()}>
+          {t("storage.copy")}
+        </Button>
+        <AlertDialog open={confirming} onOpenChange={setConfirming}>
+          <AlertDialogTrigger render={<Button variant="outline" />}>
+            {t("storage.discard")}
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("storage.discardTitle")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("storage.discardBody")}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("storage.cancel")}</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                onClick={() => {
+                  setConfirming(false);
+                  if (discardInvalidData()) onDiscarded();
+                  else setMessage(t("storage.discardFailed"));
+                }}
+              >
+                {t("storage.discardConfirm")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+      {/* Announces the outcome of Copy or Delete without moving focus. */}
+      <p aria-live="polite" className="mt-2 text-sm empty:hidden">
+        {message}
+      </p>
+    </>
+  );
+}

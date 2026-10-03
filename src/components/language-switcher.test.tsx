@@ -2,10 +2,13 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, describe, expect, it } from "vitest";
+import { ListsProvider } from "@/components/lists-provider";
 import { i18n } from "@/i18n";
 import { localeStorageKey } from "@/i18n/locale";
+import { createRepository } from "@/lib/storage";
 import { ListsPage } from "@/routes/lists-page";
 import { RootLayout } from "@/routes/root-layout";
+import { memoryStorage } from "@/test/memory-storage";
 
 function renderApp() {
   const router = createMemoryRouter([
@@ -14,7 +17,11 @@ function renderApp() {
       children: [{ index: true, Component: ListsPage }],
     },
   ]);
-  render(<RouterProvider router={router} />);
+  render(
+    <ListsProvider repository={createRepository(() => memoryStorage().storage)}>
+      <RouterProvider router={router} />
+    </ListsProvider>,
+  );
 }
 
 describe("LanguageSwitcher", () => {
