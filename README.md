@@ -4,7 +4,7 @@ English | [한국어](README.ko.md)
 
 [![License](https://img.shields.io/github/license/dev1f965x/argmax)](LICENSE)
 
-Argmax is a web app for making picks. Create a list, add items, and let it pick one at random.
+Argmax is a web app for making picks: create a list, add items, and pick one at random with equal chance. It is in development toward its first release; see the [changelog](CHANGELOG.md).
 
 ## Development
 
@@ -17,10 +17,10 @@ pnpm dev
 
 | Script | Purpose |
 | --- | --- |
-| `pnpm dev` | Start the dev server at http://localhost:5173 |
+| `pnpm dev` | Start the dev server at http://127.0.0.1:5173 |
 | `pnpm build` | Type-check and build to `dist/` |
 | `pnpm preview` | Serve the production build |
-| `pnpm check` | Format check and lint (Biome) |
+| `pnpm check` | Format check, lint (Biome), and design token check |
 | `pnpm format` | Format files |
 | `pnpm typecheck` | Type-check |
 | `pnpm test` | Run unit and component tests (Vitest) |
