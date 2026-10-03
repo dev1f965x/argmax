@@ -3,7 +3,7 @@
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const paths = ["/", "/lists/example", "/missing"];
+const paths = ["/", "/lists/example", "/privacy", "/missing"];
 
 for (const locale of ["en-US", "ko-KR"]) {
   test.describe(locale, () => {

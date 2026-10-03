@@ -26,6 +26,14 @@ pnpm dev
 | `pnpm test` | Run unit and component tests (Vitest) |
 | `pnpm test:e2e` | Build and run end-to-end and accessibility tests (Playwright, axe-core) |
 
+## Privacy
+
+Argmax does not collect personal data. There are no accounts, cookies, analytics, or tracking. Lists and the language choice are saved only in the browser's local storage and are never sent anywhere. The hosting provider, Cloudflare, processes technical request data such as IP addresses to deliver and protect the site.
+
+## Feedback and security
+
+Questions, bug reports, and requests go to [GitHub Issues](https://github.com/dev1f965x/argmax/issues). Report security issues privately as described in [SECURITY.md](SECURITY.md).
+
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). Third-party licenses are listed in `third-party-notices.txt`, generated with each build and linked from the app's footer.
