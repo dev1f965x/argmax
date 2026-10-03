@@ -35,7 +35,6 @@ import {
   renameList,
 } from "@/lib/lists";
 import { type Item, limits } from "@/lib/storage";
-import { cn } from "@/lib/utils";
 import { NotFoundPage } from "@/routes/not-found-page";
 
 /**
@@ -57,6 +56,9 @@ export function ListPage() {
   const navigate = useNavigate();
   const [renaming, setRenaming] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  // Set while a deleted list's screen waits for navigation, so it does not
+  // render "Page not found" in between.
+  const [deleting, setDeleting] = useState(false);
   const actionsButton = useRef<HTMLButtonElement>(null);
   // One row is edited at a time; opening another row's editor discards an unsaved draft.
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -84,7 +86,7 @@ export function ListPage() {
     setFocusTarget(null);
   }, [focusTarget]);
 
-  if (!list) return <NotFoundPage />;
+  if (!list) return deleting ? null : <NotFoundPage />;
   const listId = list.id;
   // Newest first, matching the Lists screen, so an added item appears right under the form.
   const items = list.items.toReversed();
@@ -118,8 +120,10 @@ export function ListPage() {
       announce(t("common.saveFailed"));
       return;
     }
+    setDeleting(true);
     const navigationState: DeletedListState = { deletedListName: name };
-    navigate("/", { state: navigationState });
+    // Replaces the deleted list's history entry, so Back does not lead to it.
+    navigate("/", { replace: true, state: navigationState });
   }
 
   function outcome(
@@ -220,7 +224,8 @@ export function ListPage() {
           <h1 className="sr-only">{list.name}</h1>
           <div className="pt-1">
             <TextEntryForm
-              label={t("list.nameLabel")}
+              label={t("list.rename")}
+              visibleLabel
               submitLabel={t("list.save")}
               initialValue={list.name}
               autoFocus
@@ -293,14 +298,11 @@ export function ListPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <p
-        className={cn(
-          "text-sm text-muted-foreground",
-          renaming ? "mt-3" : "mt-0.5",
-        )}
-      >
-        {t("list.itemCount", { count: list.items.length })}
-      </p>
+      {!renaming && (
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          {t("list.itemCount", { count: list.items.length })}
+        </p>
+      )}
 
       <div className="mt-5">
         {atLimit ? (
@@ -337,6 +339,7 @@ export function ListPage() {
                     submitLabel={t("list.save")}
                     initialValue={item.text}
                     autoFocus
+                    stacked
                     onSubmit={(text) => save(item, text)}
                     cancel={{
                       label: t("list.cancel"),

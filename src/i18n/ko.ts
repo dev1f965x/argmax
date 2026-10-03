@@ -41,7 +41,6 @@ export const ko: Resources = {
     removed: "“{{text}}” 항목을 삭제했습니다.",
     actions: "목록 메뉴",
     rename: "이름 바꾸기",
-    nameLabel: "목록 이름",
     renamed: "목록 이름을 바꿨습니다: “{{name}}”",
     delete: "목록 삭제",
     deleteTitle: "“{{name}}” 목록을 삭제할까요?",

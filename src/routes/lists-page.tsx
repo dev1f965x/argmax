@@ -8,12 +8,13 @@ import { Note } from "@/components/note";
 import { TextEntryForm } from "@/components/text-entry-form";
 import { createList } from "@/lib/lists";
 import { limits } from "@/lib/storage";
-import type { DeletedListState } from "@/routes/list-page";
 
 function deletedListName(state: unknown): string | null {
   if (typeof state !== "object" || state === null) return null;
-  const name = (state as Partial<DeletedListState>).deletedListName;
-  return typeof name === "string" ? name : null;
+  if (!("deletedListName" in state)) return null;
+  return typeof state.deletedListName === "string"
+    ? state.deletedListName
+    : null;
 }
 
 export function ListsPage() {

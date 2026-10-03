@@ -42,7 +42,11 @@ function storedList(items: string[]): string {
   return JSON.stringify(state);
 }
 
-function renderList(items: string[], path = "/lists/lunch") {
+function renderList(
+  items: string[],
+  path = "/lists/lunch",
+  history: string[] = [],
+) {
   const { storage, data } = memoryStorage({ [storageKey]: storedList(items) });
   const router = createMemoryRouter(
     [
@@ -54,7 +58,7 @@ function renderList(items: string[], path = "/lists/lunch") {
         ],
       },
     ],
-    { initialEntries: [path] },
+    { initialEntries: [...history, path] },
   );
   render(
     <ListsProvider
@@ -259,7 +263,7 @@ describe("ListPage", () => {
       actions().focus();
       await user.keyboard("{Enter}");
       await user.click(await screen.findByRole("menuitem", { name: "Rename" }));
-      const field = screen.getByRole("textbox", { name: "List name" });
+      const field = screen.getByRole("textbox", { name: "Rename" });
       expect(field).toHaveFocus();
       expect(field).toHaveValue("Lunch");
 
@@ -310,7 +314,9 @@ describe("ListPage", () => {
     });
 
     it("deletes the list, returns to the Lists screen, and confirms with focus", async () => {
-      const { user, storedLists, router } = renderList([]);
+      const { user, storedLists, router } = renderList([], "/lists/lunch", [
+        "/",
+      ]);
 
       await user.click(actions());
       await user.click(
@@ -332,6 +338,10 @@ describe("ListPage", () => {
       expect(screen.getByText("Deleted “Lunch”.")).toHaveFocus();
       // The history entry is cleared, so a reload or Back does not repeat it.
       expect(router.state.location.state).toBeNull();
+
+      // The deleted list's entry was replaced, so Back goes to the earlier page.
+      await router.navigate(-1);
+      expect(router.state.location.pathname).toBe("/");
     });
   });
 });

@@ -37,7 +37,6 @@ export const en = {
     removed: "Removed “{{text}}”.",
     actions: "List actions",
     rename: "Rename",
-    nameLabel: "List name",
     renamed: "Renamed the list to “{{name}}”.",
     delete: "Delete list",
     deleteTitle: "Delete “{{name}}”?",

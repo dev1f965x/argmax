@@ -24,6 +24,10 @@ interface TextEntryFormProps {
   disabled?: boolean;
   /** Focuses and selects the field when it appears, as in an edit row. */
   autoFocus?: boolean;
+  /** Shows the label above the field instead of only to screen readers. */
+  visibleLabel?: boolean;
+  /** Puts the buttons under a full-width field, for long text such as items. */
+  stacked?: boolean;
   /** Shows a Cancel button and lets Escape cancel. */
   cancel?: { label: string; onCancel: () => void };
   /** Lets the parent move focus to the field, for example after removing a row. */
@@ -44,6 +48,8 @@ export function TextEntryForm({
   autoFocus = false,
   cancel,
   fieldRef,
+  visibleLabel = false,
+  stacked = false,
 }: TextEntryFormProps) {
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState<string | null>(null);
@@ -99,9 +105,14 @@ export function TextEntryForm({
     <form
       onSubmit={submit}
       noValidate
-      className={cn("flex flex-wrap gap-x-2 gap-y-1.5", cancel && "gap-y-2")}
+      className={cn("flex flex-wrap gap-x-2 gap-y-1.5", stacked && "gap-y-2")}
     >
-      <label htmlFor={inputId} className="sr-only">
+      <label
+        htmlFor={inputId}
+        className={
+          visibleLabel ? "basis-full text-sm text-muted-foreground" : "sr-only"
+        }
+      >
         {label}
       </label>
       <Input
@@ -118,25 +129,21 @@ export function TextEntryForm({
         disabled={disabled}
         aria-invalid={error !== null}
         aria-describedby={error ? errorId : undefined}
-        className={cancel ? "basis-full" : "flex-1 basis-0"}
+        className={stacked ? "basis-full" : "flex-1 basis-0"}
       />
-      {cancel ? (
-        <>
-          {errorMessage && <div className="basis-full">{errorMessage}</div>}
-          <Button type="submit" disabled={disabled}>
-            {submitLabel}
-          </Button>
-          <Button type="button" variant="outline" onClick={cancel.onCancel}>
-            {cancel.label}
-          </Button>
-        </>
-      ) : (
-        <>
-          <Button type="submit" disabled={disabled}>
-            {submitLabel}
-          </Button>
-          {errorMessage && <div className="basis-full">{errorMessage}</div>}
-        </>
+      {stacked && errorMessage && (
+        <div className="basis-full">{errorMessage}</div>
+      )}
+      <Button type="submit" disabled={disabled}>
+        {submitLabel}
+      </Button>
+      {cancel && (
+        <Button type="button" variant="outline" onClick={cancel.onCancel}>
+          {cancel.label}
+        </Button>
+      )}
+      {!stacked && errorMessage && (
+        <div className="basis-full">{errorMessage}</div>
       )}
     </form>
   );

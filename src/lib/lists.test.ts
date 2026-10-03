@@ -119,6 +119,14 @@ describe("lists", () => {
     });
   });
 
+  it("keeps the timestamp when a list is renamed to the same name", () => {
+    const context = testContext();
+    const created = mustOk(createList(emptyState, "Lunch", context));
+    expect(mustOk(renameList(created, "id-1", " Lunch ", context))).toBe(
+      created,
+    );
+  });
+
   it("deletes a list", () => {
     const created = mustOk(createList(emptyState, "Lunch", testContext()));
     expect(mustOk(deleteList(created, "id-1")).lists).toEqual([]);
