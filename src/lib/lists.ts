@@ -25,11 +25,14 @@ export const browserContext: Context = {
   now: () => new Date(),
 };
 
-/** Trims surrounding whitespace and rejects empty or over-long text (FR2, FR5, FR11). */
+/**
+ * Trims surrounding whitespace, normalizes to NFC, and rejects empty or
+ * over-long text (FR2, FR5, FR11). All stored text passes through here.
+ */
 export function validateText(
   input: string,
 ): { ok: true; value: string } | { ok: false; error: TextError } {
-  const value = input.trim();
+  const value = input.normalize("NFC").trim();
   if (value.length === 0) return { ok: false, error: "empty" };
   if (characterCount(value) > limits.textLength)
     return { ok: false, error: "too-long" };
@@ -65,18 +68,16 @@ export function renameList(
 ): Result<ListError> {
   const text = validateText(name);
   if (!text.ok) return text;
-  return updateList(state, listId, context, (list) => ({
-    ...list,
-    name: text.value,
-  }));
+  const list = findList(state, listId);
+  if (!list) return { ok: false, error: "not-found" };
+  return replaceList(state, { ...list, name: text.value }, context);
 }
 
 export function deleteList(
   state: StoredState,
   listId: string,
 ): Result<ListError> {
-  if (!state.lists.some((list) => list.id === listId))
-    return { ok: false, error: "not-found" };
+  if (!findList(state, listId)) return { ok: false, error: "not-found" };
   return {
     ok: true,
     state: {
@@ -94,17 +95,14 @@ export function addItem(
 ): Result<ItemError> {
   const text = validateText(input);
   if (!text.ok) return text;
-  const list = state.lists.find((candidate) => candidate.id === listId);
+  const list = findList(state, listId);
   if (!list) return { ok: false, error: "not-found" };
   if (list.items.length >= limits.itemsPerList)
     return { ok: false, error: "item-limit" };
 
   // Duplicate items are allowed without a warning (FR5).
   const item: Item = { id: context.newId(), text: text.value };
-  return updateList(state, listId, context, (current) => ({
-    ...current,
-    items: [...current.items, item],
-  }));
+  return replaceList(state, { ...list, items: [...list.items, item] }, context);
 }
 
 export function editItem(
@@ -116,15 +114,13 @@ export function editItem(
 ): Result<ItemError> {
   const text = validateText(input);
   if (!text.ok) return text;
-  const list = state.lists.find((candidate) => candidate.id === listId);
+  const list = findList(state, listId);
   if (!list?.items.some((item) => item.id === itemId))
     return { ok: false, error: "not-found" };
-  return updateList(state, listId, context, (current) => ({
-    ...current,
-    items: current.items.map((item) =>
-      item.id === itemId ? { ...item, text: text.value } : item,
-    ),
-  }));
+  const items = list.items.map((item) =>
+    item.id === itemId ? { ...item, text: text.value } : item,
+  );
+  return replaceList(state, { ...list, items }, context);
 }
 
 export function removeItem(
@@ -133,30 +129,33 @@ export function removeItem(
   itemId: string,
   context: Context,
 ): Result<ItemError> {
-  const list = state.lists.find((candidate) => candidate.id === listId);
+  const list = findList(state, listId);
   if (!list?.items.some((item) => item.id === itemId))
     return { ok: false, error: "not-found" };
-  return updateList(state, listId, context, (current) => ({
-    ...current,
-    items: current.items.filter((item) => item.id !== itemId),
-  }));
+  return replaceList(
+    state,
+    { ...list, items: list.items.filter((item) => item.id !== itemId) },
+    context,
+  );
 }
 
-function updateList<E>(
+function findList(state: StoredState, listId: string): List | undefined {
+  return state.lists.find((list) => list.id === listId);
+}
+
+/** Returns a new state with the list replaced and its updatedAt set to now. */
+function replaceList(
   state: StoredState,
-  listId: string,
+  changed: List,
   context: Context,
-  change: (list: List) => List,
-): Result<E | "not-found"> {
-  if (!state.lists.some((list) => list.id === listId))
-    return { ok: false, error: "not-found" };
-  const updatedAt = context.now().toISOString();
+): { ok: true; state: StoredState } {
+  const updated: List = { ...changed, updatedAt: context.now().toISOString() };
   return {
     ok: true,
     state: {
       ...state,
       lists: state.lists.map((list) =>
-        list.id === listId ? { ...change(list), updatedAt } : list,
+        list.id === updated.id ? updated : list,
       ),
     },
   };

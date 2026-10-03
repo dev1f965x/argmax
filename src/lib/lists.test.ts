@@ -59,6 +59,16 @@ describe("validateText", () => {
   });
 });
 
+describe("validateText normalization", () => {
+  it("stores decomposed Hangul in composed form and counts a family emoji once", () => {
+    expect(validateText("점심".normalize("NFD"))).toEqual({
+      ok: true,
+      value: "점심",
+    });
+    expect(validateText("👨‍👩‍👧‍👦".repeat(limits.textLength)).ok).toBe(true);
+  });
+});
+
 describe("lists", () => {
   it("creates a list with trimmed name and timestamps, without changing the input state", () => {
     const state = mustOk(createList(emptyState, "  Lunch ", testContext()));

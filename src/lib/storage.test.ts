@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  characterCount,
   createRepository,
   emptyState,
   limits,
@@ -30,18 +31,28 @@ function memoryStorage(initial: Record<string, string> = {}) {
   return { storage, data, failures };
 }
 
-const validState: StoredState = {
-  schemaVersion: 1,
-  lists: [
-    {
-      id: "list-1",
-      name: "Lunch",
-      items: [{ id: "item-1", text: "Ramen" }],
-      createdAt: "2026-10-03T00:00:00.000Z",
-      updatedAt: "2026-10-03T00:00:00.000Z",
-    },
-  ],
+const list = {
+  id: "list-1",
+  name: "Lunch",
+  items: [{ id: "item-1", text: "Ramen" }],
+  createdAt: "2026-10-03T00:00:00.000Z",
+  updatedAt: "2026-10-03T00:00:00.000Z",
 };
+const validState: StoredState = { schemaVersion: 1, lists: [list] };
+
+const stored = (state: unknown) => JSON.stringify(state);
+
+describe("characterCount", () => {
+  it.each([
+    ["Hangul syllables", "점심", 2],
+    ["decomposed Hangul (NFD)", "점심".normalize("NFD"), 2],
+    ["a family emoji sequence", "👨‍👩‍👧‍👦", 1],
+    ["a flag", "🇰🇷", 1],
+    ["Latin letters", "Lunch", 5],
+  ])("counts %s as users see them", (_, text, expected) => {
+    expect(characterCount(text)).toBe(expected);
+  });
+});
 
 describe("createRepository", () => {
   it("returns an empty state when nothing is stored", () => {
@@ -55,6 +66,7 @@ describe("createRepository", () => {
   it("saves and loads the state under the argmax key", () => {
     const { storage, data } = memoryStorage();
     const repository = createRepository(() => storage);
+    repository.load();
     expect(repository.save(validState)).toEqual({ ok: true });
     expect(JSON.parse(data.get(storageKey) ?? "")).toEqual(validState);
     expect(createRepository(() => storage).load()).toEqual({
@@ -65,25 +77,30 @@ describe("createRepository", () => {
 
   it.each([
     ["malformed JSON", "{not json"],
-    [
-      "an unknown schema version",
-      JSON.stringify({ ...validState, schemaVersion: 2 }),
-    ],
-    ["a missing field", JSON.stringify({ schemaVersion: 1 })],
+    ["an unknown schema version", stored({ ...validState, schemaVersion: 2 })],
+    ["a missing field", stored({ schemaVersion: 1 })],
     [
       "an empty list name",
-      JSON.stringify({
+      stored({ ...validState, lists: [{ ...list, name: "  " }] }),
+    ],
+    [
+      "untrimmed text",
+      stored({ ...validState, lists: [{ ...list, name: " Lunch" }] }),
+    ],
+    [
+      "an over-long item",
+      stored({
         ...validState,
-        lists: [{ ...validState.lists[0], name: "  " }],
+        lists: [{ ...list, items: [{ id: "i", text: "x".repeat(101) }] }],
       }),
     ],
     [
       "too many items",
-      JSON.stringify({
+      stored({
         ...validState,
         lists: [
           {
-            ...validState.lists[0],
+            ...list,
             items: Array.from({ length: limits.itemsPerList + 1 }, (_, i) => ({
               id: `i${i}`,
               text: "x",
@@ -92,11 +109,36 @@ describe("createRepository", () => {
         ],
       }),
     ],
+    [
+      "too many lists",
+      stored({
+        ...validState,
+        lists: Array.from({ length: limits.lists + 1 }, (_, i) => ({
+          ...list,
+          id: `l${i}`,
+        })),
+      }),
+    ],
+    ["duplicate list ids", stored({ ...validState, lists: [list, list] })],
+    [
+      "duplicate item ids",
+      stored({
+        ...validState,
+        lists: [{ ...list, items: [list.items[0], list.items[0]] }],
+      }),
+    ],
+    [
+      "a date without a time zone",
+      stored({
+        ...validState,
+        lists: [{ ...list, createdAt: "2026-10-03T00:00:00" }],
+      }),
+    ],
   ])("reports %s as invalid and never overwrites it", (_, raw) => {
     const { storage, data } = memoryStorage({ [storageKey]: raw });
     const repository = createRepository(() => storage);
 
-    expect(repository.load()).toEqual({ status: "invalid", raw });
+    expect(repository.load()).toMatchObject({ status: "invalid", raw });
     expect(repository.save(emptyState)).toEqual({
       ok: false,
       reason: "read-only",
@@ -104,45 +146,112 @@ describe("createRepository", () => {
     expect(data.get(storageKey)).toBe(raw);
   });
 
-  it("reports blocked storage as unavailable on load and save", () => {
-    const blocked = () => {
-      throw new DOMException("Access denied", "SecurityError");
+  it("accepts the maximum sizes", () => {
+    const full: StoredState = {
+      schemaVersion: 1,
+      lists: Array.from({ length: limits.lists }, (_, i) => ({
+        ...list,
+        id: `l${i}`,
+        name: "가".repeat(limits.textLength),
+      })),
     };
-    const repository = createRepository(blocked);
-    expect(repository.load()).toEqual({ status: "unavailable" });
+    const { storage } = memoryStorage({ [storageKey]: stored(full) });
+    expect(createRepository(() => storage).load()).toEqual({
+      status: "ok",
+      state: full,
+    });
+  });
+
+  it("refuses to save before a load, so unseen data is never replaced", () => {
+    const raw = "{not json";
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+    expect(createRepository(() => storage).save(emptyState)).toEqual({
+      ok: false,
+      reason: "not-loaded",
+    });
+    expect(data.get(storageKey)).toBe(raw);
+  });
+
+  it("refuses to save after a failed read, and allows it after a later successful read", () => {
+    const { storage, failures, data } = memoryStorage({
+      [storageKey]: stored(validState),
+    });
+    const repository = createRepository(() => storage);
+    failures.get = new Error("read failed");
+
+    expect(repository.load()).toMatchObject({
+      status: "unavailable",
+      cause: failures.get,
+    });
+    expect(repository.save(emptyState)).toEqual({
+      ok: false,
+      reason: "not-loaded",
+    });
+    expect(data.get(storageKey)).toBe(stored(validState));
+
+    failures.get = undefined;
+    expect(repository.load()).toEqual({ status: "ok", state: validState });
+    expect(repository.save(emptyState)).toEqual({ ok: true });
+  });
+
+  it("reports blocked storage as unavailable", () => {
+    const denied = new DOMException("Access denied", "SecurityError");
+    const repository = createRepository(() => {
+      throw denied;
+    });
+    expect(repository.load()).toEqual({ status: "unavailable", cause: denied });
     expect(repository.save(validState)).toEqual({
       ok: false,
-      reason: "unavailable",
+      reason: "not-loaded",
     });
   });
 
-  it("reports a failing read as unavailable but still allows saving", () => {
-    const { storage, failures, data } = memoryStorage();
-    failures.get = new Error("read failed");
-    const repository = createRepository(() => storage);
-    expect(repository.load()).toEqual({ status: "unavailable" });
-    expect(repository.save(validState)).toEqual({ ok: true });
-    expect(data.has(storageKey)).toBe(true);
-  });
+  /** Older Safari reports quota errors only through the legacy code 22. */
+  function legacyQuotaError(): DOMException {
+    const error = new DOMException("Quota exceeded", "UnknownError");
+    Object.defineProperty(error, "code", { value: 22 });
+    return error;
+  }
 
-  it("reports a full storage and keeps the previous value", () => {
-    const { storage, failures, data } = memoryStorage({
-      [storageKey]: JSON.stringify(emptyState),
-    });
-    const repository = createRepository(() => storage);
-    repository.load();
-    failures.set = new DOMException("Quota exceeded", "QuotaExceededError");
+  it.each([
+    [
+      "QuotaExceededError",
+      () => new DOMException("Quota exceeded", "QuotaExceededError"),
+    ],
+    [
+      "the Firefox legacy name",
+      () => new DOMException("Quota reached", "NS_ERROR_DOM_QUOTA_REACHED"),
+    ],
+    ["the legacy code 22", legacyQuotaError],
+  ])(
+    "reports a full storage from %s and keeps the previous value",
+    (_, makeError) => {
+      const { storage, failures, data } = memoryStorage({
+        [storageKey]: stored(emptyState),
+      });
+      const repository = createRepository(() => storage);
+      repository.load();
+      const error = makeError();
+      failures.set = error;
 
-    expect(repository.save(validState)).toEqual({ ok: false, reason: "full" });
-    expect(data.get(storageKey)).toBe(JSON.stringify(emptyState));
-  });
+      expect(repository.save(validState)).toEqual({
+        ok: false,
+        reason: "full",
+        cause: error,
+      });
+      expect(data.get(storageKey)).toBe(stored(emptyState));
+    },
+  );
 
   it("reports other write errors as unavailable", () => {
     const { storage, failures } = memoryStorage();
+    const repository = createRepository(() => storage);
+    repository.load();
     failures.set = new Error("write failed");
-    expect(createRepository(() => storage).save(validState)).toEqual({
+    expect(repository.save(validState)).toEqual({
       ok: false,
       reason: "unavailable",
+      cause: failures.set,
     });
   });
 });
