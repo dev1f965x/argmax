@@ -29,6 +29,28 @@ export const ko: Resources = {
   },
   list: {
     allLists: "전체 목록",
+    addLabel: "항목 추가",
+    add: "추가",
+    added: "“{{text}}” 항목을 추가했습니다.",
+    saved: "“{{text}}” 항목을 저장했습니다.",
+    removed: "“{{text}}” 항목을 삭제했습니다.",
+    editLabel: "항목 수정",
+    edit: "“{{text}}” 수정",
+    remove: "“{{text}}” 삭제",
+    save: "저장",
+    cancel: "취소",
+    emptyTitle: "목록이 비어 있습니다",
+    emptyBody: "뽑으려면 항목을 하나 이상 추가하세요.",
+    limitReached:
+      "항목이 최대 개수인 {{limit, number}}개입니다. 추가하려면 항목을 삭제하세요.",
+    errors: {
+      empty: "항목을 입력하세요.",
+      tooLong: "{{limit, number}}자 이하로 입력하세요.",
+    },
+  },
+  common: {
+    saveFailed:
+      "변경 사항을 저장하지 못했습니다. 페이지를 새로 고친 뒤 다시 시도하세요.",
   },
   storage: {
     unavailableTitle: "목록을 저장할 수 없습니다",

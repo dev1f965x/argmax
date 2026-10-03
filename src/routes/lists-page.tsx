@@ -1,22 +1,40 @@
-import { ChevronRight, CircleAlert, Info } from "lucide-react";
-import { type FormEvent, useId, useRef, useState } from "react";
+import { ChevronRight } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { useLists } from "@/components/lists-provider";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Note } from "@/components/note";
+import { TextEntryForm } from "@/components/text-entry-form";
 import { createList } from "@/lib/lists";
 import { limits } from "@/lib/storage";
 
 export function ListsPage() {
   const { t } = useTranslation();
-  const { state, editable } = useLists();
+  const { state, editable, change } = useLists();
   const atLimit = state.lists.length >= limits.lists;
-  // Lives here, not in the form, so creating the 100th list is still announced
+  // Lives outside the form, so creating the 100th list is still announced
   // after the limit message replaces the form.
   const [created, setCreated] = useState<string | null>(null);
   // Newest first, so a list just created appears right under the form.
   const lists = state.lists.toReversed();
+
+  function create(name: string) {
+    const result = change((current, context) =>
+      createList(current, name, context),
+    );
+    if (result.ok) {
+      setCreated(name.trim());
+      return { ok: true } as const;
+    }
+    const message = {
+      empty: t("lists.errors.empty"),
+      "too-long": t("lists.errors.tooLong", { limit: limits.textLength }),
+      "list-limit": t("lists.limitReached", { limit: limits.lists }),
+      "not-found": t("common.saveFailed"),
+      "read-only": t("common.saveFailed"),
+    }[result.error];
+    return { ok: false, message } as const;
+  }
 
   return (
     <div className="max-w-160">
@@ -24,7 +42,12 @@ export function ListsPage() {
       {atLimit ? (
         <Note strong>{t("lists.limitReached", { limit: limits.lists })}</Note>
       ) : (
-        <CreateListForm onCreated={setCreated} />
+        <TextEntryForm
+          label={t("lists.nameLabel")}
+          submitLabel={t("lists.create")}
+          disabled={!editable}
+          onSubmit={create}
+        />
       )}
       <p role="status" className="sr-only">
         {created && t("lists.created", { name: created })}
@@ -65,102 +88,5 @@ export function ListsPage() {
         </ul>
       )}
     </div>
-  );
-}
-
-function CreateListForm({ onCreated }: { onCreated: (name: string) => void }) {
-  const { t } = useTranslation();
-  const { change, editable } = useLists();
-  const [name, setName] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  // Each failed attempt remounts the message, so a repeated error is announced again.
-  const [attempt, setAttempt] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const inputId = useId();
-  const errorId = useId();
-
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const result = change((state, context) => createList(state, name, context));
-    if (result.ok) {
-      setName("");
-      setError(null);
-      onCreated(name.trim());
-    } else {
-      setAttempt((count) => count + 1);
-      setError(
-        {
-          empty: t("lists.errors.empty"),
-          "too-long": t("lists.errors.tooLong", { limit: limits.textLength }),
-          "list-limit": t("lists.limitReached", { limit: limits.lists }),
-          "not-found": null,
-          "read-only": null,
-        }[result.error],
-      );
-    }
-    // Keeps focus in the field so the next name or a correction can be typed at once.
-    inputRef.current?.focus();
-  }
-
-  return (
-    <form onSubmit={submit} noValidate>
-      <label htmlFor={inputId} className="sr-only">
-        {t("lists.nameLabel")}
-      </label>
-      <div className="flex gap-2">
-        <Input
-          ref={inputRef}
-          id={inputId}
-          value={name}
-          onChange={(event) => {
-            setName(event.target.value);
-            setError(null);
-          }}
-          placeholder={t("lists.nameLabel")}
-          autoComplete="off"
-          disabled={!editable}
-          aria-invalid={error !== null}
-          aria-describedby={error ? errorId : undefined}
-        />
-        <Button type="submit" disabled={!editable}>
-          {t("lists.create")}
-        </Button>
-      </div>
-      {error && (
-        <p
-          key={attempt}
-          id={errorId}
-          role="alert"
-          className="mt-1.5 flex gap-1.5 text-sm font-medium text-destructive"
-        >
-          <CircleAlert
-            aria-hidden="true"
-            className="mt-0.5 size-4.5 shrink-0"
-          />
-          {error}
-        </p>
-      )}
-    </form>
-  );
-}
-
-function Note({
-  children,
-  strong = false,
-}: {
-  children: string;
-  strong?: boolean;
-}) {
-  return (
-    <p
-      className={
-        strong
-          ? "mt-2 flex gap-1.5 font-semibold"
-          : "mt-2 flex gap-1.5 text-sm text-muted-foreground"
-      }
-    >
-      <Info aria-hidden="true" className="mt-1 size-4 shrink-0" />
-      {children}
-    </p>
   );
 }

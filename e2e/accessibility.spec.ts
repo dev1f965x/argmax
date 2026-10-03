@@ -33,7 +33,10 @@ const storedStates = [
         {
           id: "lunch",
           name: "Lunch",
-          items: [],
+          items: [
+            { id: "ramen", text: "Ramen" },
+            { id: "sushi", text: "Sushi" },
+          ],
           createdAt: "2026-10-03T00:00:00.000Z",
           updatedAt: "2026-10-03T00:00:00.000Z",
         },
@@ -63,5 +66,25 @@ for (const locale of ["en-US", "ko-KR"]) {
         expect(results.violations).toEqual([]);
       });
     }
+
+    test("/lists/lunch while editing with an error has no detectable WCAG 2.2 AA violations", async ({
+      page,
+    }) => {
+      await page.goto("/");
+      await page.evaluate(
+        (stored) => localStorage.setItem("argmax", stored),
+        storedStates[0]?.value ?? "",
+      );
+      await page.goto("/lists/lunch");
+      const row = page.getByRole("listitem").first();
+      await row.getByRole("button").first().click();
+      await row.getByRole("textbox").fill("");
+      await row.getByRole("textbox").press("Enter");
+      await expect(page.getByRole("alert")).toBeVisible();
+      const results = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .analyze();
+      expect(results.violations).toEqual([]);
+    });
   });
 }
