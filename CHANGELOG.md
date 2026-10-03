@@ -13,5 +13,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - English and Korean UI with a header language switcher; the choice is remembered in the browser.
 - Privacy page, security policy, security headers, and third-party license notices.
 - Lists screen: create lists, see them with their item counts, and open each one. Lists are saved in this browser, with warnings when storage is blocked or full and a way to copy or delete saved data that cannot be read.
+- List screen: add, edit, and remove items, with the 1,000-item and 100-character limits; every action works with a keyboard.
 
 [Unreleased]: https://github.com/dev1f965x/argmax/commits/main

@@ -26,6 +26,30 @@ export const en = {
   },
   list: {
     allLists: "All lists",
+    itemCount_zero: "0 items",
+    itemCount_one: "{{count, number}} item",
+    itemCount_other: "{{count, number}} items",
+    addLabel: "Add an item",
+    add: "Add",
+    added: "Added “{{text}}”.",
+    saved: "Saved “{{text}}”.",
+    removed: "Removed “{{text}}”.",
+    editLabel: "Edit item",
+    edit: "Edit “{{text}}”",
+    remove: "Remove “{{text}}”",
+    save: "Save",
+    cancel: "Cancel",
+    emptyTitle: "This list is empty",
+    emptyBody: "Add at least one item to pick from.",
+    limitReached:
+      "This list has {{limit, number}} items, the maximum. Remove an item to add another.",
+    errors: {
+      empty: "Enter an item.",
+      tooLong: "Use {{limit, number}} characters or fewer.",
+    },
+  },
+  common: {
+    saveFailed: "Couldn’t save the change. Reload the page and try again.",
   },
   storage: {
     unavailableTitle: "Lists can’t be saved",

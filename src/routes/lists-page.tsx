@@ -1,34 +1,73 @@
-import { ChevronRight, CircleAlert, Info } from "lucide-react";
-import { type FormEvent, useId, useRef, useState } from "react";
+import { ChevronRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
+import { useAnnouncer } from "@/components/announcer";
 import { useLists } from "@/components/lists-provider";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Note } from "@/components/note";
+import { TextEntryForm } from "@/components/text-entry-form";
 import { createList } from "@/lib/lists";
 import { limits } from "@/lib/storage";
 
 export function ListsPage() {
   const { t } = useTranslation();
-  const { state, editable } = useLists();
+  const { state, editable, change } = useLists();
   const atLimit = state.lists.length >= limits.lists;
-  // Lives here, not in the form, so creating the 100th list is still announced
-  // after the limit message replaces the form.
-  const [created, setCreated] = useState<string | null>(null);
+  const limitMessage = t("lists.limitReached", { limit: limits.lists });
+  // Outside the form, so creating the 100th list is still announced after the
+  // limit message replaces the form; that message then takes focus.
+  const { announce, region } = useAnnouncer();
+  const limitNote = useRef<HTMLParagraphElement>(null);
+  const [focusLimit, setFocusLimit] = useState(false);
+
+  useEffect(() => {
+    if (!focusLimit) return;
+    limitNote.current?.focus();
+    setFocusLimit(false);
+  }, [focusLimit]);
   // Newest first, so a list just created appears right under the form.
   const lists = state.lists.toReversed();
+
+  function create(name: string) {
+    const result = change((current, context) =>
+      createList(current, name, context),
+    );
+    if (result.ok) {
+      const created = t("lists.created", { name: name.trim() });
+      if (state.lists.length + 1 >= limits.lists) {
+        announce(`${created} ${limitMessage}`);
+        setFocusLimit(true);
+      } else {
+        announce(created);
+      }
+      return { ok: true } as const;
+    }
+    const message = {
+      empty: t("lists.errors.empty"),
+      "too-long": t("lists.errors.tooLong", { limit: limits.textLength }),
+      "list-limit": limitMessage,
+      "not-found": t("common.saveFailed"),
+      "read-only": t("common.saveFailed"),
+    }[result.error];
+    return { ok: false, message } as const;
+  }
 
   return (
     <div className="max-w-160">
       <h1 className="mb-4 text-title font-bold">{t("lists.title")}</h1>
       {atLimit ? (
-        <Note strong>{t("lists.limitReached", { limit: limits.lists })}</Note>
+        <Note strong ref={limitNote}>
+          {limitMessage}
+        </Note>
       ) : (
-        <CreateListForm onCreated={setCreated} />
+        <TextEntryForm
+          label={t("lists.nameLabel")}
+          submitLabel={t("lists.create")}
+          disabled={!editable}
+          onSubmit={create}
+        />
       )}
-      <p role="status" className="sr-only">
-        {created && t("lists.created", { name: created })}
-      </p>
+      {region}
       <Note>{t("lists.storedLocally")}</Note>
 
       {/* While invalid data is kept, the empty state's advice to create a list would not work. */}
@@ -65,102 +104,5 @@ export function ListsPage() {
         </ul>
       )}
     </div>
-  );
-}
-
-function CreateListForm({ onCreated }: { onCreated: (name: string) => void }) {
-  const { t } = useTranslation();
-  const { change, editable } = useLists();
-  const [name, setName] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  // Each failed attempt remounts the message, so a repeated error is announced again.
-  const [attempt, setAttempt] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const inputId = useId();
-  const errorId = useId();
-
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const result = change((state, context) => createList(state, name, context));
-    if (result.ok) {
-      setName("");
-      setError(null);
-      onCreated(name.trim());
-    } else {
-      setAttempt((count) => count + 1);
-      setError(
-        {
-          empty: t("lists.errors.empty"),
-          "too-long": t("lists.errors.tooLong", { limit: limits.textLength }),
-          "list-limit": t("lists.limitReached", { limit: limits.lists }),
-          "not-found": null,
-          "read-only": null,
-        }[result.error],
-      );
-    }
-    // Keeps focus in the field so the next name or a correction can be typed at once.
-    inputRef.current?.focus();
-  }
-
-  return (
-    <form onSubmit={submit} noValidate>
-      <label htmlFor={inputId} className="sr-only">
-        {t("lists.nameLabel")}
-      </label>
-      <div className="flex gap-2">
-        <Input
-          ref={inputRef}
-          id={inputId}
-          value={name}
-          onChange={(event) => {
-            setName(event.target.value);
-            setError(null);
-          }}
-          placeholder={t("lists.nameLabel")}
-          autoComplete="off"
-          disabled={!editable}
-          aria-invalid={error !== null}
-          aria-describedby={error ? errorId : undefined}
-        />
-        <Button type="submit" disabled={!editable}>
-          {t("lists.create")}
-        </Button>
-      </div>
-      {error && (
-        <p
-          key={attempt}
-          id={errorId}
-          role="alert"
-          className="mt-1.5 flex gap-1.5 text-sm font-medium text-destructive"
-        >
-          <CircleAlert
-            aria-hidden="true"
-            className="mt-0.5 size-4.5 shrink-0"
-          />
-          {error}
-        </p>
-      )}
-    </form>
-  );
-}
-
-function Note({
-  children,
-  strong = false,
-}: {
-  children: string;
-  strong?: boolean;
-}) {
-  return (
-    <p
-      className={
-        strong
-          ? "mt-2 flex gap-1.5 font-semibold"
-          : "mt-2 flex gap-1.5 text-sm text-muted-foreground"
-      }
-    >
-      <Info aria-hidden="true" className="mt-1 size-4 shrink-0" />
-      {children}
-    </p>
   );
 }

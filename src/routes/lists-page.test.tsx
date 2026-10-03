@@ -174,7 +174,12 @@ describe("ListsPage", () => {
     await user.type(nameField(), "Last{Enter}");
 
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
-    expect(screen.getByText("Created “Last”.")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Created “Last”. You have 100 lists, the maximum.",
+    );
+    expect(
+      screen.getByText(/^You have 100 lists, the maximum/, { selector: "p" }),
+    ).toHaveFocus();
   });
 
   it("warns when storage is blocked and keeps working for the session", async () => {
