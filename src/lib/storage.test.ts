@@ -84,6 +84,17 @@ describe("createRepository", () => {
       stored({ ...validState, lists: [{ ...list, name: "  " }] }),
     ],
     [
+      "an empty name",
+      stored({ ...validState, lists: [{ ...list, name: "" }] }),
+    ],
+    [
+      "decomposed (NFD) text",
+      stored({
+        ...validState,
+        lists: [{ ...list, name: "점심".normalize("NFD") }],
+      }),
+    ],
+    [
       "untrimmed text",
       stored({ ...validState, lists: [{ ...list, name: " Lunch" }] }),
     ],

@@ -1,9 +1,9 @@
 import {
-  characterCount,
   type Item,
   type List,
   limits,
   type StoredState,
+  withinTextLimit,
 } from "./storage";
 
 export type TextError = "empty" | "too-long";
@@ -34,8 +34,7 @@ export function validateText(
 ): { ok: true; value: string } | { ok: false; error: TextError } {
   const value = input.normalize("NFC").trim();
   if (value.length === 0) return { ok: false, error: "empty" };
-  if (characterCount(value) > limits.textLength)
-    return { ok: false, error: "too-long" };
+  if (!withinTextLimit(value)) return { ok: false, error: "too-long" };
   return { ok: true, value };
 }
 

@@ -12,12 +12,19 @@ export const limits = {
 const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
 /**
- * Counts characters as users see them: a Hangul syllable, an emoji sequence, or
- * a letter with combining marks counts once. Text is normalized to NFC first, so
- * decomposed Hangul pasted from some systems is not counted per jamo.
+ * Counts characters as users see them: a Hangul syllable (composed or written as
+ * jamo), an emoji sequence, or a letter with combining marks counts once.
  */
 export function characterCount(text: string): number {
-  return Array.from(graphemes.segment(text.normalize("NFC"))).length;
+  return Array.from(graphemes.segment(text)).length;
+}
+
+/** Text no longer than the limit in UTF-16 units cannot exceed it in characters. */
+export function withinTextLimit(text: string): boolean {
+  return (
+    text.length <= limits.textLength ||
+    characterCount(text) <= limits.textLength
+  );
 }
 
 /** Stored text is saved trimmed and NFC-normalized, so the same rule validates it on load. */
@@ -25,7 +32,7 @@ const text = z
   .string()
   .refine((value) => value === value.trim().normalize("NFC"), "not normalized")
   .refine((value) => value.length > 0, "empty")
-  .refine((value) => characterCount(value) <= limits.textLength, "too long");
+  .refine(withinTextLimit, "too long");
 
 const itemSchema = z.object({
   id: z.string().min(1),
