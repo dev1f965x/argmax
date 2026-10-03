@@ -5,12 +5,20 @@ import { expect, test } from "@playwright/test";
 
 const paths = ["/", "/lists/example", "/missing"];
 
-for (const path of paths) {
-  test(`${path} has no detectable WCAG 2.2 AA violations`, async ({ page }) => {
-    await page.goto(path);
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .analyze();
-    expect(results.violations).toEqual([]);
+for (const locale of ["en-US", "ko-KR"]) {
+  test.describe(locale, () => {
+    test.use({ locale });
+
+    for (const path of paths) {
+      test(`${path} has no detectable WCAG 2.2 AA violations`, async ({
+        page,
+      }) => {
+        await page.goto(path);
+        const results = await new AxeBuilder({ page })
+          .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+          .analyze();
+        expect(results.violations).toEqual([]);
+      });
+    }
   });
 }
