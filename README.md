@@ -28,7 +28,7 @@ pnpm dev
 
 ## Deployment
 
-The app is deployed to Cloudflare Workers as static assets, configured in `wrangler.jsonc`. When Cloudflare Workers Builds is connected to this repository, a merge to `main` deploys to production at <https://argmax.dev1f965x.workers.dev>, and other branches get a Worker Preview whose URL is posted on the pull request. Preview URLs are public.
+The app is deployed to Cloudflare Workers as static assets, configured in `wrangler.jsonc`. When Cloudflare Workers Builds is connected to this repository, a merge to `main` deploys to production at <https://argmax.dev1f965x.workers.dev>, and other branches get a Worker Preview (enabled by the `previews` block in `wrangler.jsonc`; Wrangler labels `wrangler preview` an open beta command) whose URL is posted on the pull request. Preview URLs are public.
 
 Workers Builds settings:
 

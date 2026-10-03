@@ -28,7 +28,7 @@ pnpm dev
 
 ## 배포
 
-앱은 Cloudflare Workers에 정적 파일로 배포되며, 설정은 `wrangler.jsonc`에 있습니다. Cloudflare Workers Builds가 이 저장소에 연결되어 있으면, `main`에 머지할 때 <https://argmax.dev1f965x.workers.dev>에 운영 배포되고, 다른 브랜치는 Worker Preview로 배포되어 그 URL이 풀 리퀘스트에 달립니다. 미리보기 URL은 공개됩니다.
+앱은 Cloudflare Workers에 정적 파일로 배포되며, 설정은 `wrangler.jsonc`에 있습니다. Cloudflare Workers Builds가 이 저장소에 연결되어 있으면, `main`에 머지할 때 <https://argmax.dev1f965x.workers.dev>에 운영 배포되고, 다른 브랜치는 Worker Preview(`wrangler.jsonc`의 `previews` 블록으로 켬. Wrangler는 `wrangler preview`를 오픈 베타 명령으로 표시함)로 배포되어 그 URL이 풀 리퀘스트에 달립니다. 미리보기 URL은 공개됩니다.
 
 Workers Builds 설정:
 
