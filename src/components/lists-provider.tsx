@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { describeError } from "@/lib/errors";
 import { browserContext, type Context, type Result } from "@/lib/lists";
 import {
   emptyState,
@@ -25,6 +26,8 @@ export type StorageIssue =
 interface ListsContextValue {
   state: StoredState;
   issue: StorageIssue;
+  /** True while the issue is the one found on start, which needs no interrupting announcement. */
+  issueFoundAtLoad: boolean;
   /** False while invalid stored data is kept, so nothing can overwrite it. */
   editable: boolean;
   /** Applies an operation from `@/lib/lists` and saves the result. */
@@ -47,12 +50,15 @@ function initialize(repository: Repository): {
       return { state: loaded.state, issue: null };
     case "invalid":
       console.error(
-        "Stored lists failed validation and were left untouched.",
-        loaded.cause,
+        "Stored lists failed validation and were left untouched:",
+        describeError(loaded.cause),
       );
       return { state: emptyState, issue: { kind: "invalid", raw: loaded.raw } };
     case "unavailable":
-      console.error("Stored lists could not be read.", loaded.cause);
+      console.error(
+        "Stored lists could not be read:",
+        describeError(loaded.cause),
+      );
       return { state: emptyState, issue: { kind: "unavailable" } };
   }
 }
@@ -93,6 +99,7 @@ export function ListsProvider({
   // Operations read the latest state synchronously, even before React re-renders.
   const stateRef = useRef(initial.state);
   const editable = issue?.kind !== "invalid";
+  const issueFoundAtLoad = issue !== null && issue === initial.issue;
 
   const change = useCallback(
     <E,>(
@@ -106,7 +113,7 @@ export function ListsProvider({
       setState(result.state);
       const saved = repository.save(result.state);
       if (!saved.ok && "cause" in saved)
-        console.error("Saving lists failed.", saved.cause);
+        console.error("Saving lists failed:", describeError(saved.cause));
       setIssue((current) => issueAfterSave(saved, current));
       return result;
     },
@@ -116,7 +123,10 @@ export function ListsProvider({
   const discardInvalidData = useCallback(() => {
     const reset = repository.reset();
     if (!reset.ok) {
-      console.error("Deleting stored lists failed.", reset.cause);
+      console.error(
+        "Deleting stored lists failed:",
+        describeError(reset.cause),
+      );
       return false;
     }
     stateRef.current = emptyState;
@@ -126,8 +136,15 @@ export function ListsProvider({
   }, [repository]);
 
   const value = useMemo(
-    () => ({ state, issue, editable, change, discardInvalidData }),
-    [state, issue, editable, change, discardInvalidData],
+    () => ({
+      state,
+      issue,
+      issueFoundAtLoad,
+      editable,
+      change,
+      discardInvalidData,
+    }),
+    [state, issue, issueFoundAtLoad, editable, change, discardInvalidData],
   );
   return <ListsContext value={value}>{children}</ListsContext>;
 }

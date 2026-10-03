@@ -3,7 +3,6 @@ import { type FormEvent, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { useLists } from "@/components/lists-provider";
-import { StorageBanner } from "@/components/storage-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createList } from "@/lib/lists";
@@ -18,7 +17,6 @@ export function ListsPage() {
 
   return (
     <div className="max-w-160">
-      <StorageBanner />
       <h1 className="mb-4 text-title font-bold">{t("lists.title")}</h1>
       {atLimit ? (
         <Note strong>{t("lists.limitReached", { limit: limits.lists })}</Note>
@@ -33,7 +31,7 @@ export function ListsPage() {
           <p className="mb-1 text-lg font-semibold text-foreground">
             {t("lists.emptyTitle")}
           </p>
-          <p>{t("lists.emptyBody")}</p>
+          <p className="text-balance">{t("lists.emptyBody")}</p>
         </div>
       ) : (
         <ul className="mt-6 border-t">
@@ -69,6 +67,9 @@ function CreateListForm() {
   const { change, editable } = useLists();
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // Each failed attempt remounts the message, so a repeated error is announced again.
+  const [attempt, setAttempt] = useState(0);
+  const [created, setCreated] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
   const errorId = useId();
@@ -79,7 +80,10 @@ function CreateListForm() {
     if (result.ok) {
       setName("");
       setError(null);
+      setCreated(name.trim());
     } else {
+      setAttempt((count) => count + 1);
+      setCreated(null);
       setError(
         {
           empty: t("lists.errors.empty"),
@@ -104,7 +108,10 @@ function CreateListForm() {
           ref={inputRef}
           id={inputId}
           value={name}
-          onChange={(event) => setName(event.target.value)}
+          onChange={(event) => {
+            setName(event.target.value);
+            setError(null);
+          }}
           placeholder={t("lists.nameLabel")}
           autoComplete="off"
           disabled={!editable}
@@ -117,7 +124,9 @@ function CreateListForm() {
       </div>
       {error && (
         <p
+          key={attempt}
           id={errorId}
+          role="alert"
           className="mt-1.5 flex gap-1.5 text-sm font-medium text-destructive"
         >
           <CircleAlert
@@ -127,6 +136,9 @@ function CreateListForm() {
           {error}
         </p>
       )}
+      <p role="status" className="sr-only">
+        {created && t("lists.created", { name: created })}
+      </p>
     </form>
   );
 }

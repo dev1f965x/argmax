@@ -11,11 +11,13 @@ export const ko: Resources = {
     title: "목록",
     nameLabel: "새 목록 이름",
     create: "만들기",
+    created: "“{{name}}” 목록을 만들었습니다.",
     storedLocally:
       "목록은 이 브라우저에만 저장됩니다. 브라우저 데이터를 지우거나 기기를 바꾸면 사라집니다.",
     emptyTitle: "아직 목록이 없습니다",
     emptyBody: "위에서 첫 목록의 이름을 정하세요. 예: “점심 메뉴”",
-    // Korean has no plural forms; both keys exist to match the English resources.
+    // Korean has no plural forms; the one and other keys exist to match the English resources.
+    itemCount_zero: "아직 항목 없음",
     itemCount_one: "항목 {{count, number}}개",
     itemCount_other: "항목 {{count, number}}개",
     limitReached:
@@ -38,10 +40,10 @@ export const ko: Resources = {
     invalidTitle: "저장된 목록을 읽을 수 없습니다",
     invalidBody:
       "이 브라우저의 데이터가 손상되었거나 알 수 없는 버전입니다. 데이터는 그대로 두었고 편집은 꺼 두었습니다.",
-    copy: "저장된 데이터 복사",
+    copy: "데이터 복사",
     copied: "저장된 데이터를 복사했습니다.",
     copyFailed: "복사하지 못했습니다. 브라우저가 클립보드 접근을 막았습니다.",
-    discard: "저장된 데이터 삭제",
+    discard: "데이터 삭제",
     discardTitle: "저장된 데이터를 삭제할까요?",
     discardBody:
       "읽을 수 없는 데이터를 이 브라우저에서 삭제하고 빈 상태로 다시 시작합니다. 필요할 수 있다면 먼저 복사하세요. 되돌릴 수 없습니다.",

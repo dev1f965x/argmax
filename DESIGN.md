@@ -147,6 +147,7 @@ Pretendard's Latin glyphs are derived from Inter. ARG-20 lists Inter as a patter
 - List screen: one column on mobile with a fixed pick bar at the bottom; from 768 px, two columns with a 320 px sticky pick panel on the right.
 - Spacing follows the 4 px Tailwind scale. Groups use 8 to 12 px, sections 24 to 32 px, and there is more space above a heading than below it.
 - Touch targets are at least 44 px.
+- Single-field forms that add something (a new list, a new item) use the placeholder as the visible prompt and a visually hidden label, following the approved wireframes and the reference apps; the screen title gives the context once the user types. Forms with more than one field use visible labels.
 
 ## Elevation & Depth
 

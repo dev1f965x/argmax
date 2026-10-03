@@ -8,7 +8,7 @@ test("a created list stays after a reload and opens", async ({ page }) => {
   await page.reload();
 
   const link = page.getByRole("link", { name: /Lunch/ });
-  await expect(link).toContainText("0 items");
+  await expect(link).toContainText("No items yet");
   await link.click();
   await expect(page.getByRole("heading", { name: "Lunch" })).toBeVisible();
 });
@@ -20,9 +20,7 @@ test("invalid stored data is kept until the user deletes it", async ({
   await page.evaluate(() => localStorage.setItem("argmax", "{not json"));
   await page.reload();
 
-  await expect(page.getByRole("alert")).toContainText(
-    "Saved lists couldn’t be read",
-  );
+  await expect(page.getByText("Saved lists couldn’t be read")).toBeVisible();
   await expect(
     page.getByRole("textbox", { name: "New list name" }),
   ).toBeDisabled();
@@ -30,9 +28,12 @@ test("invalid stored data is kept until the user deletes it", async ({
     "{not json",
   );
 
-  await page.getByRole("button", { name: "Delete saved data" }).click();
   await page.getByRole("button", { name: "Delete data" }).click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Delete data" })
+    .click();
 
-  await expect(page.getByRole("status")).toBeFocused();
+  await expect(page.getByText(/Deleted the saved data/)).toBeFocused();
   expect(await page.evaluate(() => localStorage.getItem("argmax"))).toBeNull();
 });

@@ -14,12 +14,16 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { describeError } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 
-/** Persistent notice for storage problems, shown at the top of each screen. */
+/**
+ * Persistent notice for storage problems, rendered once in the layout so it stays
+ * in place while the user moves between screens.
+ */
 export function StorageBanner() {
   const { t } = useTranslation();
-  const { issue } = useLists();
+  const { issue, issueFoundAtLoad } = useLists();
   const [discarded, setDiscarded] = useState(false);
   const discardedRef = useRef<HTMLParagraphElement>(null);
 
@@ -34,7 +38,7 @@ export function StorageBanner() {
         ref={discardedRef}
         tabIndex={-1}
         role="status"
-        className="mb-5 rounded-xl bg-surface px-3.5 py-3 outline-none"
+        className="mb-5 max-w-160 rounded-xl bg-surface px-3.5 py-3 outline-none"
       >
         {t("storage.discarded")}
       </p>
@@ -55,9 +59,8 @@ export function StorageBanner() {
 
   return (
     <div
-      role="alert"
       className={cn(
-        "mb-5 flex gap-2.5 rounded-xl px-3.5 py-3",
+        "mb-5 flex max-w-160 gap-2.5 rounded-xl px-3.5 py-3",
         invalid ? "bg-destructive-soft" : "bg-warning-soft",
       )}
     >
@@ -69,8 +72,12 @@ export function StorageBanner() {
         )}
       />
       <div className="min-w-0">
-        <p className="font-semibold">{title}</p>
-        <p className="mt-0.5 text-sm text-muted-foreground">{body}</p>
+        {/* A problem found on start is the first thing in the page; one that
+            appears while the user works interrupts to be heard. */}
+        <div role={issueFoundAtLoad ? undefined : "alert"}>
+          <p className="font-semibold">{title}</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">{body}</p>
+        </div>
         {issue.kind === "invalid" && (
           <InvalidDataActions
             raw={issue.raw}
@@ -99,7 +106,7 @@ function InvalidDataActions({
       await navigator.clipboard.writeText(raw);
       setMessage(t("storage.copied"));
     } catch (error) {
-      console.error("Copying the stored lists failed.", error);
+      console.error("Copying the stored lists failed:", describeError(error));
       setMessage(t("storage.copyFailed"));
     }
   }

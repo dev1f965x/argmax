@@ -2,7 +2,6 @@ import { ChevronLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router";
 import { useLists } from "@/components/lists-provider";
-import { StorageBanner } from "@/components/storage-banner";
 import { NotFoundPage } from "@/routes/not-found-page";
 
 export function ListPage() {
@@ -14,7 +13,6 @@ export function ListPage() {
 
   return (
     <>
-      <StorageBanner />
       <Link
         to="/"
         className="mb-2 inline-flex min-h-11 items-center gap-1 text-sm text-muted-foreground hover:text-foreground"

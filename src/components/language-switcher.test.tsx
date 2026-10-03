@@ -17,8 +17,9 @@ function renderApp() {
       children: [{ index: true, Component: ListsPage }],
     },
   ]);
+  const { storage } = memoryStorage();
   render(
-    <ListsProvider repository={createRepository(() => memoryStorage().storage)}>
+    <ListsProvider repository={createRepository(() => storage)}>
       <RouterProvider router={router} />
     </ListsProvider>,
   );

@@ -13,6 +13,7 @@ import {
 import { memoryStorage } from "@/test/memory-storage";
 import { ListPage } from "./list-page";
 import { ListsPage } from "./lists-page";
+import { RootLayout } from "./root-layout";
 
 function testContext(): Context {
   let id = 0;
@@ -41,8 +42,13 @@ function stateWith(names: string[]): string {
 
 function renderApp(storage: Storage) {
   const router = createMemoryRouter([
-    { path: "/", Component: ListsPage },
-    { path: "/lists/:id", Component: ListPage },
+    {
+      Component: RootLayout,
+      children: [
+        { index: true, Component: ListsPage },
+        { path: "lists/:id", Component: ListPage },
+      ],
+    },
   ]);
   render(
     <ListsProvider
@@ -74,10 +80,11 @@ describe("ListsPage", () => {
     await user.type(nameField(), "  Lunch {Enter}");
 
     const link = screen.getByRole("link", { name: /Lunch/ });
-    expect(link).toHaveTextContent("0 items");
+    expect(link).toHaveTextContent("No items yet");
     expect(nameField()).toHaveValue("");
     expect(nameField()).toHaveFocus();
     expect(JSON.parse(data.get(storageKey) ?? "").lists[0].name).toBe("Lunch");
+    expect(screen.getByText("Created “Lunch”.")).toBeInTheDocument();
 
     await user.click(link);
     expect(screen.getByRole("heading", { name: "Lunch" })).toBeInTheDocument();
@@ -116,12 +123,29 @@ describe("ListsPage", () => {
       if (input) await user.type(nameField(), input);
       await user.click(createButton());
 
+      expect(screen.getByRole("alert")).toHaveTextContent(message);
       expect(nameField()).toHaveAttribute("aria-invalid", "true");
       expect(nameField()).toHaveAccessibleDescription(message);
       expect(nameField()).toHaveFocus();
       expect(data.has(storageKey)).toBe(false);
     },
   );
+
+  it("announces an error again when Enter is pressed twice, and clears it on typing", async () => {
+    const { user } = renderApp(memoryStorage().storage);
+
+    await user.type(nameField(), "{Enter}");
+    const first = screen.getByRole("alert");
+    await user.type(nameField(), "{Enter}");
+
+    // A new alert element is what makes screen readers announce it again.
+    expect(screen.getByRole("alert")).not.toBe(first);
+    expect(screen.getByRole("alert")).toHaveTextContent("Enter a list name.");
+
+    await user.type(nameField(), "L");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(nameField()).toHaveAttribute("aria-invalid", "false");
+  });
 
   it("replaces the form with a message at the list limit", () => {
     const names = Array.from(
@@ -144,7 +168,8 @@ describe("ListsPage", () => {
     failures.set = failures.get;
     const { user } = renderApp(storage);
 
-    expect(screen.getByRole("alert")).toHaveTextContent("Lists can’t be saved");
+    expect(screen.getByText("Lists can’t be saved")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     await user.type(nameField(), "Lunch{Enter}");
     expect(screen.getByRole("link", { name: /Lunch/ })).toBeInTheDocument();
   });
@@ -168,9 +193,9 @@ describe("ListsPage", () => {
     it("keeps the data, turns editing off, and offers recovery", () => {
       renderApp(memoryStorage({ [storageKey]: raw }).storage);
 
-      expect(screen.getByRole("alert")).toHaveTextContent(
-        "Saved lists couldn’t be read",
-      );
+      expect(
+        screen.getByText("Saved lists couldn’t be read"),
+      ).toBeInTheDocument();
       expect(nameField()).toBeDisabled();
       expect(createButton()).toBeDisabled();
       expect(screen.queryByText("No lists yet")).not.toBeInTheDocument();
@@ -179,7 +204,7 @@ describe("ListsPage", () => {
     it("copies the raw data", async () => {
       const { user } = renderApp(memoryStorage({ [storageKey]: raw }).storage);
 
-      await user.click(screen.getByRole("button", { name: "Copy saved data" }));
+      await user.click(screen.getByRole("button", { name: "Copy data" }));
 
       expect(await navigator.clipboard.readText()).toBe(raw);
       expect(screen.getByText("Copied the saved data.")).toBeInTheDocument();
@@ -189,24 +214,23 @@ describe("ListsPage", () => {
       const { storage, data } = memoryStorage({ [storageKey]: raw });
       const { user } = renderApp(storage);
 
+      await user.click(screen.getByRole("button", { name: "Delete data" }));
       await user.click(
-        screen.getByRole("button", { name: "Delete saved data" }),
+        within(await screen.findByRole("alertdialog")).getByRole("button", {
+          name: "Cancel",
+        }),
       );
-      await user.click(await screen.findByRole("button", { name: "Cancel" }));
       expect(data.get(storageKey)).toBe(raw);
 
+      await user.click(screen.getByRole("button", { name: "Delete data" }));
       await user.click(
-        screen.getByRole("button", { name: "Delete saved data" }),
-      );
-      await user.click(
-        await screen.findByRole("button", { name: "Delete data" }),
+        within(await screen.findByRole("alertdialog")).getByRole("button", {
+          name: "Delete data",
+        }),
       );
 
       expect(data.has(storageKey)).toBe(false);
-      expect(screen.getByRole("status")).toHaveTextContent(
-        "Deleted the saved data.",
-      );
-      expect(screen.getByRole("status")).toHaveFocus();
+      expect(screen.getByText(/Deleted the saved data/)).toHaveFocus();
       expect(nameField()).toBeEnabled();
     });
   });

@@ -9,10 +9,12 @@ export const en = {
     title: "Lists",
     nameLabel: "New list name",
     create: "Create",
+    created: "Created “{{name}}”.",
     storedLocally:
       "Lists are saved only in this browser. Clearing browser data or switching devices removes them.",
     emptyTitle: "No lists yet",
     emptyBody: "Name your first list above, for example “Lunch”.",
+    itemCount_zero: "No items yet",
     itemCount_one: "{{count, number}} item",
     itemCount_other: "{{count, number}} items",
     limitReached:
@@ -35,10 +37,10 @@ export const en = {
     invalidTitle: "Saved lists couldn’t be read",
     invalidBody:
       "The data in this browser is damaged or from an unknown version. It has been left untouched, and editing is turned off.",
-    copy: "Copy saved data",
+    copy: "Copy data",
     copied: "Copied the saved data.",
     copyFailed: "Couldn’t copy. Your browser blocked the clipboard.",
-    discard: "Delete saved data",
+    discard: "Delete data",
     discardTitle: "Delete saved data?",
     discardBody:
       "The unreadable data will be deleted from this browser, and you will start with no lists. Copy it first if you might need it. This can’t be undone.",

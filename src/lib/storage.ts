@@ -1,8 +1,4 @@
-import { z } from "zod";
-
-// The content security policy forbids eval, so Zod must not compile parsers with
-// `new Function`. Its probe for that alone is reported as a policy violation.
-z.config({ jitless: true });
+import { z } from "./zod";
 
 export const storageKey = "argmax";
 
