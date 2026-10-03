@@ -16,7 +16,23 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended"
+      "preset": "recommended",
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "zod": "Import z from @/lib/zod, which turns off eval-based parsers for the content security policy."
+            },
+            "patterns": [
+              {
+                "group": ["zod/*"],
+                "message": "Import z from @/lib/zod, which turns off eval-based parsers for the content security policy."
+              }
+            ]
+          }
+        }
+      }
     }
   },
   "javascript": {
@@ -36,5 +52,17 @@
     "parser": {
       "tailwindDirectives": true
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/lib/zod.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": "off"
+          }
+        }
+      }
+    }
+  ]
 }

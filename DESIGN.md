@@ -147,6 +147,7 @@ Pretendard's Latin glyphs are derived from Inter. ARG-20 lists Inter as a patter
 - List screen: one column on mobile with a fixed pick bar at the bottom; from 768 px, two columns with a 320 px sticky pick panel on the right.
 - Spacing follows the 4 px Tailwind scale. Groups use 8 to 12 px, sections 24 to 32 px, and there is more space above a heading than below it.
 - Touch targets are at least 44 px.
+- Single-field forms that add something (a new list, a new item) use the placeholder as the visible prompt and a visually hidden label, following the approved wireframes and the reference apps; the screen title gives the context once the user types. Forms with more than one field use visible labels.
 
 ## Elevation & Depth
 
@@ -164,7 +165,7 @@ Flat by default: separation comes from dividers and tinted surfaces, not shadows
 
 ## Components
 
-- Components come from shadcn/ui on Base UI and use only the tokens above. App components may not use raw colors or arbitrary values; `pnpm check` enforces this with `scripts/check-design-tokens.mjs`. Generated files in `src/components/ui` are excluded and kept as delivered.
+- Components come from shadcn/ui on Base UI and use only the tokens above. App components may not use raw colors or arbitrary values; `pnpm check` enforces this with `scripts/check-design-tokens.mjs`. Generated files in `src/components/ui` are excluded from that check and changed only to apply this file: 44 px buttons and inputs, 16 px semibold button text, `primary-hover`, `input` borders on outline buttons, a solid destructive button, and the dialog scrim and shadow. Review those edits when regenerating a component.
 - Links that look like buttons stay links: use `buttonVariants()` on `<Link>`, not `Button` with `render`, which adds `role="button"`.
 - Icons: Lucide only, 20 px in rows and buttons, 16 to 18 px inline, stroke width 2.
 - Mark and wordmark: `src/components/wordmark.tsx`. Three dots, one raised and green: the argument that maximizes. Favicon, Apple touch icon, and Open Graph image in `public/` use the same mark.

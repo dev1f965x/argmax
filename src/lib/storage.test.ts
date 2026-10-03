@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { memoryStorage } from "@/test/memory-storage";
 import {
   characterCount,
   createRepository,
@@ -7,29 +8,6 @@ import {
   type StoredState,
   storageKey,
 } from "./storage";
-
-/** In-memory Storage whose methods can be made to throw. */
-function memoryStorage(initial: Record<string, string> = {}) {
-  const data = new Map(Object.entries(initial));
-  const failures: { get?: Error; set?: Error } = {};
-  const storage = {
-    get length() {
-      return data.size;
-    },
-    clear: () => data.clear(),
-    key: (index: number) => [...data.keys()][index] ?? null,
-    removeItem: (key: string) => void data.delete(key),
-    getItem(key: string) {
-      if (failures.get) throw failures.get;
-      return data.get(key) ?? null;
-    },
-    setItem(key: string, value: string) {
-      if (failures.set) throw failures.set;
-      data.set(key, value);
-    },
-  } satisfies Storage;
-  return { storage, data, failures };
-}
 
 const list = {
   id: "list-1",
@@ -264,5 +242,31 @@ describe("createRepository", () => {
       reason: "unavailable",
       cause: failures.set,
     });
+  });
+
+  it("deletes invalid data on reset and allows saving again", () => {
+    const { storage, data } = memoryStorage({ [storageKey]: "{not json" });
+    const repository = createRepository(() => storage);
+    repository.load();
+
+    expect(repository.reset()).toEqual({ ok: true });
+    expect(data.has(storageKey)).toBe(false);
+    expect(repository.save(validState)).toEqual({ ok: true });
+  });
+
+  it("keeps refusing saves when reset fails", () => {
+    const { storage, failures, data } = memoryStorage({
+      [storageKey]: "{not json",
+    });
+    const repository = createRepository(() => storage);
+    repository.load();
+    failures.remove = new Error("remove failed");
+
+    expect(repository.reset()).toEqual({ ok: false, cause: failures.remove });
+    expect(repository.save(validState)).toEqual({
+      ok: false,
+      reason: "read-only",
+    });
+    expect(data.get(storageKey)).toBe("{not json");
   });
 });

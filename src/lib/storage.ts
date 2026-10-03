@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "./zod";
 
 export const storageKey = "argmax";
 
@@ -134,7 +134,21 @@ export function createRepository(getStorage: () => Storage) {
     }
   }
 
-  return { load, save };
+  /**
+   * Deletes the stored state, including invalid data the user chose to discard,
+   * and allows saving again.
+   */
+  function reset(): { ok: true } | { ok: false; cause: unknown } {
+    try {
+      getStorage().removeItem(storageKey);
+    } catch (cause) {
+      return { ok: false, cause };
+    }
+    mode = "writable";
+    return { ok: true };
+  }
+
+  return { load, save, reset };
 }
 
 function isQuotaExceeded(error: unknown): boolean {
@@ -146,6 +160,8 @@ function isQuotaExceeded(error: unknown): boolean {
       error.code === 22)
   );
 }
+
+export type Repository = ReturnType<typeof createRepository>;
 
 /** Returns window.localStorage, which throws when the browser blocks site data. */
 export function browserStorage(): Storage {

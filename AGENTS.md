@@ -41,7 +41,7 @@ CI (`.github/workflows/ci.yml`) runs the same commands on every pull request; bo
 | `src/main.tsx` | Entry point |
 | `src/routes/` | Route components and the root layout |
 | `src/router.tsx` | Route table (React Router, data mode) |
-| `src/components/` | App components; `ui/` holds shadcn/ui components generated on Base UI, kept as delivered |
+| `src/components/` | App components; `ui/` holds shadcn/ui components generated on Base UI, changed only to apply DESIGN.md |
 | `src/i18n/` | i18next setup, English and Korean resources, locale detection |
 | `src/lib/` | Framework-independent logic and constants |
 | `src/test/` | Vitest setup |
