@@ -26,6 +26,23 @@ pnpm dev
 | `pnpm test` | 단위·컴포넌트 테스트 실행(Vitest) |
 | `pnpm test:e2e` | 빌드 후 E2E·접근성 테스트 실행(Playwright, axe-core) |
 
+## 배포
+
+앱은 Cloudflare Workers에 정적 파일로 배포되며, 설정은 `wrangler.jsonc`에 있습니다. Cloudflare Workers Builds가 이 저장소에 연결되어 있으면, `main`에 머지할 때 <https://argmax.dev1f965x.workers.dev>에 운영 배포되고, 다른 브랜치는 Worker Preview로 배포되어 그 URL이 풀 리퀘스트에 달립니다. 미리보기 URL은 공개됩니다.
+
+Workers Builds 설정:
+
+| 항목 | 값 |
+| --- | --- |
+| 빌드 명령 | `pnpm build` |
+| 배포 명령 | `npx wrangler deploy` |
+| 운영 외 브랜치 배포 명령 | `npx wrangler preview` |
+| 빌드 변수 | `PNPM_VERSION=12.8.1` (빌드 이미지의 기본 pnpm이 더 오래된 버전이므로 `packageManager`와 같게 유지) |
+
+Node.js 버전은 `.node-version`을 따릅니다. 운영 배포는 GitHub CI를 기다리지 않으며, `main` 규칙셋이 머지 전에 CI 통과를 강제합니다.
+
+롤백은 Cloudflare 대시보드에서 Worker의 **Deployments**를 열고 이전 버전으로 되돌리거나, `pnpm exec wrangler login` 후 `pnpm exec wrangler rollback`을 실행합니다. 롤백 뒤 `main`에 다시 머지하면 그 버전이 새로 배포됩니다.
+
 ## 개인정보
 
 Argmax는 개인정보를 수집하지 않습니다. 계정, 쿠키, 분석 도구, 추적 기술이 없습니다. 목록과 선택한 언어는 브라우저의 로컬 저장소에만 저장되며 어디로도 전송되지 않습니다. 호스팅 업체인 Cloudflare는 사이트를 제공하고 보호하기 위해 IP 주소 같은 기술적인 요청 정보를 처리합니다.

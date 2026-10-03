@@ -18,12 +18,14 @@ const production = new Set([
   "OFL-1.1",
 ]);
 // Build and test tools never ship. MPL-2.0 is file-level copyleft (axe-core, lightningcss);
-// Python-2.0 and CC-BY-4.0 cover tooling and data (argparse, caniuse-lite). None is modified or bundled.
+// Python-2.0 and CC-BY-4.0 cover tooling and data (argparse, caniuse-lite). LGPL-3.0-or-later is
+// libvips, a prebuilt binary that Wrangler's local runtime loads through sharp. None is modified or bundled.
 const development = new Set([
   ...production,
   "MPL-2.0",
   "Python-2.0",
   "CC-BY-4.0",
+  "LGPL-3.0-or-later",
 ]);
 
 // Build-time packages whose code still ships: Tailwind's preflight and utilities,

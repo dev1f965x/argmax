@@ -30,3 +30,6 @@ playwright-report
 
 # Claude Code per-machine settings
 .claude/settings.local.json
+
+# Wrangler local state
+.wrangler

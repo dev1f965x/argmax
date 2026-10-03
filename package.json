@@ -15,7 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "licenses": "node scripts/licenses.mjs"
+    "check:licenses": "node scripts/licenses.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -49,6 +49,7 @@
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vite": "^8.3.1",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.3",
+    "wrangler": "^4.146.0"
   }
 }
