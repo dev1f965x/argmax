@@ -1,6 +1,7 @@
 import { TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router";
 import { useLists } from "@/components/lists-provider";
 import {
   AlertDialog,
@@ -24,7 +25,10 @@ import { cn } from "@/lib/utils";
 export function StorageBanner() {
   const { t } = useTranslation();
   const { issue, issueFoundAtLoad } = useLists();
-  const [discarded, setDiscarded] = useState(false);
+  const { pathname } = useLocation();
+  // The confirmation belongs to the screen where the data was deleted.
+  const [discardedOn, setDiscardedOn] = useState<string | null>(null);
+  const discarded = discardedOn === pathname;
   const discardedRef = useRef<HTMLParagraphElement>(null);
 
   // The dialog and its trigger are gone after a discard, so focus moves to the confirmation.
@@ -81,7 +85,7 @@ export function StorageBanner() {
         {issue.kind === "invalid" && (
           <InvalidDataActions
             raw={issue.raw}
-            onDiscarded={() => setDiscarded(true)}
+            onDiscarded={() => setDiscardedOn(pathname)}
           />
         )}
       </div>

@@ -12,6 +12,9 @@ export function ListsPage() {
   const { t } = useTranslation();
   const { state, editable } = useLists();
   const atLimit = state.lists.length >= limits.lists;
+  // Lives here, not in the form, so creating the 100th list is still announced
+  // after the limit message replaces the form.
+  const [created, setCreated] = useState<string | null>(null);
   // Newest first, so a list just created appears right under the form.
   const lists = state.lists.toReversed();
 
@@ -21,8 +24,11 @@ export function ListsPage() {
       {atLimit ? (
         <Note strong>{t("lists.limitReached", { limit: limits.lists })}</Note>
       ) : (
-        <CreateListForm />
+        <CreateListForm onCreated={setCreated} />
       )}
+      <p role="status" className="sr-only">
+        {created && t("lists.created", { name: created })}
+      </p>
       <Note>{t("lists.storedLocally")}</Note>
 
       {/* While invalid data is kept, the empty state's advice to create a list would not work. */}
@@ -62,14 +68,13 @@ export function ListsPage() {
   );
 }
 
-function CreateListForm() {
+function CreateListForm({ onCreated }: { onCreated: (name: string) => void }) {
   const { t } = useTranslation();
   const { change, editable } = useLists();
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   // Each failed attempt remounts the message, so a repeated error is announced again.
   const [attempt, setAttempt] = useState(0);
-  const [created, setCreated] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
   const errorId = useId();
@@ -80,10 +85,9 @@ function CreateListForm() {
     if (result.ok) {
       setName("");
       setError(null);
-      setCreated(name.trim());
+      onCreated(name.trim());
     } else {
       setAttempt((count) => count + 1);
-      setCreated(null);
       setError(
         {
           empty: t("lists.errors.empty"),
@@ -136,9 +140,6 @@ function CreateListForm() {
           {error}
         </p>
       )}
-      <p role="status" className="sr-only">
-        {created && t("lists.created", { name: created })}
-      </p>
     </form>
   );
 }

@@ -99,7 +99,8 @@ export function ListsProvider({
   // Operations read the latest state synchronously, even before React re-renders.
   const stateRef = useRef(initial.state);
   const editable = issue?.kind !== "invalid";
-  const issueFoundAtLoad = issue !== null && issue === initial.issue;
+  // Compared by kind: a failed save repeating the problem found on start is not news.
+  const issueFoundAtLoad = issue !== null && issue.kind === initial.issue?.kind;
 
   const change = useCallback(
     <E,>(

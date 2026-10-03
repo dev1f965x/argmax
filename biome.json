@@ -23,7 +23,13 @@
           "options": {
             "paths": {
               "zod": "Import z from @/lib/zod, which turns off eval-based parsers for the content security policy."
-            }
+            },
+            "patterns": [
+              {
+                "group": ["zod/*"],
+                "message": "Import z from @/lib/zod, which turns off eval-based parsers for the content security policy."
+              }
+            ]
           }
         }
       }

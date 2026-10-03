@@ -162,6 +162,21 @@ describe("ListsPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("announces creating the last list after the limit message replaces the form", async () => {
+    const names = Array.from(
+      { length: limits.lists - 1 },
+      (_, index) => `List ${index}`,
+    );
+    const { user } = renderApp(
+      memoryStorage({ [storageKey]: stateWith(names) }).storage,
+    );
+
+    await user.type(nameField(), "Last{Enter}");
+
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(screen.getByText("Created “Last”.")).toBeInTheDocument();
+  });
+
   it("warns when storage is blocked and keeps working for the session", async () => {
     const { storage, failures } = memoryStorage();
     failures.get = new DOMException("Access denied", "SecurityError");
@@ -172,6 +187,8 @@ describe("ListsPage", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     await user.type(nameField(), "Lunch{Enter}");
     expect(screen.getByRole("link", { name: /Lunch/ })).toBeInTheDocument();
+    // The failed save repeats the known problem, so it does not interrupt.
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("warns when storage is full", async () => {
@@ -231,7 +248,14 @@ describe("ListsPage", () => {
 
       expect(data.has(storageKey)).toBe(false);
       expect(screen.getByText(/Deleted the saved data/)).toHaveFocus();
+
       expect(nameField()).toBeEnabled();
+
+      await user.type(nameField(), "Lunch{Enter}");
+      await user.click(screen.getByRole("link", { name: /Lunch/ }));
+      expect(
+        screen.queryByText(/Deleted the saved data/),
+      ).not.toBeInTheDocument();
     });
   });
 });
