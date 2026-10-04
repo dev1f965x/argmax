@@ -27,6 +27,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useScreenView } from "@/components/use-screen-view";
+import { visitStartedAt } from "@/lib/analytics";
 import {
   addItem,
   deleteList,
@@ -74,6 +76,8 @@ export function ListPage() {
   const limitNote = useRef<HTMLParagraphElement>(null);
 
   const list = state.lists.find((candidate) => candidate.id === id);
+  // An unknown list renders NotFoundPage, which reports itself.
+  useScreenView(list ? "list" : null);
 
   useEffect(() => {
     if (!focusTarget) return;
@@ -390,7 +394,12 @@ export function ListPage() {
           )}
         </div>
         {/* Keyed by list, so a result or a running cycle never carries over to another list. */}
-        <PickPanel key={listId} items={items} announce={announce} />
+        <PickPanel
+          key={listId}
+          items={items}
+          announce={announce}
+          earlierVisit={new Date(list.createdAt) < visitStartedAt}
+        />
       </div>
     </>
   );

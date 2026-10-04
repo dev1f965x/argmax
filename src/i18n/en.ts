@@ -109,7 +109,8 @@ export const en = {
       "Argmax does not collect personal data. There are no accounts and no cookies.",
     localOnly:
       "Your lists and your language choice are saved only in this browser's local storage. They are not sent anywhere, and clearing your browser data removes them. While a tab is open, the browser also keeps your scroll positions for Back and Forward; they are removed when you close the tab.",
-    noTracking: "Argmax does not use analytics or tracking.",
+    noTracking:
+      "To learn how Argmax is used, the site sends anonymous usage counts to Umami Cloud: which screen was opened, that a list was created, and that a pick was made, with the browser language and screen size. List names and items are never sent, no cookies are used, and nothing identifies you. Umami Cloud is hosted in the United States and the European Union. If your browser sends Global Privacy Control or Do Not Track, nothing is sent.",
     hosting:
       "The hosting provider, Cloudflare, processes technical request data such as IP addresses to deliver and protect the site.",
     questions: "Questions or requests: open an issue on GitHub.",

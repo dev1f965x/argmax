@@ -1,9 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { PageHeading } from "@/components/page-heading";
+import { useScreenView } from "@/components/use-screen-view";
 import { issuesUrl } from "@/lib/links";
 
 export function PrivacyPage() {
   const { t } = useTranslation();
+  useScreenView("privacy");
 
   return (
     <article className="flex max-w-160 flex-col gap-4">

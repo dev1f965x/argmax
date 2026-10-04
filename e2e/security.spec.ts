@@ -10,6 +10,9 @@ test("responses carry the security headers", async ({ request }) => {
     expect(headers["referrer-policy"], path).toBe(
       "strict-origin-when-cross-origin",
     );
+    expect(headers["content-security-policy"], path).toContain(
+      "connect-src 'self' https://cloud.umami.is;",
+    );
     expect(headers["permissions-policy"], path).toContain("camera=()");
     expect(headers["cross-origin-opener-policy"], path).toBe("same-origin");
   }
@@ -70,4 +73,22 @@ test("the footer links to the generated third-party notices", async ({
   expect(text).toContain("pretendard 1.3.9");
   expect(text).toContain("SIL OPEN FONT LICENSE Version 1.1");
   expect(text).toMatch(/^tailwindcss /m);
+});
+
+test("no usage events leave a non-production site", async ({ page }) => {
+  const reports: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("umami")) reports.push(request.url());
+  });
+
+  await page.goto("/");
+  await page.getByRole("textbox", { name: "New list name" }).fill("Lunch");
+  await page.keyboard.press("Enter");
+  await page.getByRole("link", { name: /Lunch/ }).click();
+  await page.getByRole("textbox", { name: "Add an item" }).fill("Ramen");
+  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "Pick", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Pick again" })).toBeVisible();
+
+  expect(reports).toEqual([]);
 });

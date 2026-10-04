@@ -1,8 +1,9 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ListsProvider } from "@/components/lists-provider";
+import { tracker } from "@/lib/analytics";
 import type { Context } from "@/lib/lists";
 import {
   createRepository,
@@ -71,6 +72,17 @@ describe("ListsPage", () => {
     expect(screen.getByRole("heading", { name: "Lists" })).toBeInTheDocument();
     expect(screen.getByText("No lists yet")).toBeInTheDocument();
     expect(screen.getByText(/saved only in this browser/)).toBeInTheDocument();
+  });
+
+  it("reports list_created for a created list, and nothing for a rejected name", async () => {
+    const listCreated = vi.spyOn(tracker, "listCreated");
+    const { user } = renderApp(memoryStorage().storage);
+
+    await user.type(nameField(), "{Enter}");
+    expect(listCreated).not.toHaveBeenCalled();
+    await user.type(nameField(), "Lunch{Enter}");
+    expect(listCreated).toHaveBeenCalledOnce();
+    listCreated.mockRestore();
   });
 
   it("creates a list with a trimmed name, saves it, and links to it", async () => {

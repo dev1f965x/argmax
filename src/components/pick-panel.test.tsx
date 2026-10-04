@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ListsProvider } from "@/components/lists-provider";
+import { tracker } from "@/lib/analytics";
 import { createRepository, type StoredState, storageKey } from "@/lib/storage";
 import { ListPage } from "@/routes/list-page";
 import { RootLayout } from "@/routes/root-layout";
@@ -84,6 +85,17 @@ describe("PickPanel", () => {
     expect(pickButton()).toHaveAccessibleDescription("Add an item to pick.");
     fireEvent.click(pickButton());
     expect(screen.queryByText("Picked")).not.toBeInTheDocument();
+  });
+
+  it("reports a settled pick with earlier_visit, without the item", async () => {
+    reduceMotion(true);
+    const pick = vi.spyOn(tracker, "pick");
+    // The stored list was created before this test run started the visit.
+    renderList(["Ramen"]);
+
+    await userEvent.click(pickButton());
+
+    expect(pick).toHaveBeenCalledExactlyOnceWith(true);
   });
 
   it("picks with the fair algorithm, shows and announces the result, and offers Pick again", async () => {
