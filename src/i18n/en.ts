@@ -10,6 +10,7 @@ export const en = {
     nameLabel: "New list name",
     create: "Create",
     created: "Created “{{name}}”.",
+    deleted: "Deleted “{{name}}”.",
     storedLocally:
       "Lists are saved only in this browser. Clearing browser data or switching devices removes them.",
     emptyTitle: "No lists yet",
@@ -34,6 +35,16 @@ export const en = {
     added: "Added “{{text}}”.",
     saved: "Saved “{{text}}”.",
     removed: "Removed “{{text}}”.",
+    actions: "List actions",
+    rename: "Rename",
+    renamed: "Renamed the list to “{{name}}”.",
+    delete: "Delete list",
+    deleteTitle: "Delete “{{name}}”?",
+    deleteBody_zero: "The list will be deleted. This can’t be undone.",
+    deleteBody_one:
+      "{{count, number}} item will be deleted with it. This can’t be undone.",
+    deleteBody_other:
+      "{{count, number}} items will be deleted with it. This can’t be undone.",
     editLabel: "Edit item",
     edit: "Edit “{{text}}”",
     remove: "Remove “{{text}}”",

@@ -69,6 +69,8 @@ export function renameList(
   if (!text.ok) return text;
   const list = findList(state, listId);
   if (!list) return { ok: false, error: "not-found" };
+  // An unchanged name is not an edit, so updatedAt stays as it was.
+  if (text.value === list.name) return { ok: true, state };
   return replaceList(state, { ...list, name: text.value }, context);
 }
 

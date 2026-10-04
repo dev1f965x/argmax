@@ -12,6 +12,7 @@ export const ko: Resources = {
     nameLabel: "새 목록 이름",
     create: "만들기",
     created: "“{{name}}” 목록을 만들었습니다.",
+    deleted: "“{{name}}” 목록을 삭제했습니다.",
     storedLocally:
       "목록은 이 브라우저에만 저장됩니다. 브라우저 데이터를 지우거나 기기를 바꾸면 사라집니다.",
     emptyTitle: "아직 목록이 없습니다",
@@ -38,6 +39,16 @@ export const ko: Resources = {
     added: "“{{text}}” 항목을 추가했습니다.",
     saved: "“{{text}}” 항목을 저장했습니다.",
     removed: "“{{text}}” 항목을 삭제했습니다.",
+    actions: "목록 메뉴",
+    rename: "이름 바꾸기",
+    renamed: "목록 이름을 바꿨습니다: “{{name}}”",
+    delete: "목록 삭제",
+    deleteTitle: "“{{name}}” 목록을 삭제할까요?",
+    deleteBody_zero: "목록이 삭제되며 되돌릴 수 없습니다.",
+    deleteBody_one:
+      "항목 {{count, number}}개가 함께 삭제되며 되돌릴 수 없습니다.",
+    deleteBody_other:
+      "항목 {{count, number}}개가 함께 삭제되며 되돌릴 수 없습니다.",
     editLabel: "항목 수정",
     edit: "“{{text}}” 수정",
     remove: "“{{text}}” 삭제",
