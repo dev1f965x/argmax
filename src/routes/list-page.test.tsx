@@ -35,6 +35,29 @@ const rows = () =>
     .map((row) => row.textContent);
 
 describe("ListPage", () => {
+  it("offers Undo after removing an item until the next change", async () => {
+    const { user, storedItems } = renderList(["A", "B", "C"]);
+
+    await user.click(screen.getByRole("button", { name: "Remove “A”" }));
+    expect(storedItems()).toEqual(["B", "C"]);
+    await user.click(screen.getByRole("button", { name: "Undo" }));
+
+    // Back in its place (shown newest first), with focus on its Edit button.
+    expect(rows()).toEqual(["C", "B", "A"]);
+    expect(storedItems()).toEqual(["A", "B", "C"]);
+    expect(screen.getByRole("button", { name: "Edit “A”" })).toHaveFocus();
+    expect(screen.getByText("Restored “A”.")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Undo" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Remove “A”" }));
+    await user.type(addField(), "D{Enter}");
+    expect(
+      screen.queryByRole("button", { name: "Undo" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("shows the list name, item count, and an empty state", () => {
     renderList([]);
 
@@ -149,7 +172,8 @@ describe("ListPage", () => {
     // Newest first: Sushi is shown above Ramen.
     await user.click(screen.getByRole("button", { name: "Remove “Sushi”" }));
     expect(storedItems()).toEqual(["Ramen"]);
-    expect(screen.getByText("Removed “Sushi”.")).toBeInTheDocument();
+    // Announced, and shown next to Undo.
+    expect(screen.getAllByText("Removed “Sushi”.")).toHaveLength(2);
     // Edit, not Remove, so pressing Enter again cannot remove another item.
     expect(screen.getByRole("button", { name: "Edit “Ramen”" })).toHaveFocus();
 

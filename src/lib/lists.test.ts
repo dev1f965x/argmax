@@ -7,6 +7,7 @@ import {
   editItem,
   removeItem,
   renameList,
+  restoreItem,
   validateText,
 } from "./lists";
 import { emptyState, limits, type StoredState } from "./storage";
@@ -184,6 +185,29 @@ describe("items", () => {
       mustOk(removeItem(edited, "id-1", "id-2", context)).lists[0]?.items,
     ).toEqual([]);
     expect(removeItem(edited, "id-1", "missing", context)).toEqual({
+      ok: false,
+      error: "not-found",
+    });
+  });
+
+  it("restores a removed item at its earlier position, once", () => {
+    const { context, state } = withList();
+    let full = state;
+    for (const text of ["A", "B", "C"])
+      full = mustOk(addItem(full, "id-1", text, context));
+    const [, b] = full.lists[0]?.items ?? [];
+    if (!b) throw new Error("fixture has no second item");
+    const removed = mustOk(removeItem(full, "id-1", b.id, context));
+
+    const restored = mustOk(restoreItem(removed, "id-1", b, 1, context));
+    expect(restored.lists[0]?.items.map((item) => item.text)).toEqual([
+      "A",
+      "B",
+      "C",
+    ]);
+    // Restoring again, as a second tab might, changes nothing.
+    expect(mustOk(restoreItem(restored, "id-1", b, 1, context))).toBe(restored);
+    expect(restoreItem(removed, "missing", b, 1, context)).toEqual({
       ok: false,
       error: "not-found",
     });

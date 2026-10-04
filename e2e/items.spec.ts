@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { createList } from "./support.ts";
 
-test("items can be added, edited, and removed with the keyboard, and stay after a reload", async ({
+test("items can be added, edited, removed, and restored with the keyboard, and stay after a reload", async ({
   page,
 }) => {
   await page.goto("/");
@@ -20,9 +20,16 @@ test("items can be added, edited, and removed with the keyboard, and stay after 
 
   await page.getByRole("button", { name: "Remove “Sushi”" }).focus();
   await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "Undo" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("listitem")).toHaveText(["Sushi", "Udon"]);
+  await page.getByRole("button", { name: "Remove “Sushi”" }).focus();
+  await page.keyboard.press("Enter");
 
   await page.reload();
 
   await expect(page.getByRole("listitem")).toHaveText(["Udon"]);
   await expect(page.getByText("1 item", { exact: true })).toBeVisible();
+  // Undo does not survive a reload.
+  await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
 });

@@ -66,6 +66,13 @@ The title is a question that names the object; the body states what else is affe
 - Title: "Delete “Lunch”?"
 - Body: "This also deletes 3 items. You can’t undo this." / "항목 3개도 함께 삭제됩니다. 되돌릴 수 없습니다."
 
+### Undo
+
+Removing an item is one step and can be undone instead of confirmed. The result stays visible with an Undo button until the next change in the list, with no timer, so keyboard and screen reader users can reach it.
+
+- "Removed “Ramen”." + "Undo" / "“라멘” 항목을 삭제했습니다." + "되돌리기"
+- After Undo: "Restored “Ramen”." / "“라멘” 항목을 되돌렸습니다."
+
 ### Limits
 
 State the limit as a fact, then how to make room.
