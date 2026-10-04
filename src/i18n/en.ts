@@ -12,7 +12,7 @@ export const en = {
     created: "Created “{{name}}”.",
     deleted: "Deleted “{{name}}”.",
     storedLocally:
-      "Lists are saved only in this browser. Clearing browser data or switching devices deletes them.",
+      "Lists are saved only in this browser. Clearing browser data deletes them, and other devices don’t show them.",
     emptyTitle: "No lists yet",
     emptyBody: "Create your first list, for example “Lunch”.",
     itemCount_zero: "No items yet",
@@ -74,7 +74,7 @@ export const en = {
   storage: {
     unavailableTitle: "Lists can’t be saved",
     unavailableBody:
-      "This browser is blocking storage, so changes will be lost when you close the page. To keep changes, allow site data for this site or use another browser.",
+      "This browser is blocking storage, so changes will be lost when you close the page. To keep changes, allow this site to store data or use another browser.",
     fullTitle: "Lists can’t be saved",
     fullBody:
       "Storage in this browser is full, so changes will be lost when you close the page. Delete lists or items you no longer need.",
@@ -110,7 +110,7 @@ export const en = {
     localOnly:
       "Your lists and your language choice are saved only in this browser’s local storage. They aren’t sent anywhere, and clearing your browser data deletes them. While a tab is open, the browser also keeps your scroll positions for Back and Forward; closing the tab deletes them.",
     analyticsIntro:
-      "To learn how Argmax is used, Argmax sends usage data to Umami Cloud, run by Umami Software, Inc. in the United States. Each time you open a screen, create a list, or make a pick, it sends the following over HTTPS:",
+      "To learn how it’s used, Argmax sends usage data to Umami Cloud, run by Umami Software, Inc. in the United States. Each time you open a screen, create a list, or make a pick, it sends the following over HTTPS:",
     analyticsScreen: "Which screen was opened",
     analyticsEvent:
       "That a list was created or a pick was made, and whether it was a first visit, judged from when the lists in this browser were created",

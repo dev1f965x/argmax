@@ -14,7 +14,7 @@ export const ko: Resources = {
     created: "“{{name}}” 목록을 만들었습니다.",
     deleted: "“{{name}}” 목록을 삭제했습니다.",
     storedLocally:
-      "목록은 이 브라우저에만 저장됩니다. 브라우저 데이터를 지우거나 기기를 바꾸면 사라집니다.",
+      "목록은 이 브라우저에만 저장됩니다. 브라우저 데이터를 지우면 삭제되며, 다른 기기에서는 보이지 않습니다.",
     emptyTitle: "아직 목록이 없습니다",
     emptyBody: "첫 목록을 만드세요. 예: “점심 메뉴”",
     // Korean has no plural forms; the one and other keys exist to match the English resources.
