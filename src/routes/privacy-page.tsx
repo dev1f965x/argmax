@@ -13,9 +13,9 @@ export function PrivacyPage() {
         title={t("privacy.title")}
         className="text-title font-bold"
       />
-      <p>{t("privacy.noPersonalData")}</p>
+      <p>{t("privacy.noAccounts")}</p>
       <p>{t("privacy.localOnly")}</p>
-      <p>{t("privacy.noTracking")}</p>
+      <p>{t("privacy.analytics")}</p>
       <p>{t("privacy.hosting")}</p>
       <p>
         <a

@@ -4,7 +4,7 @@ import { describeError } from "./errors";
  * Umami Cloud identifies the site by this id. It is public: the browser sends
  * it with every event.
  */
-export const umamiWebsiteId = "00000000-0000-0000-0000-000000000000";
+export const umamiWebsiteId = "c00a1d2c-91a4-4738-9b11-2ab748c166f6";
 export const umamiEndpoint = "https://cloud.umami.is/api/send";
 /** Only the production site reports; development, tests, and previews never do. */
 export const productionHostname = "argmax.dev1f965x.workers.dev";
