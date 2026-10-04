@@ -176,4 +176,46 @@ describe("ListsProvider across tabs", () => {
     expect(screen.getByRole("link", { name: /From A/ })).toBeInTheDocument();
     expect(field).toHaveValue("Half-typed");
   });
+
+  it("follows another tab that replaces invalid data, so nothing it creates is discarded here", () => {
+    const { storage, data } = memoryStorage({ [storageKey]: "{bad" });
+    const a = renderTab(storage, "A");
+    expect(a.value().issue?.kind).toBe("invalid");
+
+    // Tab B deletes the invalid data and creates a list.
+    data.set(
+      storageKey,
+      JSON.stringify({
+        schemaVersion: 1,
+        lists: [
+          {
+            id: "fresh",
+            name: "Fresh",
+            items: [],
+            createdAt: "2026-10-04T00:00:00.000Z",
+            updatedAt: "2026-10-04T00:00:00.000Z",
+          },
+        ],
+      }),
+    );
+    storageEvent();
+
+    expect(a.value().issue).toBeNull();
+    expect(a.value().editable).toBe(true);
+    expect(a.names()).toEqual(["Fresh"]);
+  });
+
+  it("saves again after a read that failed once", () => {
+    const { storage, data, failures } = memoryStorage();
+    const a = renderTab(storage, "A");
+    failures.get = new Error("read failed");
+    a.create("While failing");
+    expect(a.value().issue).toEqual({ kind: "unavailable" });
+
+    failures.get = undefined;
+    a.create("After recovery");
+
+    expect(a.value().issue).toBeNull();
+    expect(storedNames(data)).toEqual(["While failing", "After recovery"]);
+  });
 });

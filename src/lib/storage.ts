@@ -89,6 +89,9 @@ type Mode = "unloaded" | "writable" | "read-only";
  */
 export function createRepository(getStorage: () => Storage) {
   let mode: Mode = "unloaded";
+  // The last valid raw value and its parsed state. Every change and every other
+  // tab's save loads the store, so an unchanged value skips parsing it again.
+  let cache: { raw: string; state: StoredState } | null = null;
 
   function load(): LoadResult {
     let raw: string | null;
@@ -101,6 +104,10 @@ export function createRepository(getStorage: () => Storage) {
     if (raw === null) {
       mode = "writable";
       return { status: "ok", state: emptyState };
+    }
+    if (raw === cache?.raw) {
+      mode = "writable";
+      return { status: "ok", state: cache.state };
     }
 
     let parsed: unknown;
@@ -116,6 +123,7 @@ export function createRepository(getStorage: () => Storage) {
       return { status: "invalid", raw, cause: result.error };
     }
     mode = "writable";
+    cache = { raw, state: result.data };
     return { status: "ok", state: result.data };
   }
 
@@ -123,7 +131,9 @@ export function createRepository(getStorage: () => Storage) {
     if (mode === "unloaded") return { ok: false, reason: "not-loaded" };
     if (mode === "read-only") return { ok: false, reason: "read-only" };
     try {
-      getStorage().setItem(storageKey, JSON.stringify(state));
+      const raw = JSON.stringify(state);
+      getStorage().setItem(storageKey, raw);
+      cache = { raw, state };
       return { ok: true };
     } catch (cause) {
       return {

@@ -105,9 +105,11 @@ export function ListsProvider({
   const [issue, setIssue] = useState(initial.issue);
   // Operations read the latest state synchronously, even before React re-renders.
   const stateRef = useRef(initial.state);
-  // False after a failed save: memory then holds changes the stored state lacks,
-  // and replacing memory with the stored state would drop them.
-  const inSync = useRef(initial.issue === null);
+  // True after a failed save: memory then holds changes the stored state lacks,
+  // and replacing memory with the stored state would drop them. The next
+  // successful save writes them, replacing changes other tabs made meanwhile;
+  // the banner has told the user that saving is failing.
+  const unsaved = useRef(false);
   const editable = issue?.kind !== "invalid";
 
   // A problem present on start needs no interrupting announcement, and neither
@@ -124,8 +126,8 @@ export function ListsProvider({
   const adopt = useCallback((loaded: LoadResult): StoredState | null => {
     switch (loaded.status) {
       case "ok":
+        if (unsaved.current) return stateRef.current;
         stateRef.current = loaded.state;
-        inSync.current = true;
         setState(loaded.state);
         setIssue((current) =>
           current?.kind === "invalid" || current?.kind === "unavailable"
@@ -139,6 +141,7 @@ export function ListsProvider({
           describeError(loaded.cause),
         );
         stateRef.current = emptyState;
+        unsaved.current = false;
         setState(emptyState);
         setIssue({ kind: "invalid", raw: loaded.raw });
         return null;
@@ -152,7 +155,6 @@ export function ListsProvider({
     function handleStorage(event: StorageEvent) {
       // A null key means another tab cleared all of this site's storage.
       if (event.key !== storageKey && event.key !== null) return;
-      if (!inSync.current) return;
       adopt(repository.load());
     }
     window.addEventListener("storage", handleStorage);
@@ -164,7 +166,10 @@ export function ListsProvider({
       operation: (state: StoredState, context: Context) => Result<E>,
     ): Result<E | "read-only"> => {
       if (!editable) return { ok: false, error: "read-only" };
-      const base = inSync.current ? adopt(repository.load()) : stateRef.current;
+      // Reading first also lets a tab whose read failed recover once storage
+      // works again. Two tabs changing within the same few milliseconds can
+      // still both read the old state; a person cannot act in two tabs that fast.
+      const base = adopt(repository.load());
       if (base === null) return { ok: false, error: "read-only" };
       const result = operation(base, context);
       if (!result.ok) return result;
@@ -172,7 +177,7 @@ export function ListsProvider({
       stateRef.current = result.state;
       setState(result.state);
       const saved = repository.save(result.state);
-      inSync.current = saved.ok;
+      unsaved.current = !saved.ok;
       if (!saved.ok && "cause" in saved)
         console.error("Saving lists failed:", describeError(saved.cause));
       setIssue((current) => issueAfterSave(saved, current));
@@ -191,7 +196,7 @@ export function ListsProvider({
       return false;
     }
     stateRef.current = emptyState;
-    inSync.current = true;
+    unsaved.current = false;
     setState(emptyState);
     setIssue(null);
     return true;
