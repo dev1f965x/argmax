@@ -18,6 +18,9 @@ describe("NotFoundPage", () => {
     expect(
       screen.getByRole("heading", { name: "Page not found" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText("This page or list doesn’t exist."),
+    ).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("link", { name: "Back to lists" }));
 
