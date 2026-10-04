@@ -131,7 +131,7 @@ export function PickPanel({
     <section
       ref={panel}
       aria-label={t("pick.region")}
-      className="fixed inset-x-0 bottom-0 z-10 border-t bg-background px-4 pt-3 pb-4 md:sticky md:top-6 md:w-80 md:shrink-0 md:border-0 md:bg-transparent md:p-0"
+      className="fixed inset-x-0 bottom-0 z-10 border-t bg-background px-4 pt-3 pb-4 md:sticky md:top-6 md:col-start-2 md:row-span-2 md:row-start-1 md:w-80 md:border-0 md:bg-transparent md:p-0"
     >
       {/* With no items, the reason under the button is the only hint. */}
       {shown === null ? (

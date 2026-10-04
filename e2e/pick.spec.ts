@@ -123,3 +123,20 @@ test("on a phone, keyboard focus is never hidden behind the pick bar", async ({
     );
   }
 });
+
+test("on desktop, Tab reaches Pick right after the list's actions", async ({
+  page,
+}) => {
+  await openWithStorage(
+    page,
+    storedState([{ id: "lunch", name: "Lunch", items }]),
+    "/lists/lunch",
+  );
+  await page.getByRole("button", { name: "List actions" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: "Pick", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("textbox", { name: "New item" })).toBeFocused();
+});

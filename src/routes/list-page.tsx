@@ -275,8 +275,11 @@ export function ListPage() {
         {t("list.allLists")}
       </Link>
       {/* The pick panel starts level with the title, below the back link. */}
-      <div className="md:flex md:items-start md:gap-12">
-        <div className="min-w-0 flex-1">
+      {/* In the DOM the pick panel follows the title, so keyboard users reach
+          Pick before the items; the grid places it in the right column on
+          desktop, and on phones it is a fixed bar at the bottom. */}
+      <div className="md:grid md:grid-cols-list md:items-start md:gap-x-12">
+        <div className="min-w-0">
           {renaming ? (
             <>
               {/* Keeps the page heading for screen readers while the title is a field. */}
@@ -366,7 +369,15 @@ export function ListPage() {
               {t("list.itemCount", { count: itemCount })}
             </p>
           )}
-
+        </div>
+        {/* Keyed by list, so a result or a running cycle never carries over to another list. */}
+        <PickPanel
+          key={listId}
+          items={items}
+          announce={announce}
+          earlierVisit={fromEarlierVisit(list.createdAt)}
+        />
+        <div className="min-w-0">
           <div className="mt-5">
             {atLimit ? (
               <Note strong ref={limitNote}>
@@ -456,13 +467,6 @@ export function ListPage() {
             </ul>
           )}
         </div>
-        {/* Keyed by list, so a result or a running cycle never carries over to another list. */}
-        <PickPanel
-          key={listId}
-          items={items}
-          announce={announce}
-          earlierVisit={fromEarlierVisit(list.createdAt)}
-        />
       </div>
     </>
   );

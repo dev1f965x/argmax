@@ -101,6 +101,11 @@
 }
 
 /* Caps the result in the phone pick bar; a longer result scrolls, never truncated. */
+/* List screen on desktop: content, then the 320 px pick panel. */
+@utility grid-cols-list {
+  grid-template-columns: minmax(0, 1fr) 20rem;
+}
+
 @utility max-h-pick-result {
   max-height: 40svh;
 }
