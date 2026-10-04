@@ -211,178 +211,185 @@ export function ListPage() {
   }
 
   return (
-    <div className="md:flex md:items-start md:gap-12">
-      <div className="min-w-0 flex-1">
-        <Link
-          to="/"
-          className="mb-2 inline-flex min-h-11 items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft aria-hidden="true" className="size-4" />
-          {t("list.allLists")}
-        </Link>
-        {renaming ? (
-          <>
-            {/* Keeps the page heading for screen readers while the title is a field. */}
-            <h1 className="sr-only">{list.name}</h1>
-            <div className="pt-1">
-              <TextEntryForm
-                label={t("list.rename")}
-                visibleLabel
-                submitLabel={t("list.save")}
-                initialValue={list.name}
-                autoFocus
-                onSubmit={rename}
-                cancel={{
-                  label: t("list.cancel"),
-                  onCancel: () => {
-                    setRenaming(false);
-                    setFocusTarget("actions");
-                  },
-                }}
-              />
-            </div>
-          </>
-        ) : (
-          <div className="flex items-start justify-between gap-2">
-            <h1 className="pt-1 text-title font-bold wrap-anywhere">
-              {list.name}
-            </h1>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    ref={actionsButton}
-                    variant="ghost"
-                    size="icon"
-                    disabled={!editable}
-                    aria-label={t("list.actions")}
-                    className="shrink-0 text-muted-foreground"
-                  />
-                }
-              >
-                <Ellipsis aria-hidden="true" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setRenaming(true)}>
-                  <Pencil aria-hidden="true" />
-                  {t("list.rename")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={() => setConfirmingDelete(true)}
-                >
-                  <Trash2 aria-hidden="true" />
-                  {t("list.delete")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
-        <AlertDialog open={confirmingDelete} onOpenChange={setConfirmingDelete}>
-          {/* Opened from the menu, so focus returns to the List actions button. */}
-          <AlertDialogContent finalFocus={actionsButton}>
-            <AlertDialogHeader>
-              <AlertDialogTitle className="wrap-anywhere">
-                {t("list.deleteTitle", { name: list.name })}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {t("list.deleteBody", { count: list.items.length })}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>{t("list.cancel")}</AlertDialogCancel>
-              <Button
-                variant="destructive"
-                onClick={() => confirmDelete(list.name)}
-              >
-                {t("list.delete")}
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-        {!renaming && (
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {t("list.itemCount", { count: list.items.length })}
-          </p>
-        )}
-
-        <div className="mt-5">
-          {atLimit ? (
-            <Note strong ref={limitNote}>
-              {limitMessage}
-            </Note>
+    <>
+      <Link
+        to="/"
+        className="mb-2 inline-flex min-h-11 items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ChevronLeft aria-hidden="true" className="size-4" />
+        {t("list.allLists")}
+      </Link>
+      {/* The pick panel starts level with the title, below the back link. */}
+      <div className="md:flex md:items-start md:gap-12">
+        <div className="min-w-0 flex-1">
+          {renaming ? (
+            <>
+              {/* Keeps the page heading for screen readers while the title is a field. */}
+              <h1 className="sr-only">{list.name}</h1>
+              <div className="pt-1">
+                <TextEntryForm
+                  label={t("list.rename")}
+                  visibleLabel
+                  submitLabel={t("list.save")}
+                  initialValue={list.name}
+                  autoFocus
+                  onSubmit={rename}
+                  cancel={{
+                    label: t("list.cancel"),
+                    onCancel: () => {
+                      setRenaming(false);
+                      setFocusTarget("actions");
+                    },
+                  }}
+                />
+              </div>
+            </>
           ) : (
-            <TextEntryForm
-              label={t("list.addLabel")}
-              submitLabel={t("list.add")}
-              disabled={!editable}
-              onSubmit={add}
-              fieldRef={addField}
-            />
+            <div className="flex items-start justify-between gap-2">
+              <h1 className="pt-1 text-title font-bold wrap-anywhere">
+                {list.name}
+              </h1>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      ref={actionsButton}
+                      variant="ghost"
+                      size="icon"
+                      disabled={!editable}
+                      aria-label={t("list.actions")}
+                      className="shrink-0 text-muted-foreground"
+                    />
+                  }
+                >
+                  <Ellipsis aria-hidden="true" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setRenaming(true)}>
+                    <Pencil aria-hidden="true" />
+                    {t("list.rename")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={() => setConfirmingDelete(true)}
+                  >
+                    <Trash2 aria-hidden="true" />
+                    {t("list.delete")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+          <AlertDialog
+            open={confirmingDelete}
+            onOpenChange={setConfirmingDelete}
+          >
+            {/* Opened from the menu, so focus returns to the List actions button. */}
+            <AlertDialogContent finalFocus={actionsButton}>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="wrap-anywhere">
+                  {t("list.deleteTitle", { name: list.name })}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t("list.deleteBody", { count: list.items.length })}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{t("list.cancel")}</AlertDialogCancel>
+                <Button
+                  variant="destructive"
+                  onClick={() => confirmDelete(list.name)}
+                >
+                  {t("list.delete")}
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          {!renaming && (
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {t("list.itemCount", { count: list.items.length })}
+            </p>
+          )}
+
+          <div className="mt-5">
+            {atLimit ? (
+              <Note strong ref={limitNote}>
+                {limitMessage}
+              </Note>
+            ) : (
+              <TextEntryForm
+                label={t("list.addLabel")}
+                submitLabel={t("list.add")}
+                disabled={!editable}
+                onSubmit={add}
+                fieldRef={addField}
+              />
+            )}
+          </div>
+          {region}
+
+          {items.length === 0 ? (
+            <div className="mt-6 rounded-xl bg-surface px-4 py-9 text-center text-muted-foreground">
+              <p className="mb-1 text-lg font-semibold text-foreground">
+                {t("list.emptyTitle")}
+              </p>
+              <p className="text-balance">{t("list.emptyBody")}</p>
+            </div>
+          ) : (
+            <ul className="mt-4 border-t">
+              {items.map((item, index) => (
+                <li key={item.id} className="border-b">
+                  {editingId === item.id ? (
+                    <div className="py-2">
+                      <TextEntryForm
+                        label={t("list.editLabel")}
+                        submitLabel={t("list.save")}
+                        initialValue={item.text}
+                        autoFocus
+                        stacked
+                        onSubmit={(text) => save(item, text)}
+                        cancel={{
+                          label: t("list.cancel"),
+                          onCancel: () => cancelEdit(item),
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex min-h-14 items-center gap-1 py-1 pl-1">
+                      <span className="min-w-0 flex-1 py-2 wrap-anywhere">
+                        {item.text}
+                      </span>
+                      <Button
+                        ref={editButtonRef(item.id)}
+                        variant="ghost"
+                        size="icon"
+                        disabled={!editable}
+                        aria-label={t("list.edit", { text: item.text })}
+                        onClick={() => setEditingId(item.id)}
+                        className="text-muted-foreground"
+                      >
+                        <Pencil aria-hidden="true" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        disabled={!editable}
+                        aria-label={t("list.remove", { text: item.text })}
+                        onClick={() => remove(item, index)}
+                        className="text-muted-foreground"
+                      >
+                        <Trash2 aria-hidden="true" />
+                      </Button>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
-        {region}
-
-        {items.length === 0 ? (
-          <div className="mt-6 rounded-xl bg-surface px-4 py-9 text-center text-muted-foreground">
-            <p className="mb-1 text-lg font-semibold text-foreground">
-              {t("list.emptyTitle")}
-            </p>
-            <p className="text-balance">{t("list.emptyBody")}</p>
-          </div>
-        ) : (
-          <ul className="mt-4 border-t">
-            {items.map((item, index) => (
-              <li key={item.id} className="border-b">
-                {editingId === item.id ? (
-                  <div className="py-2">
-                    <TextEntryForm
-                      label={t("list.editLabel")}
-                      submitLabel={t("list.save")}
-                      initialValue={item.text}
-                      autoFocus
-                      stacked
-                      onSubmit={(text) => save(item, text)}
-                      cancel={{
-                        label: t("list.cancel"),
-                        onCancel: () => cancelEdit(item),
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex min-h-14 items-center gap-1 py-1 pl-1">
-                    <span className="min-w-0 flex-1 py-2 wrap-anywhere">
-                      {item.text}
-                    </span>
-                    <Button
-                      ref={editButtonRef(item.id)}
-                      variant="ghost"
-                      size="icon"
-                      disabled={!editable}
-                      aria-label={t("list.edit", { text: item.text })}
-                      onClick={() => setEditingId(item.id)}
-                      className="text-muted-foreground"
-                    >
-                      <Pencil aria-hidden="true" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      disabled={!editable}
-                      aria-label={t("list.remove", { text: item.text })}
-                      onClick={() => remove(item, index)}
-                      className="text-muted-foreground"
-                    >
-                      <Trash2 aria-hidden="true" />
-                    </Button>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
+        {/* Keyed by list, so a result or a running cycle never carries over to another list. */}
+        <PickPanel key={listId} items={items} announce={announce} />
       </div>
-      <PickPanel items={items} announce={announce} />
-    </div>
+    </>
   );
 }

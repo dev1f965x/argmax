@@ -73,7 +73,7 @@ test.describe("on a phone", () => {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 
     const bar = await page
-      .getByRole("complementary", { name: "Pick" })
+      .getByRole("region", { name: "Pick result" })
       .boundingBox();
     const footer = await page.getByRole("contentinfo").boundingBox();
     expect(bar).not.toBeNull();

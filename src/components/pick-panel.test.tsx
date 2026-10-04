@@ -21,7 +21,9 @@ function renderList(items: string[]) {
       },
     ],
   };
-  const { storage } = memoryStorage({ [storageKey]: JSON.stringify(state) });
+  const { storage, data } = memoryStorage({
+    [storageKey]: JSON.stringify(state),
+  });
   const router = createMemoryRouter(
     [
       {
@@ -36,6 +38,7 @@ function renderList(items: string[]) {
       <RouterProvider router={router} />
     </ListsProvider>,
   );
+  return { data };
 }
 
 /** Makes crypto.getRandomValues return the given values in order. */
@@ -77,8 +80,10 @@ describe("PickPanel", () => {
   it("is unavailable for an empty list and says why", () => {
     renderList([]);
 
-    expect(pickButton()).toBeDisabled();
+    expect(pickButton()).toHaveAttribute("aria-disabled", "true");
     expect(pickButton()).toHaveAccessibleDescription("Add an item to pick.");
+    fireEvent.click(pickButton());
+    expect(screen.queryByText("Picked")).not.toBeInTheDocument();
   });
 
   it("picks with the fair algorithm, shows and announces the result, and offers Pick again", async () => {
@@ -131,5 +136,39 @@ describe("PickPanel", () => {
     await user.click(screen.getByRole("button", { name: "Remove “Udon”" }));
     expect(screen.queryByText("Picked")).not.toBeInTheDocument();
     expect(pickButton()).toHaveAccessibleName("Pick");
+  });
+
+  it("announces nothing and keeps focus when another tab removes every item during the cycle", () => {
+    reduceMotion(false);
+    vi.useFakeTimers();
+    const { data } = renderList(["A", "B"]);
+    pickButton().focus();
+
+    fireEvent.click(pickButton());
+    act(() => vi.advanceTimersByTime(200));
+    data.set(
+      storageKey,
+      JSON.stringify({
+        schemaVersion: 1,
+        lists: [
+          {
+            id: "lunch",
+            name: "Lunch",
+            items: [],
+            createdAt: "2026-10-04T00:00:00.000Z",
+            updatedAt: "2026-10-04T00:00:00.000Z",
+          },
+        ],
+      }),
+    );
+    act(() => {
+      window.dispatchEvent(new StorageEvent("storage", { key: storageKey }));
+    });
+    act(() => vi.advanceTimersByTime(600));
+
+    expect(screen.queryByText("Picked")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("");
+    expect(pickButton()).toHaveFocus();
+    expect(pickButton()).toHaveAttribute("aria-disabled", "true");
   });
 });

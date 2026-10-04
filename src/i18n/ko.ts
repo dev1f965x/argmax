@@ -64,7 +64,7 @@ export const ko: Resources = {
     },
   },
   pick: {
-    region: "뽑기",
+    region: "뽑기 결과",
     pick: "뽑기",
     again: "다시 뽑기",
     label: "뽑힌 항목",

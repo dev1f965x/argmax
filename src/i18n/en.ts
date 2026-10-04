@@ -60,7 +60,7 @@ export const en = {
     },
   },
   pick: {
-    region: "Pick",
+    region: "Pick result",
     pick: "Pick",
     again: "Pick again",
     label: "Picked",
