@@ -2,7 +2,7 @@
 
 <!-- impeccable:product-schema 1 -->
 
-Derived from the Problem Brief and PRD in the Argmax Confluence space, which remain the source of truth. Update those first, then this file.
+Derived from the Problem Brief and PRD, which are private planning documents and remain the source of truth. Update those first, then this file.
 
 ## Platform
 
@@ -35,11 +35,11 @@ Differentiation from existing tools (Wheel of Names, Picker Wheel, random.org Li
 - Empty or whitespace-only names and items are rejected with a message. Duplicate items are allowed without a warning.
 - Deleting a list asks for confirmation and cannot be undone.
 - Storage that is unavailable, full, or holds invalid data is reported to the user; data is never silently lost or overwritten.
-- Static single-page app (Vite, React, TypeScript, Tailwind CSS, shadcn/ui on Base UI), free hosting, no backend, Argmax stores no personal data; usage data without names or account details goes to Umami Cloud.
+- Static single-page app (Vite, React, TypeScript, Tailwind CSS, shadcn/ui on Base UI), free hosting, no backend. Argmax stores no personal data; usage data without names or account details goes to Umami Cloud.
 
 ## Brand Commitments
 
-Name: Argmax. No visual identity yet; it is defined in ARG-20.
+Name: Argmax. Visual identity, mark, and tokens are in [DESIGN.md](DESIGN.md).
 
 ## Evidence on Hand
 

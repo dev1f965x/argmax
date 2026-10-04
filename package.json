@@ -9,14 +9,15 @@
     "build": "tsc -b && vite build && node scripts/licenses.mjs --write dist/third-party-notices.txt",
     "preview": "vite preview",
     "typecheck": "tsc -b",
-    "check": "biome check && node scripts/check-design-tokens.mjs && node scripts/licenses.mjs && knip",
+    "check": "biome check && node scripts/check-design-tokens.mjs && node scripts/check-content.mjs && node scripts/licenses.mjs && knip",
     "lint": "biome lint",
     "format": "biome format --write",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "check:licenses": "node scripts/licenses.mjs",
-    "knip": "knip"
+    "knip": "knip",
+    "check:content": "node scripts/check-content.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
