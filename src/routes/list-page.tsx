@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { useAnnouncer } from "@/components/announcer";
 import { useLists } from "@/components/lists-provider";
 import { Note } from "@/components/note";
+import { PageHeading } from "@/components/page-heading";
 import { PickPanel } from "@/components/pick-panel";
 import {
   type SubmitOutcome,
@@ -225,7 +226,7 @@ export function ListPage() {
           {renaming ? (
             <>
               {/* Keeps the page heading for screen readers while the title is a field. */}
-              <h1 className="sr-only">{list.name}</h1>
+              <PageHeading title={list.name} className="sr-only" />
               <div className="pt-1">
                 <TextEntryForm
                   label={t("list.rename")}
@@ -246,9 +247,10 @@ export function ListPage() {
             </>
           ) : (
             <div className="flex items-start justify-between gap-2">
-              <h1 className="pt-1 text-title font-bold wrap-anywhere">
-                {list.name}
-              </h1>
+              <PageHeading
+                title={list.name}
+                className="pt-1 text-title font-bold wrap-anywhere"
+              />
               <DropdownMenu>
                 <DropdownMenuTrigger
                   render={

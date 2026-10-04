@@ -108,7 +108,7 @@ export const en = {
     noPersonalData:
       "Argmax does not collect personal data. There are no accounts and no cookies.",
     localOnly:
-      "Your lists and your language choice are saved only in this browser's local storage. They are not sent anywhere, and clearing your browser data removes them.",
+      "Your lists and your language choice are saved only in this browser's local storage. They are not sent anywhere, and clearing your browser data removes them. While a tab is open, the browser also keeps your scroll positions for Back and Forward; they are removed when you close the tab.",
     noTracking: "Argmax does not use analytics or tracking.",
     hosting:
       "The hosting provider, Cloudflare, processes technical request data such as IP addresses to deliver and protect the site.",
