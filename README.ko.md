@@ -61,8 +61,8 @@ Argmax에는 계정과 쿠키가 없으며, 개인정보를 요청하거나 저�
 | Cloudflare Workers | 호스팅과 미리보기 배포 | 무료: 정적 파일 요청은 무료·무제한, 다른 한도는 과금 대신 차단, 결제 수단 없음 | 확인 안 됨 | [약관](https://www.cloudflare.com/terms/), [요금](https://developers.cloudflare.com/workers/platform/pricing/) |
 | Umami Cloud | 사용 현황 분석 | Hobby, 0달러: 월 10만 이벤트, 사이트 1개, 6개월 보관, 이벤트당 추가 요금은 유료 플랜에만 적용, 결제 수단 없음 | 확인 안 됨 | [약관](https://umami.is/terms), [개인정보](https://umami.is/privacy) |
 | GitHub | 저장소, Actions, CodeQL, 비밀 정보 검사, Dependabot 알림 | 공개 저장소 무료 | 가능 | [약관](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) |
-| Mend Renovate(GitHub App) | 의존성 업데이트 풀 리퀘스트 | 무료 | 가능 | [Mend 법적 고지](https://www.mend.io/legal-and-privacy/) |
-| Shields.io | 이 README의 라이선스 배지 | 무료 | 가능 | [Shields.io](https://shields.io/) |
+| Mend Renovate(GitHub App) | 의존성 업데이트 풀 리퀘스트 | 무료 | 가능 | [약관](https://www.mend.io/terms-of-service/), [개인정보](https://www.mend.io/privacy-policy/) |
+| Shields.io | 이 README의 라이선스 배지 | 무료 | 확인 안 됨(약관 미게시) | [Shields.io](https://shields.io/) |
 | Dev Container 이미지와 Claude Code 기능 | 개발 환경 | `mcr.microsoft.com/devcontainers/typescript-node`, `ghcr.io/anthropics/devcontainer-features/claude-code`, 모두 MIT | 가능 | [이미지 라이선스](https://github.com/devcontainers/images/blob/main/LICENSE), [기능 저장소](https://github.com/anthropics/devcontainer-features) |
 
 ## 문의와 보안

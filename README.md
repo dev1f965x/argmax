@@ -61,8 +61,8 @@ Terms were checked on 2026-10-04. Argmax is a non-commercial project; before any
 | Cloudflare Workers | Hosting and preview deployments | Free: static asset requests are free and unlimited; other limits block rather than bill; no payment method | Not confirmed | [Terms](https://www.cloudflare.com/terms/), [pricing](https://developers.cloudflare.com/workers/platform/pricing/) |
 | Umami Cloud | Usage analytics | Hobby, $0: 100K events per month, 1 website, 6-month retention; per-event overage applies only to paid plans; no payment method | Not confirmed | [Terms](https://umami.is/terms), [privacy](https://umami.is/privacy) |
 | GitHub | Repository, Actions, CodeQL, secret scanning, Dependabot alerts | Free for public repositories | Allowed | [Terms](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) |
-| Mend Renovate (GitHub App) | Dependency update pull requests | Free | Allowed | [Mend legal](https://www.mend.io/legal-and-privacy/) |
-| Shields.io | License badge in this README | Free | Allowed | [Shields.io](https://shields.io/) |
+| Mend Renovate (GitHub App) | Dependency update pull requests | Free | Allowed | [Terms](https://www.mend.io/terms-of-service/), [privacy](https://www.mend.io/privacy-policy/) |
+| Shields.io | License badge in this README | Free | Not confirmed (no terms published) | [Shields.io](https://shields.io/) |
 | Dev Container image and Claude Code feature | Development environment | `mcr.microsoft.com/devcontainers/typescript-node` and `ghcr.io/anthropics/devcontainer-features/claude-code`, both MIT | Allowed | [Image license](https://github.com/devcontainers/images/blob/main/LICENSE), [feature repository](https://github.com/anthropics/devcontainer-features) |
 
 ## Feedback and security
