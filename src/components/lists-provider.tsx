@@ -3,6 +3,7 @@ import {
   type ReactNode,
   use,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -11,9 +12,11 @@ import { describeError } from "@/lib/errors";
 import { browserContext, type Context, type Result } from "@/lib/lists";
 import {
   emptyState,
+  type LoadResult,
   type Repository,
   type SaveResult,
   type StoredState,
+  storageKey,
 } from "@/lib/storage";
 
 /** A storage problem the user must know about; null when storage works. */
@@ -80,9 +83,13 @@ function issueAfterSave(
 }
 
 /**
- * Holds the lists for the whole app. The state is loaded once; every change is
- * kept in memory and saved, so the app keeps working for the session even when
- * saving fails, and a banner says so.
+ * Holds the lists for the whole app. Every change is kept in memory and saved,
+ * so the app keeps working for the session even when saving fails, and a
+ * banner says so.
+ *
+ * Other tabs share the stored lists. A change starts from the latest stored
+ * state, and a save in another tab is shown here at once (the `storage` event),
+ * so no tab overwrites lists created in another.
  */
 export function ListsProvider({
   repository,
@@ -98,29 +105,80 @@ export function ListsProvider({
   const [issue, setIssue] = useState(initial.issue);
   // Operations read the latest state synchronously, even before React re-renders.
   const stateRef = useRef(initial.state);
+  // False after a failed save: memory then holds changes the stored state lacks,
+  // and replacing memory with the stored state would drop them.
+  const inSync = useRef(initial.issue === null);
   const editable = issue?.kind !== "invalid";
-  // Compared by kind: a failed save repeating the problem found on start is not
-  // news. A problem found on start cannot clear through a save (the repository
-  // refuses to save until a load succeeds), so the same kind never means a new one.
-  const issueFoundAtLoad = issue !== null && issue.kind === initial.issue?.kind;
+
+  // A problem present on start needs no interrupting announcement, and neither
+  // does a failed save repeating it (compared by kind). Once it clears, a later
+  // problem of the same kind is news again.
+  const [quietKind, setQuietKind] = useState(initial.issue?.kind ?? null);
+  if (issue === null && quietKind !== null) setQuietKind(null);
+  const issueFoundAtLoad = issue !== null && issue.kind === quietKind;
+
+  /**
+   * Shows a freshly loaded stored state. Returns the state to build a change
+   * on, or null when the stored data is invalid and must not be overwritten.
+   */
+  const adopt = useCallback((loaded: LoadResult): StoredState | null => {
+    switch (loaded.status) {
+      case "ok":
+        stateRef.current = loaded.state;
+        inSync.current = true;
+        setState(loaded.state);
+        setIssue((current) =>
+          current?.kind === "invalid" || current?.kind === "unavailable"
+            ? null
+            : current,
+        );
+        return loaded.state;
+      case "invalid":
+        console.error(
+          "Stored lists failed validation and were left untouched:",
+          describeError(loaded.cause),
+        );
+        stateRef.current = emptyState;
+        setState(emptyState);
+        setIssue({ kind: "invalid", raw: loaded.raw });
+        return null;
+      case "unavailable":
+        // Saving reports the problem; until then the lists in memory stay.
+        return stateRef.current;
+    }
+  }, []);
+
+  useEffect(() => {
+    function handleStorage(event: StorageEvent) {
+      // A null key means another tab cleared all of this site's storage.
+      if (event.key !== storageKey && event.key !== null) return;
+      if (!inSync.current) return;
+      adopt(repository.load());
+    }
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [adopt, repository]);
 
   const change = useCallback(
     <E,>(
       operation: (state: StoredState, context: Context) => Result<E>,
     ): Result<E | "read-only"> => {
       if (!editable) return { ok: false, error: "read-only" };
-      const result = operation(stateRef.current, context);
+      const base = inSync.current ? adopt(repository.load()) : stateRef.current;
+      if (base === null) return { ok: false, error: "read-only" };
+      const result = operation(base, context);
       if (!result.ok) return result;
 
       stateRef.current = result.state;
       setState(result.state);
       const saved = repository.save(result.state);
+      inSync.current = saved.ok;
       if (!saved.ok && "cause" in saved)
         console.error("Saving lists failed:", describeError(saved.cause));
       setIssue((current) => issueAfterSave(saved, current));
       return result;
     },
-    [editable, repository, context],
+    [editable, repository, context, adopt],
   );
 
   const discardInvalidData = useCallback(() => {
@@ -133,6 +191,7 @@ export function ListsProvider({
       return false;
     }
     stateRef.current = emptyState;
+    inSync.current = true;
     setState(emptyState);
     setIssue(null);
     return true;
