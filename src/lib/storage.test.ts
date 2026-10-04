@@ -269,4 +269,22 @@ describe("createRepository", () => {
     });
     expect(data.get(storageKey)).toBe("{not json");
   });
+
+  it("reuses the parsed state while the stored value is unchanged", () => {
+    const { storage, data } = memoryStorage({
+      [storageKey]: stored(validState),
+    });
+    const repository = createRepository(() => storage);
+    const stateOf = (result: ReturnType<typeof repository.load>) =>
+      result.status === "ok" ? result.state : null;
+
+    const first = stateOf(repository.load());
+    expect(stateOf(repository.load())).toBe(first);
+
+    // A changed value is parsed again.
+    data.set(storageKey, stored({ ...validState, lists: [] }));
+    const changed = stateOf(repository.load());
+    expect(changed).not.toBe(first);
+    expect(changed?.lists).toEqual([]);
+  });
 });
