@@ -82,3 +82,46 @@ test.describe("on a phone", () => {
       expect(footer.y + footer.height).toBeLessThanOrEqual(bar.y + 1);
   });
 });
+
+test.describe("on a phone in landscape", () => {
+  test.use({ viewport: { width: 740, height: 360 } });
+
+  test("a long result that scrolls in the pick bar passes the accessibility check", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "argmax",
+        JSON.stringify({
+          schemaVersion: 1,
+          lists: [
+            {
+              id: "long",
+              name: "Long",
+              // 100 wide letters wrap to more lines than the capped area holds.
+              items: [{ id: "a", text: "W".repeat(100) }],
+              createdAt: "2026-10-04T00:00:00.000Z",
+              updatedAt: "2026-10-04T00:00:00.000Z",
+            },
+          ],
+        }),
+      );
+    });
+    await page.goto("/lists/long");
+    await page.getByRole("button", { name: "Pick", exact: true }).click();
+    const result = page.getByText("Picked", { exact: true }).locator("..");
+    await expect(result).toBeVisible();
+    expect(
+      await result.evaluate(
+        (element) => element.scrollHeight > element.clientHeight,
+      ),
+    ).toBe(true);
+
+    const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .analyze();
+    expect(results.violations).toEqual([]);
+  });
+});

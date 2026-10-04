@@ -112,41 +112,40 @@ export function PickPanel({
       aria-label={t("pick.region")}
       className="fixed inset-x-0 bottom-0 z-10 border-t bg-background px-4 pt-3 pb-4 md:sticky md:top-6 md:w-80 md:shrink-0 md:border-0 md:bg-transparent md:p-0"
     >
-      <div
-        // Hidden from screen readers while names cycle; the settled result is announced.
-        aria-hidden={cycling !== null}
-        className={cn(
-          "mb-2.5 rounded-xl md:mb-3 md:flex md:min-h-32 md:flex-col md:justify-center md:p-5",
-          shown === null
-            ? "hidden bg-surface text-center text-sm text-muted-foreground"
-            : "max-h-pick-result overflow-y-auto bg-brand-soft px-3.5 py-2.5 md:max-h-none md:overflow-visible",
-        )}
-      >
-        {shown === null ? (
-          t("pick.hint")
-        ) : (
-          <>
-            <p
-              className={cn(
-                "text-sm font-semibold text-brand-strong",
-                cycling !== null && "invisible",
-              )}
-            >
-              {t("pick.label")}
-            </p>
-            <p
-              className={cn(
-                "text-result font-bold wrap-anywhere transition-colors duration-150 ease-out-expo md:text-result-lg",
-                // One line while cycling, so the panel and button do not jump;
-                // the settled result is never truncated.
-                cycling !== null && "line-clamp-1 text-muted-foreground",
-              )}
-            >
-              {shown}
-            </p>
-          </>
-        )}
-      </div>
+      {shown === null ? (
+        <div className="mb-3 hidden min-h-32 flex-col justify-center rounded-xl bg-surface p-5 text-center text-sm text-muted-foreground md:flex">
+          {t("pick.hint")}
+        </div>
+      ) : (
+        <div
+          // Hidden from screen readers while names cycle; the settled result is announced.
+          aria-hidden={cycling !== null}
+          // A long result can scroll in the phone bar, so the settled result
+          // takes focus for keyboard scrolling and for reading it again; its
+          // text ("Picked" and the item) is what a screen reader reads.
+          tabIndex={cycling === null ? 0 : undefined}
+          className="mb-2.5 max-h-pick-result overflow-y-auto rounded-xl bg-brand-soft px-3.5 py-2.5 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:mb-3 md:flex md:max-h-none md:min-h-32 md:flex-col md:justify-center md:overflow-visible md:p-5"
+        >
+          <p
+            className={cn(
+              "text-sm font-semibold text-brand-strong",
+              cycling !== null && "invisible",
+            )}
+          >
+            {t("pick.label")}
+          </p>
+          <p
+            className={cn(
+              "text-result font-bold wrap-anywhere transition-colors duration-150 ease-out-expo md:text-result-lg",
+              // One line while cycling, so the panel and button do not jump;
+              // the settled result is never truncated.
+              cycling !== null && "line-clamp-1 text-muted-foreground",
+            )}
+          >
+            {shown}
+          </p>
+        </div>
+      )}
       {/* aria-disabled rather than disabled: the button keeps focus when the
           list empties under it, and its reason is read when it is focused. */}
       <Button
