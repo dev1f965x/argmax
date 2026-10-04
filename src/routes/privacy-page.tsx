@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { PageHeading } from "@/components/page-heading";
 import { useScreenView } from "@/components/use-screen-view";
-import { issuesUrl } from "@/lib/links";
+import { issuesUrl, umamiPrivacyUrl } from "@/lib/links";
 
 export function PrivacyPage() {
   const { t } = useTranslation();
@@ -16,6 +16,14 @@ export function PrivacyPage() {
       <p>{t("privacy.noAccounts")}</p>
       <p>{t("privacy.localOnly")}</p>
       <p>{t("privacy.analytics")}</p>
+      <p>
+        <a
+          href={umamiPrivacyUrl}
+          className="text-primary underline underline-offset-4"
+        >
+          {t("privacy.umamiPolicy")}
+        </a>
+      </p>
       <p>{t("privacy.hosting")}</p>
       <p>
         <a

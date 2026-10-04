@@ -35,7 +35,7 @@ Differentiation from existing tools (Wheel of Names, Picker Wheel, random.org Li
 - Empty or whitespace-only names and items are rejected with a message. Duplicate items are allowed without a warning.
 - Deleting a list asks for confirmation and cannot be undone.
 - Storage that is unavailable, full, or holds invalid data is reported to the user; data is never silently lost or overwritten.
-- Static single-page app (Vite, React, TypeScript, Tailwind CSS, shadcn/ui on Base UI), free hosting, no backend, no personal data stored; anonymous usage counts through Umami Cloud.
+- Static single-page app (Vite, React, TypeScript, Tailwind CSS, shadcn/ui on Base UI), free hosting, no backend, Argmax stores no personal data; usage data without names or account details goes to Umami Cloud.
 
 ## Brand Commitments
 
