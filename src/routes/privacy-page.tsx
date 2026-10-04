@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { PageHeading } from "@/components/page-heading";
 import { issuesUrl } from "@/lib/links";
 
 export function PrivacyPage() {
@@ -6,7 +7,10 @@ export function PrivacyPage() {
 
   return (
     <article className="flex max-w-160 flex-col gap-4">
-      <h1 className="text-title font-bold">{t("privacy.title")}</h1>
+      <PageHeading
+        title={t("privacy.title")}
+        className="text-title font-bold"
+      />
       <p>{t("privacy.noPersonalData")}</p>
       <p>{t("privacy.localOnly")}</p>
       <p>{t("privacy.noTracking")}</p>

@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate } from "react-router";
 import { useAnnouncer } from "@/components/announcer";
 import { useLists } from "@/components/lists-provider";
 import { Note } from "@/components/note";
+import { PageHeading } from "@/components/page-heading";
 import { TextEntryForm } from "@/components/text-entry-form";
 import { createList } from "@/lib/lists";
 import { limits } from "@/lib/storage";
@@ -85,7 +86,10 @@ export function ListsPage() {
           {t("lists.deleted", { name: deleted })}
         </p>
       )}
-      <h1 className="mb-4 text-title font-bold">{t("lists.title")}</h1>
+      <PageHeading
+        title={t("lists.title")}
+        className="mb-4 text-title font-bold"
+      />
       {atLimit ? (
         <Note strong ref={limitNote}>
           {limitMessage}
