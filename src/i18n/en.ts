@@ -33,6 +33,8 @@ export const en = {
     added: "Added “{{text}}”.",
     saved: "Saved “{{text}}”.",
     removed: "Removed “{{text}}”.",
+    undo: "Undo",
+    restored: "Restored “{{text}}”.",
     actions: "List actions",
     rename: "Rename",
     renamed: "Renamed the list to “{{name}}”.",

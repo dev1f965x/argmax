@@ -20,7 +20,6 @@ test("a list can be renamed and deleted from its actions menu", async ({
   });
   await page.goto("/");
   await createList(page, "Lunch");
-  await page.getByRole("link", { name: /Lunch/ }).click();
 
   await page.getByRole("button", { name: "List actions" }).click();
   await page.getByRole("menuitem", { name: "Rename" }).click();

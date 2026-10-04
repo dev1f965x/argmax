@@ -140,6 +140,29 @@ export function removeItem(
   );
 }
 
+/** Puts a removed item back where it was, for Undo. */
+export function restoreItem(
+  state: StoredState,
+  listId: string,
+  item: Item,
+  index: number,
+  context: Context,
+): Result<ItemError> {
+  const list = findList(state, listId);
+  if (!list) return { ok: false, error: "not-found" };
+  // Another tab may have restored it already.
+  if (list.items.some((existing) => existing.id === item.id))
+    return { ok: true, state };
+  if (list.items.length >= limits.itemsPerList)
+    return { ok: false, error: "item-limit" };
+  const items = list.items.toSpliced(
+    Math.min(index, list.items.length),
+    0,
+    item,
+  );
+  return replaceList(state, { ...list, items }, context);
+}
+
 function findList(state: StoredState, listId: string): List | undefined {
   return state.lists.find((list) => list.id === listId);
 }

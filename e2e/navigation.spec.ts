@@ -21,10 +21,9 @@ test("each screen has its own title, and navigation moves focus to the new headi
   await page.goto("/");
   await expect(page).toHaveTitle("Lists – Argmax");
   await createList(page, "Lunch");
-
-  await page.getByRole("link", { name: /Lunch/ }).click();
   await expect(page).toHaveTitle("Lunch – Argmax");
-  await expect(page.getByRole("heading", { name: "Lunch" })).toBeFocused();
+  // A new list opens with focus in its add field; other navigation focuses the heading.
+  await expect(page.getByRole("textbox", { name: "New item" })).toBeFocused();
 
   await page.getByRole("link", { name: "Privacy policy" }).click();
   await expect(page).toHaveTitle("Privacy policy – Argmax");

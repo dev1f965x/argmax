@@ -26,7 +26,7 @@ pnpm dev
 | `pnpm typecheck` | Type check |
 | `pnpm test` | Run unit and component tests (Vitest) |
 | `pnpm test:watch` | Run unit and component tests in watch mode |
-| `pnpm test:e2e` | Build and run end-to-end, accessibility, and security header tests (Playwright, axe-core) |
+| `pnpm test:e2e` | Build and run end-to-end, accessibility, and security header tests in Chromium, Firefox, and WebKit (Playwright, axe-core) |
 | `pnpm check:licenses` | Dependency license check only |
 | `pnpm check:content` | Banned-pattern check for UI text only |
 | `pnpm knip` | Find unused files, exports, and dependencies |

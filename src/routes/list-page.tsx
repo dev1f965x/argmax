@@ -1,7 +1,7 @@
 import { ChevronLeft, Ellipsis, Pencil, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { useAnnouncer } from "@/components/announcer";
 import { EmptyState } from "@/components/empty-state";
 import { useLists } from "@/components/lists-provider";
@@ -38,7 +38,9 @@ import {
   type ListError,
   removeItem,
   renameList,
+  restoreItem,
 } from "@/lib/lists";
+import { navigationString } from "@/lib/navigation-state";
 import { type Item, limits } from "@/lib/storage";
 import { NotFoundPage } from "@/routes/not-found-page";
 
@@ -54,6 +56,11 @@ interface DeletedListState {
   deletedListName: string;
 }
 
+/** Navigation state from the Lists screen when it opens a list it just created. */
+export interface CreatedListState {
+  createdListName: string;
+}
+
 export function ListPage() {
   const { t } = useTranslation();
   const { id } = useParams();
@@ -67,7 +74,23 @@ export function ListPage() {
   const actionsButton = useRef<HTMLButtonElement>(null);
   // One row is edited at a time; opening another row's editor discards an unsaved draft.
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [focusTarget, setFocusTarget] = useState<FocusTarget>(null);
+  const location = useLocation();
+  // Read once: the history entry is then cleared, so a reload or Back does not
+  // announce the new list or move focus again.
+  const [created] = useState(() =>
+    navigationString(location.state, "createdListName"),
+  );
+  // A list just created is empty, so focus starts in the add field.
+  // The last removed item, offered for Undo until the next change in this list.
+  const [undo, setUndo] = useState<{
+    listId: string;
+    item: Item;
+    index: number;
+  } | null>(null);
+  const undoId = useId();
+  const [focusTarget, setFocusTarget] = useState<FocusTarget>(
+    created ? "entry" : null,
+  );
   const { announce, region } = useAnnouncer();
   const editButtons = useRef(new Map<string, HTMLButtonElement>());
   const editButtonRefs = useRef(
@@ -79,6 +102,12 @@ export function ListPage() {
   const list = state.lists.find((candidate) => candidate.id === id);
   // An unknown list renders NotFoundPage, which reports itself.
   useScreenView(list ? "list" : null);
+
+  useEffect(() => {
+    if (!created) return;
+    announce(t("lists.created", { name: created }));
+    navigate(location.pathname, { replace: true, state: null });
+  }, [created, announce, t, navigate, location.pathname]);
 
   useEffect(() => {
     if (!focusTarget) return;
@@ -106,6 +135,7 @@ export function ListPage() {
       renameList(current, listId, name, context),
     );
     if (result.ok) {
+      setUndo(null);
       setRenaming(false);
       announce(t("list.renamed", { name: name.trim() }));
       setFocusTarget("actions");
@@ -153,6 +183,7 @@ export function ListPage() {
       addItem(current, listId, text, context),
     );
     if (result.ok) {
+      setUndo(null);
       const added = t("list.added", { text: text.trim() });
       if (itemCount + 1 >= limits.itemsPerList) {
         // The limit message replaces the field, so it takes focus and is announced.
@@ -170,6 +201,7 @@ export function ListPage() {
       editItem(current, listId, item.id, text, context),
     );
     if (result.ok) {
+      setUndo(null);
       setEditingId(null);
       announce(t("list.saved", { text: text.trim() }));
       setFocusTarget({ itemId: item.id });
@@ -183,6 +215,8 @@ export function ListPage() {
   }
 
   function remove(item: Item, index: number) {
+    // Rows are shown newest first; Undo needs the position in stored order.
+    const storedIndex = itemCount - 1 - index;
     const result = change((current, context) =>
       removeItem(current, listId, item.id, context),
     );
@@ -190,6 +224,7 @@ export function ListPage() {
       announce(t("common.saveFailed"));
       return;
     }
+    setUndo({ listId, item, index: storedIndex });
     announce(t("list.removed", { text: item.text }));
     // Focus moves to the Edit button of the row that takes the removed row's
     // place (the previous one if it was last), skipping a row being edited.
@@ -199,6 +234,20 @@ export function ListPage() {
       ...items.slice(0, index).reverse(),
     ].find((candidate) => candidate.id !== editingId);
     setFocusTarget(neighbor ? { itemId: neighbor.id } : "entry");
+  }
+
+  function restore(item: Item, index: number) {
+    const result = change((current, context) =>
+      restoreItem(current, listId, item, index, context),
+    );
+    const done = outcome(result);
+    if (!done.ok) {
+      announce(done.message);
+      return;
+    }
+    setUndo(null);
+    announce(t("list.restored", { text: item.text }));
+    setFocusTarget({ itemId: item.id });
   }
 
   // Stable per item, so rows do not detach and reattach their refs on every render.
@@ -227,8 +276,11 @@ export function ListPage() {
         {t("list.allLists")}
       </Link>
       {/* The pick panel starts level with the title, below the back link. */}
-      <div className="md:flex md:items-start md:gap-12">
-        <div className="min-w-0 flex-1">
+      {/* In the DOM the pick panel follows the title, so keyboard users reach
+          Pick before the items; the grid places it in the right column on
+          desktop, and on phones it is a fixed bar at the bottom. */}
+      <div className="md:grid md:grid-list md:items-start md:gap-x-12">
+        <div className="min-w-0">
           {renaming ? (
             <>
               {/* Keeps the page heading for screen readers while the title is a field. */}
@@ -318,7 +370,15 @@ export function ListPage() {
               {t("list.itemCount", { count: itemCount })}
             </p>
           )}
-
+        </div>
+        {/* Keyed by list, so a result or a running cycle never carries over to another list. */}
+        <PickPanel
+          key={listId}
+          items={items}
+          announce={announce}
+          earlierVisit={fromEarlierVisit(list.createdAt)}
+        />
+        <div className="min-w-0">
           <div className="mt-5">
             {atLimit ? (
               <Note strong ref={limitNote}>
@@ -335,6 +395,23 @@ export function ListPage() {
             )}
           </div>
           {region}
+          {undo?.listId === listId && (
+            <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-surface py-1 pr-1 pl-3.5">
+              <p id={undoId} className="min-w-0 text-sm wrap-anywhere">
+                {t("list.removed", { text: undo.item.text })}
+              </p>
+              <Button
+                variant="ghost"
+                disabled={!editable}
+                onClick={() => restore(undo.item, undo.index)}
+                // Says what Undo restores when the button is reached on its own.
+                aria-describedby={undoId}
+                className="shrink-0"
+              >
+                {t("list.undo")}
+              </Button>
+            </div>
+          )}
 
           {items.length === 0 ? (
             <EmptyState
@@ -393,13 +470,6 @@ export function ListPage() {
             </ul>
           )}
         </div>
-        {/* Keyed by list, so a result or a running cycle never carries over to another list. */}
-        <PickPanel
-          key={listId}
-          items={items}
-          announce={announce}
-          earlierVisit={fromEarlierVisit(list.createdAt)}
-        />
       </div>
     </>
   );

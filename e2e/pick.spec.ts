@@ -97,3 +97,64 @@ test.describe("on a phone in landscape", () => {
     expect(results.violations).toEqual([]);
   });
 });
+
+test("on a phone, keyboard focus is never hidden behind the pick bar", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await openWithStorage(
+    page,
+    storedState([{ id: "lunch", name: "Lunch", items }]),
+    "/lists/lunch",
+  );
+  const bar = page.getByRole("region", { name: "Pick result" });
+  await page.getByRole("textbox", { name: "New item" }).focus();
+  // Edit and Remove for every item, then the footer links. This covers Tab
+  // navigation; scroll-padding in index.css also covers other ways focus
+  // scrolls a control into view, which a Tab test cannot tell apart.
+  for (let stop = 0; stop < items.length * 2 + 1; stop += 1) {
+    await page.keyboard.press("Tab");
+    const focused = await page.evaluate(() => {
+      const box = document.activeElement?.getBoundingClientRect();
+      return { name: document.activeElement?.ariaLabel, bottom: box?.bottom };
+    });
+    const barTop = (await bar.boundingBox())?.y ?? 0;
+    if ((await bar.locator(":focus").count()) > 0) continue;
+    expect(focused.bottom, `${focused.name} is covered`).toBeLessThanOrEqual(
+      barTop,
+    );
+  }
+});
+
+test("on desktop, Tab reaches Pick right after the list's actions", async ({
+  page,
+}) => {
+  await openWithStorage(
+    page,
+    storedState([{ id: "lunch", name: "Lunch", items }]),
+    "/lists/lunch",
+  );
+  await page.getByRole("button", { name: "List actions" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: "Pick", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("textbox", { name: "New item" })).toBeFocused();
+});
+
+test("on desktop, a pick does not move the list below the title", async ({
+  page,
+}) => {
+  await openWithStorage(
+    page,
+    // One long item makes the result panel taller than the title block.
+    storedState([{ id: "long", name: "Long", items: ["W".repeat(100)] }]),
+    "/lists/long",
+  );
+  const field = page.getByRole("textbox", { name: "New item" });
+  const before = (await field.boundingBox())?.y;
+  await page.getByRole("button", { name: "Pick", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Pick again" })).toBeVisible();
+  expect((await field.boundingBox())?.y).toBe(before);
+});

@@ -16,7 +16,12 @@ test.beforeEach(async ({ page }) => {
       .request()
       .url()
       .replace(production, "http://127.0.0.1:4173");
-    await route.fulfill({ response: await route.fetch({ url: local }) });
+    // Firefox keeps the original Host header when the URL changes, and the
+    // preview server rejects hosts it does not serve.
+    const headers = { ...route.request().headers(), host: "127.0.0.1:4173" };
+    await route.fulfill({
+      response: await route.fetch({ url: local, headers }),
+    });
   });
 });
 
@@ -41,7 +46,6 @@ async function captureReports(page: Page): Promise<Report[]> {
 async function useTheApp(page: Page) {
   await page.goto("/");
   await createList(page, "Secret lunch");
-  await page.getByRole("link", { name: /Secret lunch/ }).click();
   await page.getByRole("textbox", { name: "New item" }).fill("Secret ramen");
   await page.keyboard.press("Enter");
   await page.getByRole("button", { name: "Pick", exact: true }).click();

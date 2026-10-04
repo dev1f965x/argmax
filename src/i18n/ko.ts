@@ -37,6 +37,8 @@ export const ko: Resources = {
     added: "“{{text}}” 항목을 추가했습니다.",
     saved: "“{{text}}” 항목을 저장했습니다.",
     removed: "“{{text}}” 항목을 삭제했습니다.",
+    undo: "되돌리기",
+    restored: "“{{text}}” 항목을 되돌렸습니다.",
     actions: "목록 메뉴",
     rename: "이름 바꾸기",
     renamed: "목록 이름을 바꿨습니다: “{{name}}”",

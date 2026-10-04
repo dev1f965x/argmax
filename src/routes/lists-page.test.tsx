@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { act, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { tracker } from "@/lib/analytics";
 import { limits, storageKey } from "@/lib/storage";
@@ -9,6 +9,7 @@ const named = (names: string[]) => names.map((name) => ({ name }));
 
 const nameField = () => screen.getByRole("textbox", { name: "New list name" });
 const createButton = () => screen.getByRole("button", { name: "Create" });
+const itemField = () => screen.getByRole("textbox", { name: "New item" });
 
 describe("ListsPage", () => {
   it("explains what to do first and where lists are stored", () => {
@@ -31,26 +32,29 @@ describe("ListsPage", () => {
     listCreated.mockRestore();
   });
 
-  it("creates a list with a trimmed name, saves it, and links to it", async () => {
-    const { user, data } = renderApp();
+  it("creates a list with a trimmed name and opens it, ready for the first item", async () => {
+    const { user, data, router } = renderApp();
 
     await user.type(nameField(), "  Lunch {Enter}");
 
-    const link = screen.getByRole("link", { name: /Lunch/ });
-    expect(link).toHaveTextContent("0 items");
-    expect(nameField()).toHaveValue("");
-    expect(nameField()).toHaveFocus();
-    expect(JSON.parse(data.get(storageKey) ?? "").lists[0].name).toBe("Lunch");
-    expect(screen.getByText("Created “Lunch”.")).toBeInTheDocument();
-
-    await user.click(link);
     expect(screen.getByRole("heading", { name: "Lunch" })).toBeInTheDocument();
+    expect(itemField()).toHaveFocus();
+    expect(screen.getByText("Created “Lunch”.")).toBeInTheDocument();
+    expect(JSON.parse(data.get(storageKey) ?? "").lists[0].name).toBe("Lunch");
+
+    // The confirmation and the focus move are not repeated on Back and Forward.
+    await act(() => router.navigate(-1));
+    expect(screen.getByRole("link", { name: /Lunch/ })).toHaveTextContent(
+      "0 items",
+    );
+    await act(() => router.navigate(1));
+    expect(screen.getByRole("heading", { name: "Lunch" })).toBeInTheDocument();
+    expect(screen.queryByText("Created “Lunch”.")).not.toBeInTheDocument();
+    expect(itemField()).not.toHaveFocus();
   });
 
-  it("shows the newest list first", async () => {
-    const { user } = renderApp({ stored: storedState(named(["Older"])) });
-
-    await user.type(nameField(), "Newer{Enter}");
+  it("shows the newest list first", () => {
+    renderApp({ stored: storedState(named(["Older", "Newer"])) });
 
     const names = within(screen.getByRole("list"))
       .getAllByRole("link")
@@ -116,7 +120,7 @@ describe("ListsPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("announces creating the last list after the limit message replaces the form", async () => {
+  it("opens the last allowed list, and Lists then shows the limit message", async () => {
     const names = Array.from(
       { length: limits.lists - 1 },
       (_, index) => `List ${index}`,
@@ -124,14 +128,15 @@ describe("ListsPage", () => {
     const { user } = renderApp({ stored: storedState(named(names)) });
 
     await user.type(nameField(), "Last{Enter}");
+    expect(screen.getByRole("heading", { name: "Last" })).toBeInTheDocument();
+    await user.click(screen.getByRole("link", { name: "All lists" }));
 
-    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "Created “Last”. You have 100 lists, the maximum.",
-    );
     expect(
-      screen.getByText(/^You have 100 lists, the maximum/, { selector: "p" }),
-    ).toHaveFocus();
+      screen.queryByRole("textbox", { name: "New list name" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/^You have 100 lists, the maximum/),
+    ).toBeInTheDocument();
   });
 
   it("warns when storage is blocked and keeps working for the session", async () => {
@@ -143,7 +148,7 @@ describe("ListsPage", () => {
     expect(screen.getByText("Lists can’t be saved")).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     await user.type(nameField(), "Lunch{Enter}");
-    expect(screen.getByRole("link", { name: /Lunch/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Lunch" })).toBeInTheDocument();
     // The failed save repeats the known problem, so it does not interrupt.
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
@@ -157,10 +162,10 @@ describe("ListsPage", () => {
       "Storage in this browser is full",
     );
     failures.set = undefined;
-    await user.type(nameField(), "Two{Enter}");
+    await user.type(itemField(), "Two{Enter}");
     expect(screen.queryByText("Lists can’t be saved")).not.toBeInTheDocument();
     failures.set = new DOMException("Quota exceeded", "QuotaExceededError");
-    await user.type(nameField(), "Three{Enter}");
+    await user.type(itemField(), "Three{Enter}");
 
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Storage in this browser is full",
@@ -176,7 +181,7 @@ describe("ListsPage", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Storage in this browser is full",
     );
-    expect(screen.getByRole("link", { name: /Lunch/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Lunch" })).toBeInTheDocument();
   });
 
   describe("with invalid stored data", () => {
@@ -217,12 +222,12 @@ describe("ListsPage", () => {
         "Storage in this browser is full",
       );
       failures.set = undefined;
-      await user.type(nameField(), "Two{Enter}");
+      await user.type(itemField(), "Two{Enter}");
 
       expect(
         screen.queryByText(/Deleted the saved data/),
       ).not.toBeInTheDocument();
-      expect(nameField()).toHaveFocus();
+      expect(itemField()).toHaveFocus();
     });
 
     it("deletes the data only after confirmation", async () => {
@@ -249,7 +254,9 @@ describe("ListsPage", () => {
       expect(nameField()).toBeEnabled();
 
       await user.type(nameField(), "Lunch{Enter}");
-      await user.click(screen.getByRole("link", { name: /Lunch/ }));
+      expect(
+        screen.getByRole("heading", { name: "Lunch" }),
+      ).toBeInTheDocument();
       expect(
         screen.queryByText(/Deleted the saved data/),
       ).not.toBeInTheDocument();

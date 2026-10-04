@@ -1,17 +1,22 @@
 import { expect, test } from "@playwright/test";
 import { storageKey } from "./support.ts";
 
-test("a created list stays after a reload and opens", async ({ page }) => {
+test("a created list opens, stays after a reload, and appears on Lists", async ({
+  page,
+}) => {
   await page.goto("/");
   await page.getByRole("textbox", { name: "New list name" }).fill("Lunch");
   await page.getByRole("button", { name: "Create" }).click();
 
-  await page.reload();
-
-  const link = page.getByRole("link", { name: /Lunch/ });
-  await expect(link).toContainText("0 items");
-  await link.click();
   await expect(page.getByRole("heading", { name: "Lunch" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "New item" })).toBeFocused();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Lunch" })).toBeVisible();
+
+  await page.getByRole("link", { name: "All lists" }).click();
+  await expect(page.getByRole("link", { name: /Lunch/ })).toContainText(
+    "0 items",
+  );
 });
 
 test("invalid stored data is kept until the user deletes it", async ({

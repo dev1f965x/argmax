@@ -100,6 +100,14 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* List screen on desktop: content, then the 320 px pick panel, which spans
+   both rows. The first row (the title) keeps its own height, so a tall result
+   does not push the add field down. */
+@utility grid-list {
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  grid-template-rows: auto 1fr;
+}
+
 /* Caps the result in the phone pick bar; a longer result scrolls, never truncated. */
 @utility max-h-pick-result {
   max-height: 40svh;
@@ -114,6 +122,15 @@
   }
   html {
     @apply font-sans;
+    /* On phones the pick bar is fixed to the bottom; scrolling a focused
+       control into view stops above it instead of behind it (WCAG 2.4.11).
+       Firefox ignores this when Tab moves focus; PickPanel covers that case. */
+    scroll-padding-bottom: var(--pick-bar-height, 0px);
+  }
+  @media (width >= 48rem) {
+    html {
+      scroll-padding-bottom: 0;
+    }
   }
   body {
     @apply bg-background text-foreground;

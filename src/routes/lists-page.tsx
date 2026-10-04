@@ -1,8 +1,7 @@
 import { ChevronRight } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router";
-import { useAnnouncer } from "@/components/announcer";
 import { EmptyState } from "@/components/empty-state";
 import { useLists } from "@/components/lists-provider";
 import { Note } from "@/components/note";
@@ -15,15 +14,9 @@ import {
 import { useScreenView } from "@/components/use-screen-view";
 import { fromEarlierVisit, tracker } from "@/lib/analytics";
 import { createList, type ListError } from "@/lib/lists";
+import { navigationString } from "@/lib/navigation-state";
 import { limits } from "@/lib/storage";
-
-function deletedListName(state: unknown): string | null {
-  if (typeof state !== "object" || state === null) return null;
-  if (!("deletedListName" in state)) return null;
-  return typeof state.deletedListName === "string"
-    ? state.deletedListName
-    : null;
-}
+import type { CreatedListState } from "@/routes/list-page";
 
 export function ListsPage() {
   const { t } = useTranslation();
@@ -31,27 +24,19 @@ export function ListsPage() {
   const { state, editable, change } = useLists();
   const atLimit = state.lists.length >= limits.lists;
   const limitMessage = t("lists.limitReached", { limit: limits.lists });
-  // Outside the form, so creating the 100th list is still announced after the
-  // limit message replaces the form; that message then takes focus.
-  const { announce, region } = useAnnouncer();
-  const limitNote = useRef<HTMLParagraphElement>(null);
-  const [focusLimit, setFocusLimit] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   // Read once: the history entry is then cleared, so a reload or Back does not
   // show the confirmation again.
-  const [deleted] = useState(() => deletedListName(location.state));
+  const [deleted] = useState(() =>
+    navigationString(location.state, "deletedListName"),
+  );
 
   useEffect(() => {
     if (!deleted) return;
     navigate(location.pathname, { replace: true, state: null });
   }, [deleted, navigate, location.pathname]);
 
-  useEffect(() => {
-    if (!focusLimit) return;
-    limitNote.current?.focus();
-    setFocusLimit(false);
-  }, [focusLimit]);
   // Newest first, so a list just created appears right under the form.
   const lists = state.lists.toReversed();
 
@@ -63,12 +48,14 @@ export function ListsPage() {
       tracker.listCreated(
         !state.lists.some((list) => fromEarlierVisit(list.createdAt)),
       );
-      const created = t("lists.created", { name: name.trim() });
-      if (state.lists.length + 1 >= limits.lists) {
-        announce(`${created} ${limitMessage}`);
-        setFocusLimit(true);
-      } else {
-        announce(created);
+      // A new list is empty, so the next step is adding items: open it with
+      // the item field focused. The new list is the last one stored.
+      const createdId = result.state.lists.at(-1)?.id;
+      if (createdId) {
+        const navigationState: CreatedListState = {
+          createdListName: name.trim(),
+        };
+        navigate(`/lists/${createdId}`, { state: navigationState });
       }
       return { ok: true };
     }
@@ -93,9 +80,7 @@ export function ListsPage() {
         className="mb-4 text-title font-bold"
       />
       {atLimit ? (
-        <Note strong ref={limitNote}>
-          {limitMessage}
-        </Note>
+        <Note strong>{limitMessage}</Note>
       ) : (
         <TextEntryForm
           label={t("lists.nameLabel")}
@@ -104,7 +89,6 @@ export function ListsPage() {
           onSubmit={create}
         />
       )}
-      {region}
       <Note>{t("lists.storedLocally")}</Note>
 
       {/* While invalid data is kept, the empty state's advice to create a list would not work. */}

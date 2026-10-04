@@ -49,7 +49,6 @@ test("the app runs without Content Security Policy violations", async ({
   await page.goto("/");
   await page.getByRole("textbox", { name: "새 목록 이름" }).fill("점심");
   await page.keyboard.press("Enter");
-  await page.getByRole("link", { name: /점심/ }).click();
   await page.getByRole("textbox", { name: "새 항목" }).fill("라멘");
   await page.keyboard.press("Enter");
   await page.getByRole("button", { name: "뽑기", exact: true }).click();
@@ -86,7 +85,6 @@ test("no usage events leave a non-production site", async ({ page }) => {
 
   await page.goto("/");
   await createList(page, "Lunch");
-  await page.getByRole("link", { name: /Lunch/ }).click();
   await page.getByRole("textbox", { name: "New item" }).fill("Ramen");
   await page.keyboard.press("Enter");
   await page.getByRole("button", { name: "Pick", exact: true }).click();
