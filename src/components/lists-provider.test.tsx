@@ -205,9 +205,10 @@ describe("ListsProvider across tabs", () => {
     expect(a.names()).toEqual(["Fresh"]);
   });
 
-  it("saves again after a read that failed once", () => {
+  it("saves again after a read that failed once, building on the stored lists", () => {
     const { storage, data, failures } = memoryStorage();
     const a = renderTab(storage, "A");
+    a.create("Saved");
     failures.get = new Error("read failed");
     a.create("While failing");
     expect(a.value().issue).toEqual({ kind: "unavailable" });
@@ -215,7 +216,36 @@ describe("ListsProvider across tabs", () => {
     failures.get = undefined;
     a.create("After recovery");
 
+    // The change made while storage could not be read was never saved and is
+    // dropped; the banner said so. Saving works again.
     expect(a.value().issue).toBeNull();
-    expect(storedNames(data)).toEqual(["While failing", "After recovery"]);
+    expect(storedNames(data)).toEqual(["Saved", "After recovery"]);
+  });
+
+  it("never saves over stored lists it could not read on start", () => {
+    const precious = JSON.stringify({
+      schemaVersion: 1,
+      lists: [
+        {
+          id: "precious",
+          name: "Precious",
+          items: [],
+          createdAt: "2026-10-04T00:00:00.000Z",
+          updatedAt: "2026-10-04T00:00:00.000Z",
+        },
+      ],
+    });
+    const { storage, data, failures } = memoryStorage({
+      [storageKey]: precious,
+    });
+    failures.get = new Error("read failed");
+    const a = renderTab(storage, "A");
+    a.create("While unreadable");
+    expect(data.get(storageKey)).toBe(precious);
+
+    failures.get = undefined;
+    a.create("After recovery");
+
+    expect(storedNames(data)).toEqual(["Precious", "After recovery"]);
   });
 });

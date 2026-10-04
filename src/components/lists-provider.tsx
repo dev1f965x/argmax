@@ -105,10 +105,13 @@ export function ListsProvider({
   const [issue, setIssue] = useState(initial.issue);
   // Operations read the latest state synchronously, even before React re-renders.
   const stateRef = useRef(initial.state);
-  // True after a failed save: memory then holds changes the stored state lacks,
-  // and replacing memory with the stored state would drop them. The next
-  // successful save writes them, replacing changes other tabs made meanwhile;
-  // the banner has told the user that saving is failing.
+  // True after a write failed (storage full or blocked while it could be read):
+  // memory then holds changes the stored state lacks, and replacing memory with
+  // the stored state would drop them. The next successful save writes them,
+  // replacing changes other tabs made meanwhile; the banner has told the user
+  // that saving is failing. Changes made while storage could not be read are
+  // not kept this way: memory never saw the stored lists, so saving it could
+  // replace them. Those changes are dropped when the store can be read again.
   const unsaved = useRef(false);
   const editable = issue?.kind !== "invalid";
 
@@ -177,7 +180,9 @@ export function ListsProvider({
       stateRef.current = result.state;
       setState(result.state);
       const saved = repository.save(result.state);
-      unsaved.current = !saved.ok;
+      if (saved.ok) unsaved.current = false;
+      else if (saved.reason === "full" || saved.reason === "unavailable")
+        unsaved.current = true;
       if (!saved.ok && "cause" in saved)
         console.error("Saving lists failed:", describeError(saved.cause));
       setIssue((current) => issueAfterSave(saved, current));
