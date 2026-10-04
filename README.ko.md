@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/github/license/dev1f965x/argmax)](LICENSE)
 
-Argmax는 무언가를 고를 때 쓰는 웹 앱입니다. 목록을 만들고 항목을 넣으면 그중 하나를 같은 확률로 무작위로 골라 줍니다. 첫 출시를 향해 개발 중이며, 진행 상황은 [변경 이력](CHANGELOG.md)에서 볼 수 있습니다.
+Argmax는 목록을 만들고 항목을 추가하면 그중 하나를 같은 확률로 무작위로 뽑는 웹 앱입니다. 첫 출시를 향해 개발 중이며, 진행 상황은 [변경 이력](CHANGELOG.md)에서 볼 수 있습니다.
 
 ## 개발
 

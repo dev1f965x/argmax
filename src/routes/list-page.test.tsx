@@ -79,7 +79,7 @@ function renderList(
   return { user: userEvent.setup(), storedItems, storedLists, router };
 }
 
-const addField = () => screen.getByRole("textbox", { name: "Add an item" });
+const addField = () => screen.getByRole("textbox", { name: "New item" });
 const rows = () =>
   within(screen.getByRole("list"))
     .getAllByRole("listitem")
@@ -139,7 +139,7 @@ describe("ListPage", () => {
     );
 
     expect(
-      screen.queryByRole("textbox", { name: "Add an item" }),
+      screen.queryByRole("textbox", { name: "New item" }),
     ).not.toBeInTheDocument();
     expect(
       screen.getByText(
@@ -153,7 +153,7 @@ describe("ListPage", () => {
 
     screen.getByRole("button", { name: "Edit “Ramen”" }).focus();
     await user.keyboard("{Enter}");
-    const field = screen.getByRole("textbox", { name: "Edit item" });
+    const field = screen.getByRole("textbox", { name: "Item text" });
     expect(field).toHaveFocus();
     expect(field).toHaveValue("Ramen");
 
@@ -179,14 +179,14 @@ describe("ListPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Edit “Ramen”" }));
     await user.type(
-      screen.getByRole("textbox", { name: "Edit item" }),
+      screen.getByRole("textbox", { name: "Item text" }),
       `${"x".repeat(limits.textLength)}{Enter}`,
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Use 100 characters or fewer.",
     );
-    expect(screen.getByRole("textbox", { name: "Edit item" })).toBeVisible();
+    expect(screen.getByRole("textbox", { name: "Item text" })).toBeVisible();
     expect(storedItems()).toEqual(["Ramen"]);
   });
 
@@ -305,7 +305,7 @@ describe("ListPage", () => {
         name: "Delete “Lunch”?",
       });
       expect(dialog).toHaveTextContent(
-        "2 items will be deleted with it. This can’t be undone.",
+        "This also deletes 2 items. You can’t undo this.",
       );
 
       await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
@@ -323,9 +323,7 @@ describe("ListPage", () => {
         await screen.findByRole("menuitem", { name: "Delete list" }),
       );
       const dialog = await screen.findByRole("alertdialog");
-      expect(dialog).toHaveTextContent(
-        "The list will be deleted. This can’t be undone.",
-      );
+      expect(dialog).toHaveTextContent("You can’t undo this.");
       await user.click(
         within(dialog).getByRole("button", { name: "Delete list" }),
       );

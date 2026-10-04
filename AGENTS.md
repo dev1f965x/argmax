@@ -4,7 +4,7 @@ Guidance for coding agents working in this repository. Humans should start with 
 
 ## Project
 
-Argmax is a static single-page web app that keeps lists in the browser and picks one item at random with equal chance. There is no backend. Product context is in [PRODUCT.md](PRODUCT.md); visual design rules and tokens are in [DESIGN.md](DESIGN.md).
+Argmax is a static single-page web app that keeps lists in the browser and picks one item at random with equal chance. There is no backend. Product context is in [PRODUCT.md](PRODUCT.md); visual design rules and tokens are in [DESIGN.md](DESIGN.md); rules for UI text, terminology, and tone in both languages are in [CONTENT.md](CONTENT.md).
 
 ## Setup
 
@@ -57,7 +57,7 @@ CI (`.github/workflows/ci.yml`) runs the same commands on every pull request; bo
 - Use design tokens only. `pnpm check` fails on raw colors or arbitrary Tailwind values in TypeScript files under `src/`, except `src/components/ui/` and tests.
 - New dependencies must have a license on the allow list in `scripts/licenses.mjs`; do not extend the list without recording why.
 - Keep the content security policy in `public/_headers` strict; no inline scripts or styles and no third-party origins without a recorded reason.
-- Every UI string goes through i18next. Add the English key in `src/i18n/en.ts`; the Korean resources must have the same keys or the type check fails.
+- Every UI string goes through i18next and follows CONTENT.md. Add the English key in `src/i18n/en.ts`; the Korean resources must have the same keys or the type check fails.
 - A link styled as a button is `<Link className={buttonVariants()}>`, not `Button` with `render`, which adds `role="button"`.
 - UI changes are checked with screenshots at 360 px and desktop widths, in English and Korean, and must pass the axe checks.
 - Comments explain why, not what.

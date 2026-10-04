@@ -36,8 +36,10 @@ test("the app runs without Content Security Policy violations", async ({
 
   await page.goto("/");
   await page.getByRole("button", { name: "한국어" }).click();
-  await page.getByRole("link", { name: "개인정보" }).click();
-  await expect(page.getByRole("heading", { name: "개인정보" })).toBeVisible();
+  await page.getByRole("link", { name: "개인정보 처리방침" }).click();
+  await expect(
+    page.getByRole("heading", { name: "개인정보 처리방침" }),
+  ).toBeVisible();
   await page.goto("/missing");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
@@ -47,7 +49,7 @@ test("the app runs without Content Security Policy violations", async ({
   await page.getByRole("textbox", { name: "새 목록 이름" }).fill("점심");
   await page.keyboard.press("Enter");
   await page.getByRole("link", { name: /점심/ }).click();
-  await page.getByRole("textbox", { name: "항목 추가" }).fill("라멘");
+  await page.getByRole("textbox", { name: "새 항목" }).fill("라멘");
   await page.keyboard.press("Enter");
   await page.getByRole("button", { name: "뽑기", exact: true }).click();
   await expect(page.getByRole("button", { name: "다시 뽑기" })).toBeVisible();
@@ -65,7 +67,7 @@ test("the footer links to the generated third-party notices", async ({
 }) => {
   await page.goto("/");
   const href = await page
-    .getByRole("link", { name: "Open source licenses" })
+    .getByRole("link", { name: "Open-source licenses" })
     .getAttribute("href");
   const notices = await request.get(href ?? "");
   expect(notices.ok()).toBe(true);
@@ -85,7 +87,7 @@ test("no usage events leave a non-production site", async ({ page }) => {
   await page.getByRole("textbox", { name: "New list name" }).fill("Lunch");
   await page.keyboard.press("Enter");
   await page.getByRole("link", { name: /Lunch/ }).click();
-  await page.getByRole("textbox", { name: "Add an item" }).fill("Ramen");
+  await page.getByRole("textbox", { name: "New item" }).fill("Ramen");
   await page.keyboard.press("Enter");
   await page.getByRole("button", { name: "Pick", exact: true }).click();
   await expect(page.getByRole("button", { name: "Pick again" })).toBeVisible();
