@@ -1,45 +1,15 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ListsProvider } from "@/components/lists-provider";
 import { tracker } from "@/lib/analytics";
-import { createRepository, type StoredState, storageKey } from "@/lib/storage";
-import { ListPage } from "@/routes/list-page";
-import { RootLayout } from "@/routes/root-layout";
-import { memoryStorage } from "@/test/memory-storage";
+import { storageKey } from "@/lib/storage";
+import { renderApp, storedState } from "@/test/fixtures";
 
-function renderList(items: string[], createdAt = "2026-10-04T00:00:00.000Z") {
-  const state: StoredState = {
-    schemaVersion: 1,
-    lists: [
-      {
-        id: "lunch",
-        name: "Lunch",
-        items: items.map((text, index) => ({ id: `item-${index}`, text })),
-        createdAt,
-        updatedAt: createdAt,
-      },
-    ],
-  };
-  const { storage, data } = memoryStorage({
-    [storageKey]: JSON.stringify(state),
+function renderList(items: string[], createdAt?: string) {
+  return renderApp({
+    path: "/lists/lunch",
+    stored: storedState([{ id: "lunch", name: "Lunch", items, createdAt }]),
   });
-  const router = createMemoryRouter(
-    [
-      {
-        Component: RootLayout,
-        children: [{ path: "lists/:id", Component: ListPage }],
-      },
-    ],
-    { initialEntries: ["/lists/lunch"] },
-  );
-  render(
-    <ListsProvider repository={createRepository(() => storage)}>
-      <RouterProvider router={router} />
-    </ListsProvider>,
-  );
-  return { data };
 }
 
 /** Makes crypto.getRandomValues return the given values in order. */
@@ -170,21 +140,7 @@ describe("PickPanel", () => {
 
     fireEvent.click(pickButton());
     act(() => vi.advanceTimersByTime(200));
-    data.set(
-      storageKey,
-      JSON.stringify({
-        schemaVersion: 1,
-        lists: [
-          {
-            id: "lunch",
-            name: "Lunch",
-            items: [],
-            createdAt: "2026-10-04T00:00:00.000Z",
-            updatedAt: "2026-10-04T00:00:00.000Z",
-          },
-        ],
-      }),
-    );
+    data.set(storageKey, storedState([{ id: "lunch", name: "Lunch" }]));
     act(() => {
       window.dispatchEvent(new StorageEvent("storage", { key: storageKey }));
     });

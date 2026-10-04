@@ -1,73 +1,18 @@
-import { render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { createMemoryRouter, RouterProvider } from "react-router";
+import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ListsProvider } from "@/components/lists-provider";
 import { tracker } from "@/lib/analytics";
-import type { Context } from "@/lib/lists";
-import {
-  createRepository,
-  limits,
-  type StoredState,
-  storageKey,
-} from "@/lib/storage";
+import { limits, storageKey } from "@/lib/storage";
+import { renderApp, storedState } from "@/test/fixtures";
 import { memoryStorage } from "@/test/memory-storage";
-import { ListPage } from "./list-page";
-import { ListsPage } from "./lists-page";
-import { RootLayout } from "./root-layout";
 
-function testContext(): Context {
-  let id = 0;
-  return {
-    newId: () => {
-      id += 1;
-      return `id-${id}`;
-    },
-    now: () => new Date("2026-10-03T00:00:00.000Z"),
-  };
-}
-
-function stateWith(names: string[]): string {
-  const state: StoredState = {
-    schemaVersion: 1,
-    lists: names.map((name, index) => ({
-      id: `list-${index}`,
-      name,
-      items: [],
-      createdAt: "2026-10-03T00:00:00.000Z",
-      updatedAt: "2026-10-03T00:00:00.000Z",
-    })),
-  };
-  return JSON.stringify(state);
-}
-
-function renderApp(storage: Storage) {
-  const router = createMemoryRouter([
-    {
-      Component: RootLayout,
-      children: [
-        { index: true, Component: ListsPage },
-        { path: "lists/:id", Component: ListPage },
-      ],
-    },
-  ]);
-  render(
-    <ListsProvider
-      repository={createRepository(() => storage)}
-      context={testContext()}
-    >
-      <RouterProvider router={router} />
-    </ListsProvider>,
-  );
-  return { user: userEvent.setup() };
-}
+const named = (names: string[]) => names.map((name) => ({ name }));
 
 const nameField = () => screen.getByRole("textbox", { name: "New list name" });
 const createButton = () => screen.getByRole("button", { name: "Create" });
 
 describe("ListsPage", () => {
   it("explains what to do first and where lists are stored", () => {
-    renderApp(memoryStorage().storage);
+    renderApp();
 
     expect(screen.getByRole("heading", { name: "Lists" })).toBeInTheDocument();
     expect(screen.getByText("No lists yet")).toBeInTheDocument();
@@ -76,7 +21,7 @@ describe("ListsPage", () => {
 
   it("reports list_created for a created list, and nothing for a rejected name", async () => {
     const listCreated = vi.spyOn(tracker, "listCreated");
-    const { user } = renderApp(memoryStorage().storage);
+    const { user } = renderApp();
 
     await user.type(nameField(), "{Enter}");
     expect(listCreated).not.toHaveBeenCalled();
@@ -87,8 +32,7 @@ describe("ListsPage", () => {
   });
 
   it("creates a list with a trimmed name, saves it, and links to it", async () => {
-    const { storage, data } = memoryStorage();
-    const { user } = renderApp(storage);
+    const { user, data } = renderApp();
 
     await user.type(nameField(), "  Lunch {Enter}");
 
@@ -104,9 +48,7 @@ describe("ListsPage", () => {
   });
 
   it("shows the newest list first", async () => {
-    const { user } = renderApp(
-      memoryStorage({ [storageKey]: stateWith(["Older"]) }).storage,
-    );
+    const { user } = renderApp({ stored: storedState(named(["Older"])) });
 
     await user.type(nameField(), "Newer{Enter}");
 
@@ -130,8 +72,7 @@ describe("ListsPage", () => {
   ])(
     "rejects %s with a message linked to the field",
     async (_, input, message) => {
-      const { storage, data } = memoryStorage();
-      const { user } = renderApp(storage);
+      const { user, data } = renderApp();
 
       if (input) await user.type(nameField(), input);
       await user.click(createButton());
@@ -145,7 +86,7 @@ describe("ListsPage", () => {
   );
 
   it("announces an error again when Enter is pressed twice, and clears it on typing", async () => {
-    const { user } = renderApp(memoryStorage().storage);
+    const { user } = renderApp();
 
     await user.type(nameField(), "{Enter}");
     const first = screen.getByRole("alert");
@@ -165,7 +106,7 @@ describe("ListsPage", () => {
       { length: limits.lists },
       (_, index) => `List ${index}`,
     );
-    renderApp(memoryStorage({ [storageKey]: stateWith(names) }).storage);
+    renderApp({ stored: storedState(named(names)) });
 
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
     expect(
@@ -180,9 +121,7 @@ describe("ListsPage", () => {
       { length: limits.lists - 1 },
       (_, index) => `List ${index}`,
     );
-    const { user } = renderApp(
-      memoryStorage({ [storageKey]: stateWith(names) }).storage,
-    );
+    const { user } = renderApp({ stored: storedState(named(names)) });
 
     await user.type(nameField(), "Last{Enter}");
 
@@ -196,10 +135,10 @@ describe("ListsPage", () => {
   });
 
   it("warns when storage is blocked and keeps working for the session", async () => {
-    const { storage, failures } = memoryStorage();
-    failures.get = new DOMException("Access denied", "SecurityError");
-    failures.set = failures.get;
-    const { user } = renderApp(storage);
+    const memory = memoryStorage();
+    memory.failures.get = new DOMException("Access denied", "SecurityError");
+    memory.failures.set = memory.failures.get;
+    const { user } = renderApp({ storage: memory });
 
     expect(screen.getByText("Lists can’t be saved")).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -210,21 +149,8 @@ describe("ListsPage", () => {
   });
 
   it("alerts each time saving fails after storage worked in between", async () => {
-    const { storage, failures } = memoryStorage();
+    const { user, failures } = renderApp();
     failures.set = new DOMException("Quota exceeded", "QuotaExceededError");
-    const repository = createRepository(() => storage);
-    const router = createMemoryRouter([
-      {
-        Component: RootLayout,
-        children: [{ index: true, Component: ListsPage }],
-      },
-    ]);
-    render(
-      <ListsProvider repository={repository} context={testContext()}>
-        <RouterProvider router={router} />
-      </ListsProvider>,
-    );
-    const user = userEvent.setup();
 
     await user.type(nameField(), "One{Enter}");
     expect(screen.getByRole("alert")).toHaveTextContent(
@@ -242,8 +168,7 @@ describe("ListsPage", () => {
   });
 
   it("warns when storage is full", async () => {
-    const { storage, failures } = memoryStorage();
-    const { user } = renderApp(storage);
+    const { user, failures } = renderApp();
     failures.set = new DOMException("Quota exceeded", "QuotaExceededError");
 
     await user.type(nameField(), "Lunch{Enter}");
@@ -258,7 +183,7 @@ describe("ListsPage", () => {
     const raw = '{"schemaVersion":2}';
 
     it("keeps the data, turns editing off, and offers recovery", () => {
-      renderApp(memoryStorage({ [storageKey]: raw }).storage);
+      renderApp({ stored: raw });
 
       expect(
         screen.getByText("Saved lists couldn’t be read"),
@@ -269,7 +194,7 @@ describe("ListsPage", () => {
     });
 
     it("copies the raw data", async () => {
-      const { user } = renderApp(memoryStorage({ [storageKey]: raw }).storage);
+      const { user } = renderApp({ stored: raw });
 
       await user.click(screen.getByRole("button", { name: "Copy data" }));
 
@@ -278,8 +203,7 @@ describe("ListsPage", () => {
     });
 
     it("deletes the data only after confirmation", async () => {
-      const { storage, data } = memoryStorage({ [storageKey]: raw });
-      const { user } = renderApp(storage);
+      const { user, data } = renderApp({ stored: raw });
 
       await user.click(screen.getByRole("button", { name: "Delete data" }));
       await user.click(

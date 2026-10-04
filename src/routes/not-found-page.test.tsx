@@ -1,19 +1,10 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { createMemoryRouter, RouterProvider } from "react-router";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { NotFoundPage } from "./not-found-page";
+import { renderApp } from "@/test/fixtures";
 
 describe("NotFoundPage", () => {
   it("links back to the lists screen", async () => {
-    const router = createMemoryRouter(
-      [
-        { path: "/", element: <h1>Lists</h1> },
-        { path: "*", Component: NotFoundPage },
-      ],
-      { initialEntries: ["/missing"] },
-    );
-    render(<RouterProvider router={router} />);
+    const { user } = renderApp({ path: "/missing" });
 
     expect(
       screen.getByRole("heading", { name: "Page not found" }),
@@ -22,7 +13,7 @@ describe("NotFoundPage", () => {
       screen.getByText("This page or list doesn’t exist."),
     ).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("link", { name: "Back to lists" }));
+    await user.click(screen.getByRole("link", { name: "Back to lists" }));
 
     expect(screen.getByRole("heading", { name: "Lists" })).toBeInTheDocument();
   });

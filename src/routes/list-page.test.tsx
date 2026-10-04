@@ -1,73 +1,22 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { createMemoryRouter, RouterProvider } from "react-router";
+import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { ListsProvider } from "@/components/lists-provider";
-import type { Context } from "@/lib/lists";
-import {
-  createRepository,
-  limits,
-  type StoredState,
-  storageKey,
-} from "@/lib/storage";
-import { memoryStorage } from "@/test/memory-storage";
-import { ListPage } from "./list-page";
-import { ListsPage } from "./lists-page";
-import { RootLayout } from "./root-layout";
+import { limits, storageKey } from "@/lib/storage";
+import { renderApp, storedState } from "@/test/fixtures";
 
-function testContext(): Context {
-  let id = 0;
-  return {
-    newId: () => {
-      id += 1;
-      return `new-${id}`;
-    },
-    now: () => new Date("2026-10-03T00:00:00.000Z"),
-  };
-}
-
-function storedList(items: string[]): string {
-  const state: StoredState = {
-    schemaVersion: 1,
-    lists: [
-      {
-        id: "lunch",
-        name: "Lunch",
-        items: items.map((text, index) => ({ id: `item-${index}`, text })),
-        createdAt: "2026-10-03T00:00:00.000Z",
-        updatedAt: "2026-10-03T00:00:00.000Z",
-      },
-    ],
-  };
-  return JSON.stringify(state);
-}
+// jsdom renders 1,000 rows in several seconds, more than the default timeout
+// when the machine is busy.
+const fullList = { timeout: 30_000 };
 
 function renderList(
   items: string[],
   path = "/lists/lunch",
   history: string[] = [],
 ) {
-  const { storage, data } = memoryStorage({ [storageKey]: storedList(items) });
-  const router = createMemoryRouter(
-    [
-      {
-        Component: RootLayout,
-        children: [
-          { index: true, Component: ListsPage },
-          { path: "lists/:id", Component: ListPage },
-        ],
-      },
-    ],
-    { initialEntries: [...history, path] },
-  );
-  render(
-    <ListsProvider
-      repository={createRepository(() => storage)}
-      context={testContext()}
-    >
-      <RouterProvider router={router} />
-    </ListsProvider>,
-  );
+  const { user, router, data } = renderApp({
+    path,
+    history,
+    stored: storedState([{ id: "lunch", name: "Lunch", items }]),
+  });
   const storedLists = () =>
     JSON.parse(data.get(storageKey) ?? "").lists as {
       name: string;
@@ -76,7 +25,7 @@ function renderList(
     JSON.parse(data.get(storageKey) ?? "").lists[0].items.map(
       (item: { text: string }) => item.text,
     );
-  return { user: userEvent.setup(), storedItems, storedLists, router };
+  return { user, storedItems, storedLists, router };
 }
 
 const addField = () => screen.getByRole("textbox", { name: "New item" });
@@ -133,20 +82,24 @@ describe("ListPage", () => {
     expect(storedItems()).toEqual(["Ramen"]);
   });
 
-  it("replaces the add field with a message at the item limit", () => {
-    renderList(
-      Array.from({ length: limits.itemsPerList }, (_, index) => `${index}`),
-    );
+  it(
+    "replaces the add field with a message at the item limit",
+    fullList,
+    () => {
+      renderList(
+        Array.from({ length: limits.itemsPerList }, (_, index) => `${index}`),
+      );
 
-    expect(
-      screen.queryByRole("textbox", { name: "New item" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "This list has 1,000 items, the maximum. Remove an item to add another.",
-      ),
-    ).toBeInTheDocument();
-  });
+      expect(
+        screen.queryByRole("textbox", { name: "New item" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "This list has 1,000 items, the maximum. Remove an item to add another.",
+        ),
+      ).toBeInTheDocument();
+    },
+  );
 
   it("edits an item with the keyboard and returns focus to its Edit button", async () => {
     const { user, storedItems } = renderList(["Ramen", "Sushi"]);
@@ -224,20 +177,27 @@ describe("ListPage", () => {
     expect(screen.getByRole("button", { name: "Edit “A”" })).toHaveFocus();
   });
 
-  it("moves focus to the limit message when the last allowed item is added", async () => {
-    const { user } = renderList(
-      Array.from({ length: limits.itemsPerList - 1 }, (_, index) => `${index}`),
-    );
+  it(
+    "moves focus to the limit message when the last allowed item is added",
+    fullList,
+    async () => {
+      const { user } = renderList(
+        Array.from(
+          { length: limits.itemsPerList - 1 },
+          (_, index) => `${index}`,
+        ),
+      );
 
-    await user.type(addField(), "Last{Enter}");
+      await user.type(addField(), "Last{Enter}");
 
-    expect(
-      screen.getByText(/^This list has 1,000 items/, { selector: "p" }),
-    ).toHaveFocus();
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "Added “Last”. This list has 1,000 items, the maximum.",
-    );
-  });
+      expect(
+        screen.getByText(/^This list has 1,000 items/, { selector: "p" }),
+      ).toHaveFocus();
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "Added “Last”. This list has 1,000 items, the maximum.",
+      );
+    },
+  );
 
   it("announces a repeated error and a repeated addition again", async () => {
     const { user } = renderList([]);
