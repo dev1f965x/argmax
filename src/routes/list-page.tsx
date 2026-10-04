@@ -1,5 +1,5 @@
 import { ChevronLeft, Ellipsis, Pencil, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { useAnnouncer } from "@/components/announcer";
@@ -87,6 +87,7 @@ export function ListPage() {
     item: Item;
     index: number;
   } | null>(null);
+  const undoId = useId();
   const [focusTarget, setFocusTarget] = useState<FocusTarget>(
     created ? "entry" : null,
   );
@@ -278,7 +279,7 @@ export function ListPage() {
       {/* In the DOM the pick panel follows the title, so keyboard users reach
           Pick before the items; the grid places it in the right column on
           desktop, and on phones it is a fixed bar at the bottom. */}
-      <div className="md:grid md:grid-cols-list md:items-start md:gap-x-12">
+      <div className="md:grid md:grid-list md:items-start md:gap-x-12">
         <div className="min-w-0">
           {renaming ? (
             <>
@@ -396,13 +397,15 @@ export function ListPage() {
           {region}
           {undo?.listId === listId && (
             <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-surface py-1 pr-1 pl-3.5">
-              <p className="min-w-0 text-sm wrap-anywhere">
+              <p id={undoId} className="min-w-0 text-sm wrap-anywhere">
                 {t("list.removed", { text: undo.item.text })}
               </p>
               <Button
                 variant="ghost"
                 disabled={!editable}
                 onClick={() => restore(undo.item, undo.index)}
+                // Says what Undo restores when the button is reached on its own.
+                aria-describedby={undoId}
                 className="shrink-0"
               >
                 {t("list.undo")}

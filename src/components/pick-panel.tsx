@@ -65,7 +65,9 @@ export function PickPanel({
   }, []);
 
   // Firefox does not apply scroll-padding when Tab moves focus, so a control
-  // could stay behind the fixed bar; scroll it out from under the bar.
+  // could stay behind the fixed bar; scroll it out from under the bar. A mouse
+  // click on a partly covered control also scrolls it by the overlap, and the
+  // pointer stays on it because only the covered part moves out from under.
   useEffect(() => {
     function reveal(event: FocusEvent) {
       const bar = panel.current;
