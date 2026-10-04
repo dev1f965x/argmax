@@ -2,7 +2,7 @@ import { TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router";
-import { useLists } from "@/components/lists-provider";
+import { type StorageIssue, useLists } from "@/components/lists-provider";
 import { StatusNotice } from "@/components/status-notice";
 import {
   AlertDialog,
@@ -19,12 +19,12 @@ import { Button } from "@/components/ui/button";
 import { describeError } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 
+type IssueKind = NonNullable<StorageIssue>["kind"];
+
 /**
  * Persistent notice for storage problems, rendered once in the layout so it stays
  * in place while the user moves between screens.
  */
-type IssueKind = NonNullable<ReturnType<typeof useLists>["issue"]>["kind"];
-
 export function StorageBanner() {
   const { t } = useTranslation();
   const { issue, issueFoundAtLoad } = useLists();

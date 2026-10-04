@@ -19,6 +19,7 @@ for (const [file, patterns] of Object.entries(rules)) {
   readFileSync(new URL(`../${file}`, import.meta.url), "utf8")
     .split("\n")
     .forEach((line, index) => {
+      if (/^\s*\/\//.test(line)) return;
       // Only string literals are UI text; imports, types, and comments are not.
       // Escaped quotes are unescaped first, so a straight quote inside a
       // literal is still found.
