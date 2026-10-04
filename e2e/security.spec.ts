@@ -38,6 +38,21 @@ test("the app runs without Content Security Policy violations", async ({
   await page.goto("/missing");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
+  // The List screen: menus, dialogs, and the pick bar, which sets its height
+  // as a CSS variable from script.
+  await page.goto("/");
+  await page.getByRole("textbox", { name: "새 목록 이름" }).fill("점심");
+  await page.keyboard.press("Enter");
+  await page.getByRole("link", { name: /점심/ }).click();
+  await page.getByRole("textbox", { name: "항목 추가" }).fill("라멘");
+  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "뽑기", exact: true }).click();
+  await expect(page.getByRole("button", { name: "다시 뽑기" })).toBeVisible();
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.getByRole("button", { name: "목록 메뉴" }).click();
+  await page.getByRole("menuitem", { name: "목록 삭제" }).click();
+  await expect(page.getByRole("alertdialog")).toBeVisible();
+
   expect(violations).toEqual([]);
 });
 

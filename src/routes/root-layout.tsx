@@ -9,7 +9,9 @@ export function RootLayout() {
   const { t } = useTranslation();
 
   return (
-    <div className="flex min-h-svh flex-col">
+    // On phones the List screen's pick bar is fixed to the bottom; the layout
+    // reserves its height so the footer and the last items stay reachable.
+    <div className="flex min-h-svh flex-col pb-(--pick-bar-height) md:pb-0">
       <header className="border-b">
         <div className="mx-auto flex h-14 max-w-240 items-center justify-between px-4">
           <Link to="/" aria-label={t("app.home")}>

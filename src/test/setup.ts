@@ -7,3 +7,22 @@ import "@/i18n";
 afterEach(() => {
   cleanup();
 });
+
+// jsdom implements neither; the app uses them for the pick bar and its motion.
+class NoopResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+globalThis.ResizeObserver ??= NoopResizeObserver;
+window.matchMedia ??= (query: string) =>
+  ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener() {},
+    removeEventListener() {},
+    addListener() {},
+    removeListener() {},
+    dispatchEvent: () => false,
+  }) satisfies MediaQueryList;

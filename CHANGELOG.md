@@ -16,5 +16,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - List screen: add, edit, and remove items, with the 1,000-item and 100-character limits; every action works with a keyboard.
 - Rename and delete a list from the List actions menu; deleting asks for confirmation, states how many items go with it, and returns to the Lists screen.
 - Lists stay consistent across browser tabs: a change in one tab appears in the others, and no tab overwrites lists created in another.
+- Pick an item at random with equal chance: a short cycle settles on the result, which is shown in full and announced to screen readers; with reduced motion the result appears at once.
 
 [Unreleased]: https://github.com/dev1f965x/argmax/commits/main

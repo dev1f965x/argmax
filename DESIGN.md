@@ -144,7 +144,7 @@ Pretendard's Latin glyphs are derived from Inter. ARG-20 lists Inter as a patter
 ## Layout
 
 - Content width 960 px with 16 px side padding. The Lists screen keeps the same left edge and limits its column to 640 px.
-- List screen: one column on mobile with a fixed pick bar at the bottom; from 768 px, two columns with a 320 px sticky pick panel on the right.
+- List screen: one column on mobile with a fixed pick bar at the bottom; from 768 px, two columns with a 320 px sticky pick panel on the right. The bar publishes its height as `--pick-bar-height`, and the layout reserves that space so the footer and the last items are never covered.
 - Spacing follows the 4 px Tailwind scale. Groups use 8 to 12 px, sections 24 to 32 px, and there is more space above a heading than below it.
 - Touch targets are at least 44 px.
 - Single-field forms that add something (a new list, a new item) use the placeholder as the visible prompt and a visually hidden label, following the approved wireframes and the reference apps; the screen title gives the context once the user types. Forms with more than one field use visible labels.
@@ -173,6 +173,7 @@ Flat by default: separation comes from dividers and tinted surfaces, not shadows
 ### Motion
 
 - One authored moment: when the user picks, item names cycle quickly for about 600 ms and settle on the result with an ease-out (`ease-out-expo`). With `prefers-reduced-motion: reduce`, the result appears immediately.
+- The cycle uses ten steps with growing gaps (30 to 100 ms), an approximation of the ease-out: a literal expo curve would need steps shorter than a frame and a long stall at the end. Cycling names are muted and kept to one line so the panel does not jump; the result then takes the foreground color with a 150 ms `ease-out-expo` transition. In the phone bar the result area is capped at 40% of the viewport height and scrolls beyond that.
 - Everything else changes instantly or with a short fade (about 150 ms). No entrance animations on page load and no hover motion on rows.
 
 ### Dark mode

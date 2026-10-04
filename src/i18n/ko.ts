@@ -63,6 +63,15 @@ export const ko: Resources = {
       tooLong: "{{limit, number}}자 이하로 입력하세요.",
     },
   },
+  pick: {
+    region: "뽑기 결과",
+    pick: "뽑기",
+    again: "다시 뽑기",
+    label: "뽑힌 항목",
+    hint: "뽑기를 누르면 결과가 여기에 표시됩니다.",
+    needItem: "뽑으려면 항목을 추가하세요.",
+    announced: "뽑힌 항목: “{{text}}”",
+  },
   common: {
     saveFailed:
       "변경 사항을 저장하지 못했습니다. 페이지를 새로 고친 뒤 다시 시도하세요.",
