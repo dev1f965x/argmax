@@ -32,6 +32,13 @@ test("each screen has its own title, and navigation moves focus to the new headi
 
   await page.getByRole("button", { name: "한국어" }).click();
   await expect(page).toHaveTitle("개인정보 – Argmax");
+
+  await page.goBack();
+  await expect(page).toHaveTitle("Lunch – Argmax");
+  await expect(page.getByRole("heading", { name: "Lunch" })).toBeFocused();
+  await page.goBack();
+  await expect(page).toHaveTitle("목록 – Argmax");
+  await expect(page.getByRole("heading", { name: "목록" })).toBeFocused();
 });
 
 test("a new screen starts at the top, and Back restores the scroll position", async ({

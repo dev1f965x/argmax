@@ -90,6 +90,15 @@ describe("RootLayout navigation", () => {
     expect(screen.getByRole("heading", { name: "Privacy" })).toHaveFocus();
   });
 
+  it("moves focus on Back to the first page", async () => {
+    const { user, router } = renderApp("/");
+
+    await user.click(screen.getByRole("link", { name: /Lunch/ }));
+    await router.navigate(-1);
+
+    expect(await screen.findByRole("heading", { name: "Lists" })).toHaveFocus();
+  });
+
   it("keeps focus that the new screen moved on purpose", async () => {
     const { router } = renderApp("/lists/lunch");
 
