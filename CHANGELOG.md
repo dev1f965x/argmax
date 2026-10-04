@@ -19,6 +19,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Pick an item at random with equal chance: a short cycle settles on the result, which is shown in full and announced to screen readers; with reduced motion the result appears at once.
 - Not found page: unknown paths and list links say the page or list does not exist and link back to the Lists screen.
 - Each screen has its own page title; after navigation, focus moves to the new screen's heading, new screens start at the top, and Back restores the scroll position.
-- Anonymous usage counts through Umami Cloud on the production site: screen views, list creation, and picks, without list names or items, without cookies, and not when the browser sends Global Privacy Control or Do Not Track.
+- Usage data without names or account details sent to Umami Cloud from the production site: screen views, list creation, and picks, without list names or items, without cookies, and not when the browser sends Global Privacy Control or Do Not Track.
 
 [Unreleased]: https://github.com/dev1f965x/argmax/commits/main
