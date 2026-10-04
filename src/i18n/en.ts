@@ -59,6 +59,15 @@ export const en = {
       tooLong: "Use {{limit, number}} characters or fewer.",
     },
   },
+  pick: {
+    region: "Pick",
+    pick: "Pick",
+    again: "Pick again",
+    label: "Picked",
+    hint: "Pick an item to see the result here.",
+    needItem: "Add an item to pick.",
+    announced: "Picked “{{text}}”.",
+  },
   common: {
     saveFailed: "Couldn’t save the change. Reload the page and try again.",
   },
