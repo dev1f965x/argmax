@@ -1,7 +1,7 @@
 {
   "name": "Argmax",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:24-trixie@sha256:cba90c28e53ac2f5a8a5a0388b71b8e98bbe1a4711e0faaa6ef48b137037d4ae",
-  "runArgs": ["--ulimit", "core=0"],
+  "runArgs": ["--ulimit", "core=0", "--shm-size=1g"],
   "features": {
     "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
   },
