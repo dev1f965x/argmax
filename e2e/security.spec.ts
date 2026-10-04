@@ -36,8 +36,10 @@ test("the app runs without Content Security Policy violations", async ({
 
   await page.goto("/");
   await page.getByRole("button", { name: "한국어" }).click();
-  await page.getByRole("link", { name: "개인정보" }).click();
-  await expect(page.getByRole("heading", { name: "개인정보" })).toBeVisible();
+  await page.getByRole("link", { name: "개인정보 처리방침" }).click();
+  await expect(
+    page.getByRole("heading", { name: "개인정보 처리방침" }),
+  ).toBeVisible();
   await page.goto("/missing");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 

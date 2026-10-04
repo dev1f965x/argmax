@@ -14,7 +14,7 @@ export const en = {
     storedLocally:
       "Lists are saved only in this browser. Clearing browser data or switching devices removes them.",
     emptyTitle: "No lists yet",
-    emptyBody: "Name your first list above, for example “Lunch”.",
+    emptyBody: "Create your first list, for example “Lunch”.",
     itemCount_zero: "No items yet",
     itemCount_one: "{{count, number}} item",
     itemCount_other: "{{count, number}} items",
@@ -40,11 +40,11 @@ export const en = {
     renamed: "Renamed the list to “{{name}}”.",
     delete: "Delete list",
     deleteTitle: "Delete “{{name}}”?",
-    deleteBody_zero: "The list will be deleted. This can’t be undone.",
+    deleteBody_zero: "You can’t undo this.",
     deleteBody_one:
-      "{{count, number}} item will be deleted with it. This can’t be undone.",
+      "This also deletes {{count, number}} item. You can’t undo this.",
     deleteBody_other:
-      "{{count, number}} items will be deleted with it. This can’t be undone.",
+      "This also deletes {{count, number}} items. You can’t undo this.",
     editLabel: "Edit item",
     edit: "Edit “{{text}}”",
     remove: "Remove “{{text}}”",
@@ -64,8 +64,8 @@ export const en = {
     pick: "Pick",
     again: "Pick again",
     label: "Picked",
-    hint: "Pick an item to see the result here.",
-    needItem: "Add an item to pick.",
+    hint: "Select Pick to see the result here.",
+    needItem: "Add an item to pick from.",
     announced: "Picked “{{text}}”.",
   },
   common: {
@@ -80,14 +80,14 @@ export const en = {
       "Storage in this browser is full, so changes will be lost when you close the page. Delete lists or items you no longer need.",
     invalidTitle: "Saved lists couldn’t be read",
     invalidBody:
-      "The data in this browser is damaged or from an unknown version. It has been left untouched, and editing is turned off.",
+      "The saved data is damaged or from an unknown version. Argmax left it unchanged and turned off editing.",
     copy: "Copy data",
     copied: "Copied the saved data.",
     copyFailed: "Couldn’t copy. Your browser blocked the clipboard.",
     discard: "Delete data",
     discardTitle: "Delete saved data?",
     discardBody:
-      "The unreadable data will be deleted from this browser, and you will start with no lists. Copy it first if you might need it. This can’t be undone.",
+      "This deletes the unreadable data from this browser, and you start with no lists. To keep a copy, select Copy data first. You can’t undo this.",
     discardConfirm: "Delete data",
     discardFailed: "Couldn’t delete the data. Reload the page and try again.",
     cancel: "Cancel",
@@ -99,25 +99,35 @@ export const en = {
     backToLists: "Back to lists",
   },
   footer: {
-    privacy: "Privacy",
+    privacy: "Privacy policy",
     licenses: "Open source licenses",
     source: "Source code",
   },
   privacy: {
-    title: "Privacy",
+    title: "Privacy policy",
     noAccounts:
       "Argmax itself has no accounts and no cookies, and it never asks for or stores personal data.",
     localOnly:
-      "Your lists and your language choice are saved only in this browser's local storage. They are not sent anywhere, and clearing your browser data removes them. While a tab is open, the browser also keeps your scroll positions for Back and Forward; they are removed when you close the tab.",
-    analytics:
-      "To learn how Argmax is used, the site sends usage data without names or account details to Umami Cloud, run by Umami Software, Inc. in the United States. Each time you open a screen, create a list, or make a pick, it sends over HTTPS which screen was opened, that a list was created or a pick was made and whether it was a first visit (judged from the creation times of the lists stored in this browser), the browser language, the screen size, and the address of the site that linked here, without its path. List names and items are never sent. As with any website request, your IP address and browser user agent reach Umami. According to Umami's open-source data model, Umami does not store the IP address; it records the approximate location derived from it (country, region, and city) and the browser, operating system, and device type derived from the user agent. Umami keeps this data for 6 months. If your browser sends Global Privacy Control or Do Not Track, nothing is sent, and Argmax works the same.",
-    umamiPolicy: "Umami's privacy policy",
-    umamiTerms: "Umami's terms",
-    updated: "Last updated: October 4, 2026",
+      "Your lists and your language choice are saved only in this browser’s local storage. They aren’t sent anywhere, and clearing your browser data removes them. While a tab is open, the browser also keeps your scroll positions for Back and Forward; closing the tab removes them.",
+    analyticsIntro:
+      "To learn how Argmax is used, the site sends usage data to Umami Cloud, run by Umami Software, Inc. in the United States. Each time you open a screen, create a list, or make a pick, it sends the following over HTTPS:",
+    analyticsScreen: "Which screen was opened",
+    analyticsEvent:
+      "That a list was created or a pick was made, and whether it was a first visit, judged from when the lists in this browser were created",
+    analyticsDevice: "Your browser language and screen size",
+    analyticsReferrer: "The site that linked here, without the page address",
+    analyticsNever: "List names and items are never sent.",
+    analyticsUmami:
+      "Like any website request, it reaches Umami with your IP address and browser user agent. According to Umami’s open-source data model, Umami doesn’t store the IP address. It records an approximate location from it (country, region, and city) and the browser, operating system, and device type from the user agent. Umami keeps this data for 6 months.",
+    analyticsOptOut:
+      "If your browser sends Global Privacy Control or Do Not Track, Argmax sends nothing and works the same.",
+    umamiPolicy: "Umami’s privacy policy",
+    umamiTerms: "Umami’s terms",
     hosting:
       "The hosting provider, Cloudflare, processes technical request data such as IP addresses to deliver and protect the site.",
     questions: "Questions or requests: open an issue on GitHub.",
-    privacyContact: "Privacy requests that should not be public: {{email}}",
+    privacyContact: "Privacy requests that shouldn’t be public: {{email}}",
+    updated: "Last updated: October 4, 2026",
   },
 };
 

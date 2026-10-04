@@ -82,7 +82,9 @@ describe("PickPanel", () => {
     renderList([]);
 
     expect(pickButton()).toHaveAttribute("aria-disabled", "true");
-    expect(pickButton()).toHaveAccessibleDescription("Add an item to pick.");
+    expect(pickButton()).toHaveAccessibleDescription(
+      "Add an item to pick from.",
+    );
     fireEvent.click(pickButton());
     expect(screen.queryByText("Picked")).not.toBeInTheDocument();
   });

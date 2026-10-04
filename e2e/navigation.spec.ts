@@ -26,12 +26,14 @@ test("each screen has its own title, and navigation moves focus to the new headi
   await expect(page).toHaveTitle("Lunch – Argmax");
   await expect(page.getByRole("heading", { name: "Lunch" })).toBeFocused();
 
-  await page.getByRole("link", { name: "Privacy" }).click();
-  await expect(page).toHaveTitle("Privacy – Argmax");
-  await expect(page.getByRole("heading", { name: "Privacy" })).toBeFocused();
+  await page.getByRole("link", { name: "Privacy policy" }).click();
+  await expect(page).toHaveTitle("Privacy policy – Argmax");
+  await expect(
+    page.getByRole("heading", { name: "Privacy policy" }),
+  ).toBeFocused();
 
   await page.getByRole("button", { name: "한국어" }).click();
-  await expect(page).toHaveTitle("개인정보 – Argmax");
+  await expect(page).toHaveTitle("개인정보 처리방침 – Argmax");
 
   await page.goBack();
   await expect(page).toHaveTitle("Lunch – Argmax");

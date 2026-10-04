@@ -305,7 +305,7 @@ describe("ListPage", () => {
         name: "Delete “Lunch”?",
       });
       expect(dialog).toHaveTextContent(
-        "2 items will be deleted with it. This can’t be undone.",
+        "This also deletes 2 items. You can’t undo this.",
       );
 
       await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
@@ -323,9 +323,7 @@ describe("ListPage", () => {
         await screen.findByRole("menuitem", { name: "Delete list" }),
       );
       const dialog = await screen.findByRole("alertdialog");
-      expect(dialog).toHaveTextContent(
-        "The list will be deleted. This can’t be undone.",
-      );
+      expect(dialog).toHaveTextContent("You can’t undo this.");
       await user.click(
         within(dialog).getByRole("button", { name: "Delete list" }),
       );

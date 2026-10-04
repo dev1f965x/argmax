@@ -56,7 +56,7 @@ describe("RootLayout navigation", () => {
   it.each([
     ["/", "Lists – Argmax"],
     ["/lists/lunch", "Lunch – Argmax"],
-    ["/privacy", "Privacy – Argmax"],
+    ["/privacy", "Privacy policy – Argmax"],
     ["/missing", "Page not found – Argmax"],
     ["/lists/missing", "Page not found – Argmax"],
   ])("titles %s as %j", (path, title) => {
@@ -86,8 +86,10 @@ describe("RootLayout navigation", () => {
     expect(screen.getByRole("heading", { name: "Lists" })).toHaveFocus();
 
     // A footer link stays on screen, so focus must still move.
-    await user.click(screen.getByRole("link", { name: "Privacy" }));
-    expect(screen.getByRole("heading", { name: "Privacy" })).toHaveFocus();
+    await user.click(screen.getByRole("link", { name: "Privacy policy" }));
+    expect(
+      screen.getByRole("heading", { name: "Privacy policy" }),
+    ).toHaveFocus();
   });
 
   it("moves focus on Back to the first page", async () => {
