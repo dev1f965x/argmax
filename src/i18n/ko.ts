@@ -112,11 +112,12 @@ export const ko: Resources = {
   },
   privacy: {
     title: "개인정보",
-    noPersonalData:
-      "Argmax는 개인정보를 수집하지 않습니다. 계정도 쿠키도 없습니다.",
+    noAccounts:
+      "Argmax에는 계정과 쿠키가 없으며, 개인정보를 요청하거나 저장하지 않습니다.",
     localOnly:
       "목록과 선택한 언어는 이 브라우저의 로컬 저장소에만 저장됩니다. 어디로도 전송되지 않으며, 브라우저 데이터를 지우면 함께 지워집니다. 탭이 열려 있는 동안에는 뒤로·앞으로 가기를 위해 스크롤 위치도 보관하며, 탭을 닫으면 지워집니다.",
-    noTracking: "Argmax는 분석 도구나 추적 기술을 쓰지 않습니다.",
+    analytics:
+      "사용 현황을 파악하기 위해 Argmax는 익명 사용 횟수를 미국의 Umami Software, Inc.가 운영하는 Umami Cloud로 보냅니다. 보내는 내용은 어떤 화면을 열었는지, 목록을 만들었거나 뽑기를 했는지와 첫 방문인지 여부, 브라우저 언어, 화면 크기, 링크한 사이트의 주소(경로 제외)입니다. 목록 이름과 항목은 보내지 않습니다. 모든 웹 요청과 마찬가지로 IP 주소와 브라우저 정보(User-Agent)가 Umami에 전달되며, Umami는 이 정보를 익명화하고 개인정보를 수집하지 않는다고 밝힙니다. Umami는 사용 횟수를 6개월 동안 보관합니다. 브라우저가 Global Privacy Control이나 Do Not Track 신호를 보내면 아무것도 보내지 않습니다.",
     hosting:
       "호스팅 업체인 Cloudflare는 사이트를 제공하고 보호하기 위해 IP 주소 같은 기술적인 요청 정보를 처리합니다.",
     questions: "문의나 요청은 GitHub 이슈로 남겨 주세요.",

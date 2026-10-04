@@ -2,9 +2,11 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { PageHeading } from "@/components/page-heading";
 import { buttonVariants } from "@/components/ui/button";
+import { useScreenView } from "@/components/use-screen-view";
 
 export function NotFoundPage() {
   const { t } = useTranslation();
+  useScreenView("not-found");
 
   return (
     <div className="max-w-160">

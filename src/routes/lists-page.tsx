@@ -7,6 +7,8 @@ import { useLists } from "@/components/lists-provider";
 import { Note } from "@/components/note";
 import { PageHeading } from "@/components/page-heading";
 import { TextEntryForm } from "@/components/text-entry-form";
+import { useScreenView } from "@/components/use-screen-view";
+import { fromEarlierVisit, tracker } from "@/lib/analytics";
 import { createList } from "@/lib/lists";
 import { limits } from "@/lib/storage";
 
@@ -20,6 +22,7 @@ function deletedListName(state: unknown): string | null {
 
 export function ListsPage() {
   const { t } = useTranslation();
+  useScreenView("lists");
   const { state, editable, change } = useLists();
   const atLimit = state.lists.length >= limits.lists;
   const limitMessage = t("lists.limitReached", { limit: limits.lists });
@@ -55,6 +58,9 @@ export function ListsPage() {
       createList(current, name, context),
     );
     if (result.ok) {
+      tracker.listCreated(
+        !state.lists.some((list) => fromEarlierVisit(list.createdAt)),
+      );
       const created = t("lists.created", { name: name.trim() });
       if (state.lists.length + 1 >= limits.lists) {
         announce(`${created} ${limitMessage}`);

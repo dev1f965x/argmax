@@ -45,7 +45,9 @@ To roll back, open the Worker's **Deployments** in the Cloudflare dashboard and 
 
 ## Privacy
 
-Argmax does not collect personal data. There are no accounts, cookies, analytics, or tracking. Lists and the language choice are saved only in the browser's local storage and are never sent anywhere. The hosting provider, Cloudflare, processes technical request data such as IP addresses to deliver and protect the site.
+Argmax has no accounts and no cookies, and it never asks for or stores personal data. Lists and the language choice are saved only in the browser's local storage and are never sent anywhere. The hosting provider, Cloudflare, processes technical request data such as IP addresses to deliver and protect the site.
+
+The production site sends anonymous usage counts to [Umami Cloud](https://umami.is) (United States, 6-month retention) to measure how Argmax is used: screen views, list creation, and picks, with first-visit flags, the browser language, the screen size, and the referring site without its path. List names, items, and list ids are never sent; nothing is sent from development, tests, or previews, or when the browser sends Global Privacy Control or Do Not Track. The app calls Umami's event API directly, without Umami's script. The privacy page in the app has the full notice.
 
 ## Feedback and security
 

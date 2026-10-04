@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { tracker } from "@/lib/analytics";
 import { pickIndex } from "@/lib/pick";
 import type { Item } from "@/lib/storage";
 import { cn } from "@/lib/utils";
@@ -21,9 +22,12 @@ const cycleGaps = [30, 35, 40, 45, 50, 60, 70, 80, 90, 100];
 export function PickPanel({
   items,
   announce,
+  earlierVisit,
 }: {
   items: Item[];
   announce: (message: string) => void;
+  /** The list was created before this visit; reported with each pick (H2). */
+  earlierVisit: boolean;
 }) {
   const { t } = useTranslation();
   const [resultId, setResultId] = useState<string | null>(null);
@@ -78,6 +82,7 @@ export function PickPanel({
       if (!picked) return;
       setResultId(picked.id);
       announce(t("pick.announced", { text: picked.text }));
+      tracker.pick(earlierVisit);
     };
     if (
       items.length === 1 ||
