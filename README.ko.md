@@ -18,13 +18,16 @@ pnpm dev
 | 스크립트 | 용도 |
 | --- | --- |
 | `pnpm dev` | 개발 서버 실행(http://127.0.0.1:5173) |
-| `pnpm build` | 타입 검사 후 `dist/`에 빌드 |
-| `pnpm preview` | 프로덕션 빌드 미리 보기 |
-| `pnpm check` | 포맷 검사, 린트(Biome), 디자인 토큰 검사 |
+| `pnpm build` | 타입 검사 후 `dist/`에 빌드하고 `dist/third-party-notices.txt` 생성 |
+| `pnpm preview` | 운영 보안 헤더를 붙여 프로덕션 빌드 미리 보기 |
+| `pnpm check` | 포맷 검사와 린트(Biome), 디자인 토큰 검사, 의존성 라이선스 검사 |
+| `pnpm lint` | 린트만 실행 |
 | `pnpm format` | 파일 포맷 |
 | `pnpm typecheck` | 타입 검사 |
 | `pnpm test` | 단위·컴포넌트 테스트 실행(Vitest) |
-| `pnpm test:e2e` | 빌드 후 E2E·접근성 테스트 실행(Playwright, axe-core) |
+| `pnpm test:watch` | 단위·컴포넌트 테스트를 감시 모드로 실행 |
+| `pnpm test:e2e` | 빌드 후 E2E·접근성·보안 헤더 테스트 실행(Playwright, axe-core) |
+| `pnpm check:licenses` | 의존성 라이선스 검사만 실행 |
 
 ## 배포
 
@@ -47,7 +50,20 @@ Node.js 버전은 `.node-version`을 따릅니다. 운영 배포는 GitHub CI를
 
 Argmax에는 계정과 쿠키가 없으며, 개인정보를 요청하거나 저장하지 않습니다. 목록과 선택한 언어는 브라우저의 로컬 저장소에만 저장되며 어디로도 전송되지 않습니다. 호스팅 업체인 Cloudflare는 사이트를 제공하고 보호하기 위해 IP 주소 같은 기술적인 요청 정보를 처리합니다.
 
-운영 사이트는 사용 현황을 측정하기 위해 이름이나 계정 정보가 없는 사용 데이터를 [Umami Cloud](https://umami.is)(미국, 6개월 보관)로 보냅니다. 보내는 것은 화면 조회, 목록 생성, 뽑기와 첫 방문 여부, 브라우저 언어, 화면 크기, 링크한 사이트의 주소(경로 제외)입니다. Umami의 오픈소스 데이터 모델에 따르면 IP 주소는 저장하지 않고, IP 주소로 추정한 대략적인 위치(국가, 지역, 도시)와 User-Agent에서 알아낸 브라우저, 운영체제, 기기 종류를 기록합니다. 목록 이름, 항목, 목록 id는 보내지 않으며, 개발 환경, 테스트, 미리보기에서나 브라우저가 Global Privacy Control 또는 Do Not Track 신호를 보낼 때는 아무것도 보내지 않습니다. 앱은 Umami의 스크립트 없이 이벤트 API를 직접 호출합니다. 자세한 내용은 앱의 개인정보 페이지에 있습니다.
+운영 사이트는 사용 현황을 측정하기 위해 이름이나 계정 정보가 없는 사용 데이터를 [Umami Cloud](https://umami.is)(미국, 6개월 보관)로 보냅니다. 보내는 것은 화면 조회, 목록 생성, 뽑기와 첫 방문 여부(브라우저에 저장된 목록의 생성 시각으로 판단), 브라우저 언어, 화면 크기, 링크한 사이트의 주소(경로 제외)입니다. Umami의 오픈소스 데이터 모델([스키마](https://github.com/umami-software/umami/blob/master/prisma/schema.prisma), 2026-10-04 확인)에 따르면 IP 주소는 저장하지 않고, IP 주소로 추정한 대략적인 위치(국가, 지역, 도시)와 User-Agent에서 알아낸 브라우저, 운영체제, 기기 종류를 기록합니다. 목록 이름, 항목, 목록 id는 보내지 않으며, 개발 환경, 테스트, 미리보기에서나 브라우저가 Global Privacy Control 또는 Do Not Track 신호를 보낼 때는 아무것도 보내지 않습니다. 앱은 Umami의 스크립트 없이 이벤트 API를 직접 호출합니다. 자세한 내용은 앱의 개인정보 페이지에 있습니다.
+
+## 서비스와 약관
+
+약관은 2026-10-04에 확인했습니다. Argmax는 비상업 프로젝트이며, 상업적으로 쓰기 전에는 "확인 안 됨"으로 표시한 약관을 다시 확인해야 합니다.
+
+| 서비스 | 용도 | 플랜과 한도 | 상업적 이용 | 약관 |
+| --- | --- | --- | --- | --- |
+| Cloudflare Workers | 호스팅과 미리보기 배포 | 무료: 정적 파일 요청은 무료·무제한, 다른 한도는 과금 대신 차단, 결제 수단 없음 | 확인 안 됨 | [약관](https://www.cloudflare.com/terms/), [요금](https://developers.cloudflare.com/workers/platform/pricing/) |
+| Umami Cloud | 사용 현황 분석 | Hobby, 0달러: 월 10만 이벤트, 사이트 1개, 6개월 보관, 이벤트당 추가 요금은 유료 플랜에만 적용, 결제 수단 없음 | 확인 안 됨 | [약관](https://umami.is/terms), [개인정보](https://umami.is/privacy) |
+| GitHub | 저장소, Actions, CodeQL, 비밀 정보 검사, Dependabot 알림 | 공개 저장소 무료 | 가능 | [약관](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) |
+| Mend Renovate(GitHub App) | 의존성 업데이트 풀 리퀘스트 | 무료 | 가능 | [Mend 법적 고지](https://www.mend.io/legal-and-privacy/) |
+| Shields.io | 이 README의 라이선스 배지 | 무료 | 가능 | [Shields.io](https://shields.io/) |
+| Dev Container 이미지와 Claude Code 기능 | 개발 환경 | `mcr.microsoft.com/devcontainers/typescript-node`, `ghcr.io/anthropics/devcontainer-features/claude-code`, 모두 MIT | 가능 | [이미지 라이선스](https://github.com/devcontainers/images/blob/main/LICENSE), [기능 저장소](https://github.com/anthropics/devcontainer-features) |
 
 ## 문의와 보안
 
