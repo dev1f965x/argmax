@@ -44,7 +44,7 @@ async function useTheApp(page: Page) {
     .fill("Secret lunch");
   await page.keyboard.press("Enter");
   await page.getByRole("link", { name: /Secret lunch/ }).click();
-  await page.getByRole("textbox", { name: "Add an item" }).fill("Secret ramen");
+  await page.getByRole("textbox", { name: "New item" }).fill("Secret ramen");
   await page.keyboard.press("Enter");
   await page.getByRole("button", { name: "Pick", exact: true }).click();
   await expect(page.getByRole("button", { name: "Pick again" })).toBeVisible();

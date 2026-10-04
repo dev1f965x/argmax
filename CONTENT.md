@@ -10,7 +10,7 @@ Plain, brief, and calm. The UI says what to do and what happened; it does not ex
 
 - Lead with the action or the fact. One idea per sentence.
 - Address the reader as "you" in English and leave the subject out in Korean where it is clear.
-- No exclamation marks, emoji, or jokes. A pick is a small decision, not a celebration.
+- No exclamation marks, emoji, or jokes.
 - Say what the app does, not what it is: "Lists are saved only in this browser", not "Argmax is a private list keeper".
 
 ## Terminology
@@ -43,6 +43,7 @@ Product name: Argmax, always in Latin letters, in both languages.
 - A button that confirms a destructive action repeats the verb from the title ("Delete list"), never "OK" or "Confirm".
 - Field labels are nouns: "New list name", "새 목록 이름". The placeholder repeats the label (DESIGN.md explains when a label is visually hidden).
 - An icon-only button names its action and its object: "Edit “Ramen”".
+- A button named in a sentence is written as it appears, without quotes: "select Copy data", "데이터 복사를 누르세요".
 
 ### Empty states
 
@@ -73,7 +74,7 @@ State the limit as a fact, then how to make room.
 
 ### Announcements for screen readers
 
-Past tense, name the object, end with a period. In Korean, when a particle would follow user text whose last syllable is unknown, use the form "label: “text”" instead of guessing 을/를 or 로/으로.
+Past tense, name the object, end with a period (except the label form below). In Korean, when a particle would follow user text whose last syllable is unknown, use the form "label: “text”" instead of guessing 을/를 or 로/으로.
 
 - "Added “Ramen”." / "“라멘” 항목을 추가했습니다."
 - "Picked “Ramen”." / "뽑힌 항목: “라멘”"
@@ -87,8 +88,8 @@ Past tense, name the object, end with a period. In Korean, when a particle would
 
 ## Korean
 
-- Sentences use 합니다체 throughout: "저장됩니다", "삭제하세요". No 해요체, no mixing.
-- Requests use "-하세요", not "-해 주세요" or "-하시기 바랍니다", except in the privacy policy's contact sentences, where "남겨 주세요" and "보내 주세요" are the conventional forms.
+- Sentences use 합니다체 throughout: "저장됩니다", "삭제하세요". No 해요체, no mixing. One exception: a confirmation dialog's title asks with "-ㄹ까요?" ("“점심 메뉴” 목록을 삭제할까요?"), the usual form in Korean products; "-하시겠습니까?" reads stiff.
+- Requests use "-하세요", not "-해 주세요" or "-하시기 바랍니다", except in the privacy policy's contact sentence, where "남겨 주세요" is the conventional form.
 - Word spacing and line breaks follow the standard rules; the UI sets `word-break: keep-all`.
 
 Banned, because they read as translation or as an AI answer:
@@ -118,4 +119,4 @@ Banned, for the same reasons:
 
 - Every new or changed string is checked against this file before review.
 - The Korean and English versions say the same thing; neither is a loose paraphrase.
-- Search for banned patterns before handing off: `grep -nE '해당|을 통해|에 대한|성공적으로|손쉽게|다양한|!' src/i18n/ko.ts` and `grep -niE 'seamless|effortless|successfully|simply|please|!' src/i18n/en.ts`.
+- Search for banned patterns before handing off: `grep -nE '해당|[을를] 통해|에 대한|성공적으로|정상적으로|손쉽게|간편하게|다양한|효율적으로|가능합니다|되어집니다|해요|!' src/i18n/ko.ts` and `grep -niE 'seamless|effortless|successfully|simply|\bjust\b|easily|powerful|robust|leverage|please|oops|above|below|!' src/i18n/en.ts`.

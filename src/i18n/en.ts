@@ -12,7 +12,7 @@ export const en = {
     created: "Created “{{name}}”.",
     deleted: "Deleted “{{name}}”.",
     storedLocally:
-      "Lists are saved only in this browser. Clearing browser data or switching devices removes them.",
+      "Lists are saved only in this browser. Clearing browser data or switching devices deletes them.",
     emptyTitle: "No lists yet",
     emptyBody: "Create your first list, for example “Lunch”.",
     itemCount_zero: "No items yet",
@@ -30,7 +30,7 @@ export const en = {
     itemCount_zero: "0 items",
     itemCount_one: "{{count, number}} item",
     itemCount_other: "{{count, number}} items",
-    addLabel: "Add an item",
+    addLabel: "New item",
     add: "Add",
     added: "Added “{{text}}”.",
     saved: "Saved “{{text}}”.",
@@ -45,7 +45,7 @@ export const en = {
       "This also deletes {{count, number}} item. You can’t undo this.",
     deleteBody_other:
       "This also deletes {{count, number}} items. You can’t undo this.",
-    editLabel: "Edit item",
+    editLabel: "Item text",
     edit: "Edit “{{text}}”",
     remove: "Remove “{{text}}”",
     save: "Save",
@@ -64,7 +64,7 @@ export const en = {
     pick: "Pick",
     again: "Pick again",
     label: "Picked",
-    hint: "Select Pick to see the result here.",
+    hint: "Select Pick to pick one item at random.",
     needItem: "Add an item to pick from.",
     announced: "Picked “{{text}}”.",
   },
@@ -74,7 +74,7 @@ export const en = {
   storage: {
     unavailableTitle: "Lists can’t be saved",
     unavailableBody:
-      "This browser is blocking storage, so changes will be lost when you close the page.",
+      "This browser is blocking storage, so changes will be lost when you close the page. To keep changes, allow site data for this site or use another browser.",
     fullTitle: "Lists can’t be saved",
     fullBody:
       "Storage in this browser is full, so changes will be lost when you close the page. Delete lists or items you no longer need.",
@@ -83,7 +83,7 @@ export const en = {
       "The saved data is damaged or from an unknown version. Argmax left it unchanged and turned off editing.",
     copy: "Copy data",
     copied: "Copied the saved data.",
-    copyFailed: "Couldn’t copy. Your browser blocked the clipboard.",
+    copyFailed: "Couldn’t copy. Allow clipboard access and try again.",
     discard: "Delete data",
     discardTitle: "Delete saved data?",
     discardBody:
@@ -100,7 +100,7 @@ export const en = {
   },
   footer: {
     privacy: "Privacy policy",
-    licenses: "Open source licenses",
+    licenses: "Open-source licenses",
     source: "Source code",
   },
   privacy: {
@@ -108,9 +108,9 @@ export const en = {
     noAccounts:
       "Argmax itself has no accounts and no cookies, and it never asks for or stores personal data.",
     localOnly:
-      "Your lists and your language choice are saved only in this browser’s local storage. They aren’t sent anywhere, and clearing your browser data removes them. While a tab is open, the browser also keeps your scroll positions for Back and Forward; closing the tab removes them.",
+      "Your lists and your language choice are saved only in this browser’s local storage. They aren’t sent anywhere, and clearing your browser data deletes them. While a tab is open, the browser also keeps your scroll positions for Back and Forward; closing the tab deletes them.",
     analyticsIntro:
-      "To learn how Argmax is used, the site sends usage data to Umami Cloud, run by Umami Software, Inc. in the United States. Each time you open a screen, create a list, or make a pick, it sends the following over HTTPS:",
+      "To learn how Argmax is used, Argmax sends usage data to Umami Cloud, run by Umami Software, Inc. in the United States. Each time you open a screen, create a list, or make a pick, it sends the following over HTTPS:",
     analyticsScreen: "Which screen was opened",
     analyticsEvent:
       "That a list was created or a pick was made, and whether it was a first visit, judged from when the lists in this browser were created",

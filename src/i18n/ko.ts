@@ -34,7 +34,7 @@ export const ko: Resources = {
     itemCount_zero: "항목 0개",
     itemCount_one: "항목 {{count, number}}개",
     itemCount_other: "항목 {{count, number}}개",
-    addLabel: "항목 추가",
+    addLabel: "새 항목",
     add: "추가",
     added: "“{{text}}” 항목을 추가했습니다.",
     saved: "“{{text}}” 항목을 저장했습니다.",
@@ -49,7 +49,7 @@ export const ko: Resources = {
       "항목 {{count, number}}개도 함께 삭제됩니다. 되돌릴 수 없습니다.",
     deleteBody_other:
       "항목 {{count, number}}개도 함께 삭제됩니다. 되돌릴 수 없습니다.",
-    editLabel: "항목 수정",
+    editLabel: "항목 내용",
     edit: "“{{text}}” 수정",
     remove: "“{{text}}” 삭제",
     save: "저장",
@@ -68,7 +68,7 @@ export const ko: Resources = {
     pick: "뽑기",
     again: "다시 뽑기",
     label: "뽑힌 항목",
-    hint: "뽑기를 누르면 결과가 여기에 표시됩니다.",
+    hint: "뽑기를 누르면 항목 하나를 무작위로 뽑습니다.",
     needItem: "뽑을 항목을 추가하세요.",
     announced: "뽑힌 항목: “{{text}}”",
   },
@@ -79,7 +79,7 @@ export const ko: Resources = {
   storage: {
     unavailableTitle: "목록을 저장할 수 없습니다",
     unavailableBody:
-      "이 브라우저가 저장을 막고 있어, 페이지를 닫으면 변경 사항이 사라집니다.",
+      "이 브라우저가 저장을 막고 있어, 페이지를 닫으면 변경 사항이 사라집니다. 변경 사항을 유지하려면 이 사이트의 데이터 저장을 허용하거나 다른 브라우저를 쓰세요.",
     fullTitle: "목록을 저장할 수 없습니다",
     fullBody:
       "이 브라우저의 저장 공간이 가득 차, 페이지를 닫으면 변경 사항이 사라집니다. 필요 없는 목록이나 항목을 삭제하세요.",
@@ -88,11 +88,12 @@ export const ko: Resources = {
       "저장된 데이터가 손상되었거나 알 수 없는 버전입니다. 데이터는 그대로 두고 편집을 껐습니다.",
     copy: "데이터 복사",
     copied: "저장된 데이터를 복사했습니다.",
-    copyFailed: "복사하지 못했습니다. 브라우저가 클립보드를 막았습니다.",
+    copyFailed:
+      "복사하지 못했습니다. 클립보드 접근을 허용한 뒤 다시 시도하세요.",
     discard: "데이터 삭제",
     discardTitle: "저장된 데이터를 삭제할까요?",
     discardBody:
-      "읽을 수 없는 데이터를 이 브라우저에서 삭제하고 목록 없이 다시 시작합니다. 사본이 필요하면 먼저 ‘데이터 복사’를 누르세요. 되돌릴 수 없습니다.",
+      "읽을 수 없는 데이터를 이 브라우저에서 삭제하고 목록 없이 다시 시작합니다. 사본이 필요하면 먼저 데이터 복사를 누르세요. 되돌릴 수 없습니다.",
     discardConfirm: "데이터 삭제",
     discardFailed:
       "데이터를 삭제하지 못했습니다. 페이지를 새로 고친 뒤 다시 시도하세요.",
@@ -115,7 +116,7 @@ export const ko: Resources = {
     noAccounts:
       "Argmax 자체는 계정과 쿠키를 쓰지 않으며, 개인정보를 요청하거나 저장하지 않습니다.",
     localOnly:
-      "목록과 선택한 언어는 이 브라우저의 로컬 저장소에만 저장됩니다. 어디로도 전송되지 않으며, 브라우저 데이터를 지우면 함께 지워집니다. 탭이 열려 있는 동안에는 뒤로·앞으로 가기를 위해 스크롤 위치도 보관하며, 탭을 닫으면 지워집니다.",
+      "목록과 선택한 언어는 이 브라우저의 로컬 저장소에만 저장됩니다. 어디로도 전송되지 않으며, 브라우저 데이터를 지우면 함께 지워집니다. 탭이 열려 있는 동안에는 브라우저가 뒤로·앞으로 가기에 쓸 스크롤 위치도 보관하며, 탭을 닫으면 지워집니다.",
     analyticsIntro:
       "사용 현황을 파악하기 위해 Argmax는 미국의 Umami Software, Inc.가 운영하는 Umami Cloud로 사용 데이터를 보냅니다. 화면을 열거나 목록을 만들거나 뽑기를 할 때마다 다음 내용을 HTTPS로 보냅니다.",
     analyticsScreen: "어떤 화면을 열었는지",

@@ -79,7 +79,7 @@ function renderList(
   return { user: userEvent.setup(), storedItems, storedLists, router };
 }
 
-const addField = () => screen.getByRole("textbox", { name: "Add an item" });
+const addField = () => screen.getByRole("textbox", { name: "New item" });
 const rows = () =>
   within(screen.getByRole("list"))
     .getAllByRole("listitem")
@@ -139,7 +139,7 @@ describe("ListPage", () => {
     );
 
     expect(
-      screen.queryByRole("textbox", { name: "Add an item" }),
+      screen.queryByRole("textbox", { name: "New item" }),
     ).not.toBeInTheDocument();
     expect(
       screen.getByText(
@@ -153,7 +153,7 @@ describe("ListPage", () => {
 
     screen.getByRole("button", { name: "Edit “Ramen”" }).focus();
     await user.keyboard("{Enter}");
-    const field = screen.getByRole("textbox", { name: "Edit item" });
+    const field = screen.getByRole("textbox", { name: "Item text" });
     expect(field).toHaveFocus();
     expect(field).toHaveValue("Ramen");
 
@@ -179,14 +179,14 @@ describe("ListPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Edit “Ramen”" }));
     await user.type(
-      screen.getByRole("textbox", { name: "Edit item" }),
+      screen.getByRole("textbox", { name: "Item text" }),
       `${"x".repeat(limits.textLength)}{Enter}`,
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Use 100 characters or fewer.",
     );
-    expect(screen.getByRole("textbox", { name: "Edit item" })).toBeVisible();
+    expect(screen.getByRole("textbox", { name: "Item text" })).toBeVisible();
     expect(storedItems()).toEqual(["Ramen"]);
   });
 

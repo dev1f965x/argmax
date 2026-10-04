@@ -8,7 +8,7 @@ test("items can be added, edited, and removed with the keyboard, and stay after 
   await page.keyboard.press("Enter");
   await page.getByRole("link", { name: /Lunch/ }).click();
 
-  const add = page.getByRole("textbox", { name: "Add an item" });
+  const add = page.getByRole("textbox", { name: "New item" });
   await add.fill("Ramen");
   await add.press("Enter");
   await add.fill("Sushi");
@@ -16,7 +16,7 @@ test("items can be added, edited, and removed with the keyboard, and stay after 
 
   await page.getByRole("button", { name: "Edit “Ramen”" }).focus();
   await page.keyboard.press("Enter");
-  await page.getByRole("textbox", { name: "Edit item" }).fill("Udon");
+  await page.getByRole("textbox", { name: "Item text" }).fill("Udon");
   await page.keyboard.press("Enter");
 
   await page.getByRole("button", { name: "Remove “Sushi”" }).focus();
