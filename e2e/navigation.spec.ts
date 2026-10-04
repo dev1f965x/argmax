@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { createList, openWithStorage, storedState } from "./support.ts";
 
 test("an unknown path shows the not found page and links back to lists", async ({
   page,
@@ -19,8 +20,7 @@ test("each screen has its own title, and navigation moves focus to the new headi
 }) => {
   await page.goto("/");
   await expect(page).toHaveTitle("Lists – Argmax");
-  await page.getByRole("textbox", { name: "New list name" }).fill("Lunch");
-  await page.keyboard.press("Enter");
+  await createList(page, "Lunch");
 
   await page.getByRole("link", { name: /Lunch/ }).click();
   await expect(page).toHaveTitle("Lunch – Argmax");
@@ -47,18 +47,15 @@ test("a new screen starts at the top, and Back restores the scroll position", as
   page,
 }) => {
   await page.setViewportSize({ width: 360, height: 500 });
-  await page.goto("/");
-  await page.evaluate(() => {
-    const lists = Array.from({ length: 30 }, (_, index) => ({
-      id: `l${index}`,
-      name: `List ${index}`,
-      items: [],
-      createdAt: "2026-10-04T00:00:00.000Z",
-      updatedAt: "2026-10-04T00:00:00.000Z",
-    }));
-    localStorage.setItem("argmax", JSON.stringify({ schemaVersion: 1, lists }));
-  });
-  await page.reload();
+  await openWithStorage(
+    page,
+    storedState(
+      Array.from({ length: 30 }, (_, index) => ({
+        id: `l${index}`,
+        name: `List ${index}`,
+      })),
+    ),
+  );
 
   await page.getByRole("link", { name: /List 0/ }).scrollIntoViewIfNeeded();
   const listsScroll = await page.evaluate(() => window.scrollY);

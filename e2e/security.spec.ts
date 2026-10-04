@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { createList } from "./support.ts";
 
 test("responses carry the security headers", async ({ request }) => {
   for (const path of ["/", "/lists/example", "/privacy"]) {
@@ -84,8 +85,7 @@ test("no usage events leave a non-production site", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByRole("textbox", { name: "New list name" }).fill("Lunch");
-  await page.keyboard.press("Enter");
+  await createList(page, "Lunch");
   await page.getByRole("link", { name: /Lunch/ }).click();
   await page.getByRole("textbox", { name: "New item" }).fill("Ramen");
   await page.keyboard.press("Enter");

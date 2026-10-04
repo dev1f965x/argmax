@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { createList } from "./support.ts";
 
 test("items can be added, edited, and removed with the keyboard, and stay after a reload", async ({
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("textbox", { name: "New list name" }).fill("Lunch");
-  await page.keyboard.press("Enter");
+  await createList(page, "Lunch");
   await page.getByRole("link", { name: /Lunch/ }).click();
 
   const add = page.getByRole("textbox", { name: "New item" });

@@ -2,6 +2,7 @@
 // so a default import fails under nodenext resolution.
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { openWithStorage, storedState } from "./support.ts";
 
 const paths = ["/", "/lists/example", "/privacy", "/missing"];
 
@@ -27,21 +28,9 @@ for (const locale of ["en-US", "ko-KR"]) {
 const storedStates = [
   {
     name: "a list",
-    value: JSON.stringify({
-      schemaVersion: 1,
-      lists: [
-        {
-          id: "lunch",
-          name: "Lunch",
-          items: [
-            { id: "ramen", text: "Ramen" },
-            { id: "sushi", text: "Sushi" },
-          ],
-          createdAt: "2026-10-03T00:00:00.000Z",
-          updatedAt: "2026-10-03T00:00:00.000Z",
-        },
-      ],
-    }),
+    value: storedState([
+      { id: "lunch", name: "Lunch", items: ["Ramen", "Sushi"] },
+    ]),
   },
   { name: "invalid data", value: "{not json" },
 ];
@@ -54,12 +43,7 @@ for (const locale of ["en-US", "ko-KR"]) {
       test(`/ with ${name} has no detectable WCAG 2.2 AA violations`, async ({
         page,
       }) => {
-        await page.goto("/");
-        await page.evaluate(
-          (stored) => localStorage.setItem("argmax", stored),
-          value,
-        );
-        await page.reload();
+        await openWithStorage(page, value);
         const results = await new AxeBuilder({ page })
           .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
           .analyze();
@@ -70,12 +54,7 @@ for (const locale of ["en-US", "ko-KR"]) {
     test("/lists/lunch while editing with an error has no detectable WCAG 2.2 AA violations", async ({
       page,
     }) => {
-      await page.goto("/");
-      await page.evaluate(
-        (stored) => localStorage.setItem("argmax", stored),
-        storedStates[0]?.value ?? "",
-      );
-      await page.goto("/lists/lunch");
+      await openWithStorage(page, storedStates[0]?.value ?? "", "/lists/lunch");
       const row = page.getByRole("listitem").first();
       await row.getByRole("button").first().click();
       await row.getByRole("textbox").fill("");
@@ -90,12 +69,7 @@ for (const locale of ["en-US", "ko-KR"]) {
     test("/lists/lunch with the menu and the delete dialog open has no detectable WCAG 2.2 AA violations", async ({
       page,
     }) => {
-      await page.goto("/");
-      await page.evaluate(
-        (stored) => localStorage.setItem("argmax", stored),
-        storedStates[0]?.value ?? "",
-      );
-      await page.goto("/lists/lunch");
+      await openWithStorage(page, storedStates[0]?.value ?? "", "/lists/lunch");
       // Menus and dialogs fade; contrast is measured once they have settled.
       const analyze = async () => {
         await page.waitForFunction(() => document.getAnimations().length === 0);

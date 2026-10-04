@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { createList } from "./support.ts";
 
 test("a list can be renamed and deleted from its actions menu", async ({
   page,
@@ -18,8 +19,7 @@ test("a list can be renamed and deleted from its actions menu", async ({
     });
   });
   await page.goto("/");
-  await page.getByRole("textbox", { name: "New list name" }).fill("Lunch");
-  await page.keyboard.press("Enter");
+  await createList(page, "Lunch");
   await page.getByRole("link", { name: /Lunch/ }).click();
 
   await page.getByRole("button", { name: "List actions" }).click();

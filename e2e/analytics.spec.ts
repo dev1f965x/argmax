@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { createList } from "./support.ts";
 
 // The browser opens the production address, but every request to it is
 // answered by the local preview build (with its security headers), so the app
@@ -39,10 +40,7 @@ async function captureReports(page: Page): Promise<Report[]> {
 
 async function useTheApp(page: Page) {
   await page.goto("/");
-  await page
-    .getByRole("textbox", { name: "New list name" })
-    .fill("Secret lunch");
-  await page.keyboard.press("Enter");
+  await createList(page, "Secret lunch");
   await page.getByRole("link", { name: /Secret lunch/ }).click();
   await page.getByRole("textbox", { name: "New item" }).fill("Secret ramen");
   await page.keyboard.press("Enter");
