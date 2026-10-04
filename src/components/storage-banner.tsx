@@ -1,8 +1,9 @@
 import { TriangleAlert } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router";
 import { useLists } from "@/components/lists-provider";
+import { StatusNotice } from "@/components/status-notice";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,23 +35,12 @@ export function StorageBanner() {
     setShownOn(pathname);
     setDiscarded(false);
   }
-  const discardedRef = useRef<HTMLParagraphElement>(null);
-
-  // The dialog and its trigger are gone after a discard, so focus moves to the confirmation.
-  useEffect(() => {
-    if (discarded) discardedRef.current?.focus();
-  }, [discarded]);
-
   if (!issue) {
+    // The dialog and its trigger are gone after a discard, so focus moves to the confirmation.
     return discarded ? (
-      <p
-        ref={discardedRef}
-        tabIndex={-1}
-        role="status"
-        className="mb-5 max-w-160 rounded-xl bg-surface px-3.5 py-3 outline-none"
-      >
+      <StatusNotice className="max-w-160">
         {t("storage.discarded")}
-      </p>
+      </StatusNotice>
     ) : null;
   }
 

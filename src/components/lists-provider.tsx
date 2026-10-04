@@ -43,6 +43,13 @@ interface ListsContextValue {
 
 const ListsContext = createContext<ListsContextValue | null>(null);
 
+function logInvalid(cause: unknown) {
+  console.error(
+    "Stored lists failed validation and were left untouched:",
+    describeError(cause),
+  );
+}
+
 function initialize(repository: Repository): {
   state: StoredState;
   issue: StorageIssue;
@@ -52,10 +59,7 @@ function initialize(repository: Repository): {
     case "ok":
       return { state: loaded.state, issue: null };
     case "invalid":
-      console.error(
-        "Stored lists failed validation and were left untouched:",
-        describeError(loaded.cause),
-      );
+      logInvalid(loaded.cause);
       return { state: emptyState, issue: { kind: "invalid", raw: loaded.raw } };
     case "unavailable":
       console.error(
@@ -139,10 +143,7 @@ export function ListsProvider({
         );
         return loaded.state;
       case "invalid":
-        console.error(
-          "Stored lists failed validation and were left untouched:",
-          describeError(loaded.cause),
-        );
+        logInvalid(loaded.cause);
         stateRef.current = emptyState;
         unsaved.current = false;
         setState(emptyState);
@@ -181,10 +182,12 @@ export function ListsProvider({
       setState(result.state);
       const saved = repository.save(result.state);
       if (saved.ok) unsaved.current = false;
-      else if (saved.reason === "full" || saved.reason === "unavailable")
+      // Only a failed write carries a cause; "read-only" and "not-loaded" leave
+      // what was saved before as it is.
+      else if ("cause" in saved) {
         unsaved.current = true;
-      if (!saved.ok && "cause" in saved)
         console.error("Saving lists failed:", describeError(saved.cause));
+      }
       setIssue((current) => issueAfterSave(saved, current));
       return result;
     },

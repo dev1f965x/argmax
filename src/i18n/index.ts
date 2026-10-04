@@ -4,7 +4,7 @@ import { en } from "./en";
 import { ko } from "./ko";
 import { detectLocale, type Locale, locales, storeLocale } from "./locale";
 
-function browserStorage(): Storage | undefined {
+function localStorageIfAllowed(): Storage | undefined {
   try {
     return window.localStorage;
   } catch {
@@ -13,7 +13,10 @@ function browserStorage(): Storage | undefined {
   }
 }
 
-const initialLocale = detectLocale(browserStorage(), navigator.languages);
+const initialLocale = detectLocale(
+  localStorageIfAllowed(),
+  navigator.languages,
+);
 
 i18n.on("languageChanged", (language) => {
   document.documentElement.lang = language;
@@ -31,7 +34,7 @@ await i18n.use(initReactI18next).init({
 /** Switches the UI language and remembers the choice in this browser. */
 export async function chooseLocale(locale: Locale): Promise<void> {
   await i18n.changeLanguage(locale);
-  if (!storeLocale(browserStorage(), locale)) {
+  if (!storeLocale(localStorageIfAllowed(), locale)) {
     console.warn(
       "The language choice could not be saved; it applies to this visit only.",
     );

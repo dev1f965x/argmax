@@ -5,7 +5,7 @@ export const localeStorageKey = "argmax:locale";
 const fallbackLocale: Locale = "en";
 
 function isLocale(value: unknown): value is Locale {
-  return locales.includes(value as Locale);
+  return locales.some((locale) => locale === value);
 }
 
 /** A stored choice wins; otherwise the first supported browser language. */

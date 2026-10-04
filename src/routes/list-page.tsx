@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router";
 import { useAnnouncer } from "@/components/announcer";
+import { EmptyState } from "@/components/empty-state";
 import { useLists } from "@/components/lists-provider";
 import { Note } from "@/components/note";
 import { PageHeading } from "@/components/page-heading";
@@ -96,7 +97,8 @@ export function ListPage() {
   const listId = list.id;
   // Newest first, matching the Lists screen, so an added item appears right under the form.
   const items = list.items.toReversed();
-  const atLimit = list.items.length >= limits.itemsPerList;
+  const itemCount = list.items.length;
+  const atLimit = itemCount >= limits.itemsPerList;
   const limitMessage = t("list.limitReached", { limit: limits.itemsPerList });
 
   function rename(name: string): SubmitOutcome {
@@ -136,14 +138,14 @@ export function ListPage() {
     result: { ok: true } | { ok: false; error: ItemError | "read-only" },
   ): SubmitOutcome {
     if (result.ok) return { ok: true };
-    const message = {
+    const message: Record<ItemError | "read-only", string> = {
       empty: t("list.errors.empty"),
       "too-long": t("list.errors.tooLong", { limit: limits.textLength }),
       "item-limit": limitMessage,
       "not-found": t("common.saveFailed"),
       "read-only": t("common.saveFailed"),
-    }[result.error];
-    return { ok: false, message };
+    };
+    return { ok: false, message: message[result.error] };
   }
 
   function add(text: string): SubmitOutcome {
@@ -152,7 +154,7 @@ export function ListPage() {
     );
     if (result.ok) {
       const added = t("list.added", { text: text.trim() });
-      if (list && list.items.length + 1 >= limits.itemsPerList) {
+      if (itemCount + 1 >= limits.itemsPerList) {
         // The limit message replaces the field, so it takes focus and is announced.
         announce(`${added} ${limitMessage}`);
         setFocusTarget("entry");
@@ -313,7 +315,7 @@ export function ListPage() {
           </AlertDialog>
           {!renaming && (
             <p className="mt-0.5 text-sm text-muted-foreground">
-              {t("list.itemCount", { count: list.items.length })}
+              {t("list.itemCount", { count: itemCount })}
             </p>
           )}
 
@@ -335,12 +337,10 @@ export function ListPage() {
           {region}
 
           {items.length === 0 ? (
-            <div className="mt-6 rounded-xl bg-surface px-4 py-9 text-center text-muted-foreground">
-              <p className="mb-1 text-lg font-semibold text-foreground">
-                {t("list.emptyTitle")}
-              </p>
-              <p className="text-balance">{t("list.emptyBody")}</p>
-            </div>
+            <EmptyState
+              title={t("list.emptyTitle")}
+              body={t("list.emptyBody")}
+            />
           ) : (
             <ul className="mt-4 border-t">
               {items.map((item, index) => (
