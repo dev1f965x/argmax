@@ -28,7 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useScreenView } from "@/components/use-screen-view";
-import { visitStartedAt } from "@/lib/analytics";
+import { fromEarlierVisit } from "@/lib/analytics";
 import {
   addItem,
   deleteList,
@@ -398,7 +398,7 @@ export function ListPage() {
           key={listId}
           items={items}
           announce={announce}
-          earlierVisit={new Date(list.createdAt) < visitStartedAt}
+          earlierVisit={fromEarlierVisit(list.createdAt)}
         />
       </div>
     </>

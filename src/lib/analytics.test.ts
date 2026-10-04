@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  browserOptedOut,
   createTracker,
   productionHostname,
   type TrackerEnvironment,
@@ -49,11 +50,17 @@ describe("createTracker", () => {
     const { env, sent } = environment();
     const tracker = createTracker(env);
 
-    tracker.listCreated();
+    tracker.listCreated(true);
     tracker.pick(true);
 
     expect(sent).toMatchObject([
-      { payload: { name: "list_created", url: "/" } },
+      {
+        payload: {
+          name: "list_created",
+          url: "/",
+          data: { first_visit: true },
+        },
+      },
       {
         payload: {
           name: "pick",
@@ -86,7 +93,7 @@ describe("createTracker", () => {
     const { env, sent } = environment(overrides);
     const tracker = createTracker(env);
     tracker.screenView("lists");
-    tracker.listCreated();
+    tracker.listCreated(false);
     tracker.pick(false);
 
     expect(sent).toEqual([]);
@@ -105,5 +112,16 @@ describe("createTracker", () => {
         "TypeError",
       ),
     );
+  });
+
+  it.each([
+    [{ doNotTrack: null }, false],
+    [{ doNotTrack: "0" }, false],
+    [{ doNotTrack: "unspecified" }, false],
+    [{ doNotTrack: "1" }, true],
+    [{ doNotTrack: null, globalPrivacyControl: false }, false],
+    [{ doNotTrack: null, globalPrivacyControl: true }, true],
+  ])("treats %j as opted out: %s", (nav, expected) => {
+    expect(browserOptedOut(nav)).toBe(expected);
   });
 });

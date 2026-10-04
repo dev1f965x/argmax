@@ -81,7 +81,8 @@ describe("ListsPage", () => {
     await user.type(nameField(), "{Enter}");
     expect(listCreated).not.toHaveBeenCalled();
     await user.type(nameField(), "Lunch{Enter}");
-    expect(listCreated).toHaveBeenCalledOnce();
+    // No list from an earlier visit is stored, so this is a first visit.
+    expect(listCreated).toHaveBeenCalledExactlyOnceWith(true);
     listCreated.mockRestore();
   });
 

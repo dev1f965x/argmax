@@ -9,7 +9,7 @@ import { ListPage } from "@/routes/list-page";
 import { RootLayout } from "@/routes/root-layout";
 import { memoryStorage } from "@/test/memory-storage";
 
-function renderList(items: string[]) {
+function renderList(items: string[], createdAt = "2026-10-04T00:00:00.000Z") {
   const state: StoredState = {
     schemaVersion: 1,
     lists: [
@@ -17,8 +17,8 @@ function renderList(items: string[]) {
         id: "lunch",
         name: "Lunch",
         items: items.map((text, index) => ({ id: `item-${index}`, text })),
-        createdAt: "2026-10-04T00:00:00.000Z",
-        updatedAt: "2026-10-04T00:00:00.000Z",
+        createdAt,
+        updatedAt: createdAt,
       },
     ],
   };
@@ -96,6 +96,16 @@ describe("PickPanel", () => {
     await userEvent.click(pickButton());
 
     expect(pick).toHaveBeenCalledExactlyOnceWith(true);
+  });
+
+  it("reports earlier_visit false for a list created during this visit", async () => {
+    reduceMotion(true);
+    const pick = vi.spyOn(tracker, "pick");
+    renderList(["Ramen"], new Date(Date.now() + 60_000).toISOString());
+
+    await userEvent.click(pickButton());
+
+    expect(pick).toHaveBeenCalledExactlyOnceWith(false);
   });
 
   it("picks with the fair algorithm, shows and announces the result, and offers Pick again", async () => {

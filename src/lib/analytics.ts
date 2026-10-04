@@ -31,7 +31,8 @@ export interface TrackerEnvironment {
 
 export interface Tracker {
   screenView: (screen: Screen) => void;
-  listCreated: () => void;
+  /** `firstVisit`: no stored list was created before this visit (H1). */
+  listCreated: (firstVisit: boolean) => void;
   /** `earlierVisit`: the list was created before this visit (H2). */
   pick: (earlierVisit: boolean) => void;
 }
@@ -67,7 +68,11 @@ export function createTracker(environment: TrackerEnvironment): Tracker {
 
   return {
     screenView: (screen) => report(screen),
-    listCreated: () => report("lists", { name: "list_created" }),
+    listCreated: (firstVisit) =>
+      report("lists", {
+        name: "list_created",
+        data: { first_visit: firstVisit },
+      }),
     pick: (earlierVisit) =>
       report("list", { name: "pick", data: { earlier_visit: earlierVisit } }),
   };
@@ -83,17 +88,31 @@ function originOf(address: string): string {
   }
 }
 
-/** When this visit started: lists created earlier count as an earlier visit. */
+/**
+ * When this visit started: the page load. Lists created earlier belong to an
+ * earlier visit. Uses the device clock, so a clock set back can misclassify.
+ */
 export const visitStartedAt = new Date();
 
+/** Whether a list was created before this visit. */
+export function fromEarlierVisit(createdAt: string): boolean {
+  return new Date(createdAt) < visitStartedAt;
+}
+
+/** Global Privacy Control or Do Not Track asks sites not to track. */
+export function browserOptedOut(
+  nav: Pick<Navigator, "doNotTrack"> & { globalPrivacyControl?: boolean },
+): boolean {
+  return nav.globalPrivacyControl === true || nav.doNotTrack === "1";
+}
+
 function browserEnvironment(): TrackerEnvironment {
-  const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
   return {
     hostname: window.location.hostname,
     language: navigator.language,
     screen: { width: window.screen.width, height: window.screen.height },
     referrer: document.referrer,
-    optedOut: nav.globalPrivacyControl === true || navigator.doNotTrack === "1",
+    optedOut: browserOptedOut(navigator),
     send: (body) =>
       fetch(umamiEndpoint, {
         method: "POST",

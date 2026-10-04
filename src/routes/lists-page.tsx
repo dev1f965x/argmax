@@ -8,7 +8,7 @@ import { Note } from "@/components/note";
 import { PageHeading } from "@/components/page-heading";
 import { TextEntryForm } from "@/components/text-entry-form";
 import { useScreenView } from "@/components/use-screen-view";
-import { tracker } from "@/lib/analytics";
+import { fromEarlierVisit, tracker } from "@/lib/analytics";
 import { createList } from "@/lib/lists";
 import { limits } from "@/lib/storage";
 
@@ -58,7 +58,9 @@ export function ListsPage() {
       createList(current, name, context),
     );
     if (result.ok) {
-      tracker.listCreated();
+      tracker.listCreated(
+        !state.lists.some((list) => fromEarlierVisit(list.createdAt)),
+      );
       const created = t("lists.created", { name: name.trim() });
       if (state.lists.length + 1 >= limits.lists) {
         announce(`${created} ${limitMessage}`);
