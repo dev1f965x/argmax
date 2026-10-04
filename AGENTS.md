@@ -19,7 +19,7 @@ pnpm dev        # http://127.0.0.1:5173
 
 | Command | What it does |
 | --- | --- |
-| `pnpm check` | Biome format check and lint, the design token check, and the dependency license check |
+| `pnpm check` | Biome format check and lint, the design token check, the dependency license check, and knip (unused files, exports, and dependencies) |
 | `pnpm lint` | Biome lint only |
 | `pnpm format` | Format files with Biome |
 | `pnpm typecheck` | TypeScript project build check (`tsc -b`) |
@@ -29,6 +29,7 @@ pnpm dev        # http://127.0.0.1:5173
 | `pnpm build` | Type check, production build to `dist/`, and `dist/third-party-notices.txt` |
 | `pnpm preview` | Serve `dist/` with the production security headers |
 | `pnpm check:licenses` | Dependency license check only |
+| `pnpm knip` | Unused files, exports, and dependencies only (exceptions and their reasons are in `knip.jsonc`) |
 
 Run `check`, `typecheck`, `test`, `build`, and `test:e2e` before handing off any change. After a dependency change, run all of them even if the change looks unrelated.
 

@@ -49,7 +49,7 @@ import { NotFoundPage } from "@/routes/not-found-page";
 type FocusTarget = { itemId: string } | "actions" | "entry" | null;
 
 /** Navigation state that tells the Lists screen which list was just deleted. */
-export interface DeletedListState {
+interface DeletedListState {
   deletedListName: string;
 }
 

@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /** Three candidates, one raised: the argument that maximizes. */
-export function LogoMark({ className }: { className?: string }) {
+function LogoMark({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"

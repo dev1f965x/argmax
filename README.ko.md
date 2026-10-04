@@ -20,7 +20,7 @@ pnpm dev
 | `pnpm dev` | 개발 서버 실행(http://127.0.0.1:5173) |
 | `pnpm build` | 타입 검사 후 `dist/`에 빌드하고 `dist/third-party-notices.txt` 생성 |
 | `pnpm preview` | 운영 보안 헤더를 붙여 프로덕션 빌드 미리 보기 |
-| `pnpm check` | 포맷 검사와 린트(Biome), 디자인 토큰 검사, 의존성 라이선스 검사 |
+| `pnpm check` | 포맷 검사와 린트(Biome), 디자인 토큰 검사, 의존성 라이선스 검사, knip |
 | `pnpm lint` | 린트만 실행 |
 | `pnpm format` | 파일 포맷 |
 | `pnpm typecheck` | 타입 검사 |
@@ -28,6 +28,7 @@ pnpm dev
 | `pnpm test:watch` | 단위·컴포넌트 테스트를 감시 모드로 실행 |
 | `pnpm test:e2e` | 빌드 후 E2E·접근성·보안 헤더 테스트 실행(Playwright, axe-core) |
 | `pnpm check:licenses` | 의존성 라이선스 검사만 실행 |
+| `pnpm knip` | 쓰지 않는 파일, export, 의존성 찾기 |
 
 ## 배포
 

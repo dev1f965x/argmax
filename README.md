@@ -20,7 +20,7 @@ pnpm dev
 | `pnpm dev` | Start the dev server at http://127.0.0.1:5173 |
 | `pnpm build` | Type-check, build to `dist/`, and write `dist/third-party-notices.txt` |
 | `pnpm preview` | Serve the production build with the production security headers |
-| `pnpm check` | Format check and lint (Biome), the design token check, and the dependency license check |
+| `pnpm check` | Format check and lint (Biome), the design token check, the dependency license check, and knip |
 | `pnpm lint` | Lint only |
 | `pnpm format` | Format files |
 | `pnpm typecheck` | Type-check |
@@ -28,6 +28,7 @@ pnpm dev
 | `pnpm test:watch` | Run unit and component tests in watch mode |
 | `pnpm test:e2e` | Build and run end-to-end, accessibility, and security header tests (Playwright, axe-core) |
 | `pnpm check:licenses` | Dependency license check only |
+| `pnpm knip` | Find unused files, exports, and dependencies |
 
 ## Deployment
 

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  "ignoreDependencies": [
+    // Run outside the source: .mcp.json starts the Playwright MCP server, and
+    // Cloudflare Workers Builds deploys with wrangler.
+    "@playwright/mcp",
+    "wrangler"
+  ],
+  "ignoreIssues": {
+    // shadcn/ui components are kept as generated, including parts not used yet.
+    "src/components/ui/**": ["exports", "types"]
+  }
+}
