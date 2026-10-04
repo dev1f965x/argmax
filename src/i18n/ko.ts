@@ -123,6 +123,7 @@ export const ko: Resources = {
     updated: "최종 수정일: 2026년 10월 4일",
     hosting:
       "호스팅 업체인 Cloudflare는 사이트를 제공하고 보호하기 위해 IP 주소 같은 기술적인 요청 정보를 처리합니다.",
+    privacyContact: "공개하기 어려운 개인정보 문의: {{email}}",
     questions: "문의나 요청은 GitHub 이슈로 남겨 주세요.",
   },
 };

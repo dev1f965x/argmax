@@ -1,7 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { PageHeading } from "@/components/page-heading";
 import { useScreenView } from "@/components/use-screen-view";
-import { issuesUrl, umamiPrivacyUrl, umamiTermsUrl } from "@/lib/links";
+import {
+  contactEmail,
+  issuesUrl,
+  umamiPrivacyUrl,
+  umamiTermsUrl,
+} from "@/lib/links";
 
 const linkClass = "text-primary underline underline-offset-4";
 
@@ -30,6 +35,11 @@ export function PrivacyPage() {
       <p>
         <a href={issuesUrl} className={linkClass}>
           {t("privacy.questions")}
+        </a>
+      </p>
+      <p>
+        <a href={`mailto:${contactEmail}`} className={linkClass}>
+          {t("privacy.privacyContact", { email: contactEmail })}
         </a>
       </p>
       <p className="text-sm text-muted-foreground">{t("privacy.updated")}</p>

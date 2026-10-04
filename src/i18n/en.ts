@@ -117,6 +117,7 @@ export const en = {
     hosting:
       "The hosting provider, Cloudflare, processes technical request data such as IP addresses to deliver and protect the site.",
     questions: "Questions or requests: open an issue on GitHub.",
+    privacyContact: "Privacy requests that should not be public: {{email}}",
   },
 };
 
