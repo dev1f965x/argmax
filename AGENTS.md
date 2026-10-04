@@ -8,7 +8,7 @@ Argmax is a static single-page web app that keeps lists in the browser and picks
 
 ## Setup
 
-Work inside the Dev Container (`.devcontainer/`). It installs the Node.js major version in `.node-version`, pnpm, dependencies, and the Playwright browsers.
+Work inside the Dev Container (`.devcontainer/`). It installs Node.js 24 (the major version in `.node-version`), pnpm, dependencies, and the Playwright browsers.
 
 ```sh
 pnpm install

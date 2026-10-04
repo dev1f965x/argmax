@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import { limits, storageKey } from "@/lib/storage";
 import { renderApp, storedState } from "@/test/fixtures";
 
-// jsdom renders 1,000 rows in several seconds, more than the default timeout
-// when the machine is busy.
-const fullList = { timeout: 30_000 };
+// These take about 2 s alone in jsdom (1,000 rows) and exceeded the 5 s default
+// on a busy machine; 10 s keeps headroom without hiding a real slowdown.
+const fullList = { timeout: 10_000 };
 
 function renderList(
   items: string[],

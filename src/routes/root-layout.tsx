@@ -38,7 +38,7 @@ export function RootLayout() {
           <Link
             to="/"
             aria-label={t("app.home")}
-            // A block-level flex link centers the mark in the header and gives a 44 px target.
+            // A flex link drops the inline baseline gap, so the mark centers, and gives a 44 px target.
             className="flex min-h-11 items-center rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             <Wordmark />

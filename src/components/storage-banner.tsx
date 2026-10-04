@@ -23,6 +23,8 @@ import { cn } from "@/lib/utils";
  * Persistent notice for storage problems, rendered once in the layout so it stays
  * in place while the user moves between screens.
  */
+type IssueKind = NonNullable<ReturnType<typeof useLists>["issue"]>["kind"];
+
 export function StorageBanner() {
   const { t } = useTranslation();
   const { issue, issueFoundAtLoad } = useLists();
@@ -35,6 +37,10 @@ export function StorageBanner() {
     setShownOn(pathname);
     setDiscarded(false);
   }
+  // A later problem replaces the confirmation for good; otherwise it would
+  // return, and take focus, once that problem clears.
+  if (issue && discarded) setDiscarded(false);
+
   if (!issue) {
     // The dialog and its trigger are gone after a discard, so focus moves to the confirmation.
     return discarded ? (
@@ -45,16 +51,18 @@ export function StorageBanner() {
   }
 
   const invalid = issue.kind === "invalid";
-  const title = {
+  const titles: Record<IssueKind, string> = {
     unavailable: t("storage.unavailableTitle"),
     full: t("storage.fullTitle"),
     invalid: t("storage.invalidTitle"),
-  }[issue.kind];
-  const body = {
+  };
+  const bodies: Record<IssueKind, string> = {
     unavailable: t("storage.unavailableBody"),
     full: t("storage.fullBody"),
     invalid: t("storage.invalidBody"),
-  }[issue.kind];
+  };
+  const title = titles[issue.kind];
+  const body = bodies[issue.kind];
 
   return (
     <div

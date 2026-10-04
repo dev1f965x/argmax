@@ -202,6 +202,29 @@ describe("ListsPage", () => {
       expect(screen.getByText("Copied the saved data.")).toBeInTheDocument();
     });
 
+    it("does not bring the deleted-data confirmation back after a later storage problem", async () => {
+      const { user, failures } = renderApp({ stored: raw });
+      await user.click(screen.getByRole("button", { name: "Delete data" }));
+      await user.click(
+        within(await screen.findByRole("alertdialog")).getByRole("button", {
+          name: "Delete data",
+        }),
+      );
+
+      failures.set = new DOMException("Quota exceeded", "QuotaExceededError");
+      await user.type(nameField(), "One{Enter}");
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Storage in this browser is full",
+      );
+      failures.set = undefined;
+      await user.type(nameField(), "Two{Enter}");
+
+      expect(
+        screen.queryByText(/Deleted the saved data/),
+      ).not.toBeInTheDocument();
+      expect(nameField()).toHaveFocus();
+    });
+
     it("deletes the data only after confirmation", async () => {
       const { user, data } = renderApp({ stored: raw });
 

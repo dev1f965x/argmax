@@ -5,12 +5,12 @@ const rules = {
   "src/i18n/en.ts": [
     /\b(?:seamless|effortless|successfully|simply|just|easily|powerful|robust|leverage|please|oops|above|below)\b/i,
     /!/,
-    /'/, // Apostrophes and quotes are curly (’ “ ”).
+    /['"]/, // Apostrophes and quotes are curly (’ “ ”).
   ],
   "src/i18n/ko.ts": [
     /해당|[을를] 통해|에 대한|성공적으로|정상적으로|손쉽게|간편하게|다양한|효율적으로|가능합니다|되어집니다|해요/,
     /!/,
-    /'/,
+    /['"]/,
   ],
 };
 
@@ -20,8 +20,14 @@ for (const [file, patterns] of Object.entries(rules)) {
     .split("\n")
     .forEach((line, index) => {
       // Only string literals are UI text; imports, types, and comments are not.
-      const text = [...line.matchAll(/"((?:[^"\\]|\\.)*)"/g)]
-        .map((match) => match[1])
+      // Escaped quotes are unescaped first, so a straight quote inside a
+      // literal is still found.
+      const text = [
+        ...line.matchAll(/"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|`([^`]*)`/g),
+      ]
+        .map((match) =>
+          (match[1] ?? match[2] ?? match[3]).replace(/\\(.)/g, "$1"),
+        )
         .join(" ");
       for (const pattern of patterns) {
         const found = text.match(pattern);
