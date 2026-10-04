@@ -18,7 +18,6 @@ export const ko: Resources = {
     emptyTitle: "아직 목록이 없습니다",
     emptyBody: "첫 목록을 만드세요. 예: “점심 메뉴”",
     // Korean has no plural forms; the one and other keys exist to match the English resources.
-    itemCount_zero: "아직 항목 없음",
     itemCount_one: "항목 {{count, number}}개",
     itemCount_other: "항목 {{count, number}}개",
     limitReached:
@@ -31,7 +30,6 @@ export const ko: Resources = {
   list: {
     allLists: "전체 목록",
     // Korean has no plural forms; the one and other keys exist to match the English resources.
-    itemCount_zero: "항목 0개",
     itemCount_one: "항목 {{count, number}}개",
     itemCount_other: "항목 {{count, number}}개",
     addLabel: "새 항목",
@@ -108,7 +106,7 @@ export const ko: Resources = {
   },
   footer: {
     privacy: "개인정보 처리방침",
-    licenses: "오픈소스 라이선스",
+    licenses: "라이선스",
     source: "소스 코드",
   },
   privacy: {

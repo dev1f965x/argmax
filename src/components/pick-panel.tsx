@@ -117,10 +117,13 @@ export function PickPanel({
       aria-label={t("pick.region")}
       className="fixed inset-x-0 bottom-0 z-10 border-t bg-background px-4 pt-3 pb-4 md:sticky md:top-6 md:w-80 md:shrink-0 md:border-0 md:bg-transparent md:p-0"
     >
+      {/* With no items, the reason under the button is the only hint. */}
       {shown === null ? (
-        <div className="mb-3 hidden min-h-32 flex-col justify-center rounded-xl bg-surface p-5 text-center text-sm text-muted-foreground md:flex">
-          {t("pick.hint")}
-        </div>
+        !empty && (
+          <div className="mb-3 hidden min-h-32 flex-col justify-center rounded-xl bg-surface p-5 text-center text-sm text-muted-foreground md:flex">
+            {t("pick.hint")}
+          </div>
+        )
       ) : (
         <div
           // Hidden from screen readers while names cycle; the settled result is announced.

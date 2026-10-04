@@ -9,7 +9,7 @@ test("a created list stays after a reload and opens", async ({ page }) => {
   await page.reload();
 
   const link = page.getByRole("link", { name: /Lunch/ });
-  await expect(link).toContainText("No items yet");
+  await expect(link).toContainText("0 items");
   await link.click();
   await expect(page.getByRole("heading", { name: "Lunch" })).toBeVisible();
 });

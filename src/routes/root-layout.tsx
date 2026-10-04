@@ -35,7 +35,12 @@ export function RootLayout() {
     <div className="flex min-h-svh flex-col pb-(--pick-bar-height) md:pb-0">
       <header className="border-b">
         <div className="mx-auto flex h-14 max-w-240 items-center justify-between px-4">
-          <Link to="/" aria-label={t("app.home")}>
+          <Link
+            to="/"
+            aria-label={t("app.home")}
+            // A block-level flex link centers the mark in the header and gives a 44 px target.
+            className="flex min-h-11 items-center rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
             <Wordmark />
           </Link>
           <LanguageSwitcher />

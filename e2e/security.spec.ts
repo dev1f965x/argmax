@@ -68,7 +68,7 @@ test("the footer links to the generated third-party notices", async ({
 }) => {
   await page.goto("/");
   const href = await page
-    .getByRole("link", { name: "Open-source licenses" })
+    .getByRole("link", { name: "Licenses" })
     .getAttribute("href");
   const notices = await request.get(href ?? "");
   expect(notices.ok()).toBe(true);

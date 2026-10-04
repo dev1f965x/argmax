@@ -37,7 +37,7 @@ describe("ListsPage", () => {
     await user.type(nameField(), "  Lunch {Enter}");
 
     const link = screen.getByRole("link", { name: /Lunch/ });
-    expect(link).toHaveTextContent("No items yet");
+    expect(link).toHaveTextContent("0 items");
     expect(nameField()).toHaveValue("");
     expect(nameField()).toHaveFocus();
     expect(JSON.parse(data.get(storageKey) ?? "").lists[0].name).toBe("Lunch");
