@@ -1,9 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
-
-async function createList(page: Page, name: string) {
-  await page.getByRole("textbox", { name: "New list name" }).fill(name);
-  await page.keyboard.press("Enter");
-}
+import { expect, test } from "@playwright/test";
+import { createList } from "./support.ts";
 
 test("two tabs show each other's lists and never overwrite them", async ({
   context,

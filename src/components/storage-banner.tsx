@@ -1,8 +1,9 @@
 import { TriangleAlert } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router";
-import { useLists } from "@/components/lists-provider";
+import { type StorageIssue, useLists } from "@/components/lists-provider";
+import { StatusNotice } from "@/components/status-notice";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +18,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { describeError } from "@/lib/errors";
 import { cn } from "@/lib/utils";
+
+type IssueKind = NonNullable<StorageIssue>["kind"];
 
 /**
  * Persistent notice for storage problems, rendered once in the layout so it stays
@@ -34,37 +37,32 @@ export function StorageBanner() {
     setShownOn(pathname);
     setDiscarded(false);
   }
-  const discardedRef = useRef<HTMLParagraphElement>(null);
-
-  // The dialog and its trigger are gone after a discard, so focus moves to the confirmation.
-  useEffect(() => {
-    if (discarded) discardedRef.current?.focus();
-  }, [discarded]);
+  // A later problem replaces the confirmation for good; otherwise it would
+  // return, and take focus, once that problem clears.
+  if (issue && discarded) setDiscarded(false);
 
   if (!issue) {
+    // The dialog and its trigger are gone after a discard, so focus moves to the confirmation.
     return discarded ? (
-      <p
-        ref={discardedRef}
-        tabIndex={-1}
-        role="status"
-        className="mb-5 max-w-160 rounded-xl bg-surface px-3.5 py-3 outline-none"
-      >
+      <StatusNotice className="max-w-160">
         {t("storage.discarded")}
-      </p>
+      </StatusNotice>
     ) : null;
   }
 
   const invalid = issue.kind === "invalid";
-  const title = {
+  const titles: Record<IssueKind, string> = {
     unavailable: t("storage.unavailableTitle"),
     full: t("storage.fullTitle"),
     invalid: t("storage.invalidTitle"),
-  }[issue.kind];
-  const body = {
+  };
+  const bodies: Record<IssueKind, string> = {
     unavailable: t("storage.unavailableBody"),
     full: t("storage.fullBody"),
     invalid: t("storage.invalidBody"),
-  }[issue.kind];
+  };
+  const title = titles[issue.kind];
+  const body = bodies[issue.kind];
 
   return (
     <div

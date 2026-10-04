@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { testContext } from "@/test/fixtures";
 import {
   addItem,
-  type Context,
   createList,
   deleteList,
   editItem,
@@ -10,21 +10,6 @@ import {
   validateText,
 } from "./lists";
 import { emptyState, limits, type StoredState } from "./storage";
-
-function testContext(): Context {
-  let id = 0;
-  let time = Date.parse("2026-10-03T00:00:00.000Z");
-  return {
-    newId: () => {
-      id += 1;
-      return `id-${id}`;
-    },
-    now: () => {
-      time += 1000;
-      return new Date(time);
-    },
-  };
-}
 
 function mustOk<E>(
   result: { ok: true; state: StoredState } | { ok: false; error: E },
@@ -77,8 +62,8 @@ describe("lists", () => {
         id: "id-1",
         name: "Lunch",
         items: [],
-        createdAt: "2026-10-03T00:00:01.000Z",
-        updatedAt: "2026-10-03T00:00:01.000Z",
+        createdAt: "2026-10-04T00:00:01.000Z",
+        updatedAt: "2026-10-04T00:00:01.000Z",
       },
     ]);
     expect(emptyState.lists).toEqual([]);

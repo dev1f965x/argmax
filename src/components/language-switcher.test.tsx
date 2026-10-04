@@ -1,29 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, describe, expect, it } from "vitest";
-import { ListsProvider } from "@/components/lists-provider";
 import { i18n } from "@/i18n";
 import { localeStorageKey } from "@/i18n/locale";
-import { createRepository } from "@/lib/storage";
-import { ListsPage } from "@/routes/lists-page";
-import { RootLayout } from "@/routes/root-layout";
-import { memoryStorage } from "@/test/memory-storage";
-
-function renderApp() {
-  const router = createMemoryRouter([
-    {
-      Component: RootLayout,
-      children: [{ index: true, Component: ListsPage }],
-    },
-  ]);
-  const { storage } = memoryStorage();
-  render(
-    <ListsProvider repository={createRepository(() => storage)}>
-      <RouterProvider router={router} />
-    </ListsProvider>,
-  );
-}
+import { renderApp } from "@/test/fixtures";
 
 describe("LanguageSwitcher", () => {
   afterEach(async () => {

@@ -2,22 +2,12 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { describe, expect, it } from "vitest";
-import { type Context, createList } from "@/lib/lists";
+import { createList } from "@/lib/lists";
 import { createRepository, emptyState, storageKey } from "@/lib/storage";
 import { ListsPage } from "@/routes/lists-page";
+import { storedState, testContext } from "@/test/fixtures";
 import { memoryStorage } from "@/test/memory-storage";
 import { ListsProvider, useLists } from "./lists-provider";
-
-function testContext(prefix: string): Context {
-  let id = 0;
-  return {
-    newId: () => {
-      id += 1;
-      return `${prefix}-${id}`;
-    },
-    now: () => new Date("2026-10-04T00:00:00.000Z"),
-  };
-}
 
 type Lists = ReturnType<typeof useLists>;
 
@@ -183,21 +173,7 @@ describe("ListsProvider across tabs", () => {
     expect(a.value().issue?.kind).toBe("invalid");
 
     // Tab B deletes the invalid data and creates a list.
-    data.set(
-      storageKey,
-      JSON.stringify({
-        schemaVersion: 1,
-        lists: [
-          {
-            id: "fresh",
-            name: "Fresh",
-            items: [],
-            createdAt: "2026-10-04T00:00:00.000Z",
-            updatedAt: "2026-10-04T00:00:00.000Z",
-          },
-        ],
-      }),
-    );
+    data.set(storageKey, storedState([{ id: "fresh", name: "Fresh" }]));
     storageEvent();
 
     expect(a.value().issue).toBeNull();
@@ -223,18 +199,7 @@ describe("ListsProvider across tabs", () => {
   });
 
   it("never saves over stored lists it could not read on start", () => {
-    const precious = JSON.stringify({
-      schemaVersion: 1,
-      lists: [
-        {
-          id: "precious",
-          name: "Precious",
-          items: [],
-          createdAt: "2026-10-04T00:00:00.000Z",
-          updatedAt: "2026-10-04T00:00:00.000Z",
-        },
-      ],
-    });
+    const precious = storedState([{ id: "precious", name: "Precious" }]);
     const { storage, data, failures } = memoryStorage({
       [storageKey]: precious,
     });

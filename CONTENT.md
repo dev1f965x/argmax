@@ -119,4 +119,4 @@ Banned, for the same reasons:
 
 - Every new or changed string is checked against this file before review.
 - The Korean and English versions say the same thing; neither is a loose paraphrase.
-- Search for banned patterns before handing off: `grep -nE '해당|[을를] 통해|에 대한|성공적으로|정상적으로|손쉽게|간편하게|다양한|효율적으로|가능합니다|되어집니다|해요|!' src/i18n/ko.ts` and `grep -niE 'seamless|effortless|successfully|simply|\bjust\b|easily|powerful|robust|leverage|please|oops|above|below|!' src/i18n/en.ts`.
+- `pnpm check` fails on the banned words, exclamation marks, and straight quotes in UI strings (`scripts/check-content.mjs`). Keep that script and this file in step.

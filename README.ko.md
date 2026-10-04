@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/github/license/dev1f965x/argmax)](LICENSE)
 
-Argmax는 목록을 만들고 항목을 추가하면 그중 하나를 같은 확률로 무작위로 뽑는 웹 앱입니다. 첫 출시를 향해 개발 중이며, 진행 상황은 [변경 이력](CHANGELOG.md)에서 볼 수 있습니다.
+Argmax는 목록을 만들고 항목을 추가하면 그중 하나를 같은 확률로 무작위로 뽑는 웹 앱입니다. 첫 출시 전 개발 단계이며, 진행 상황은 [변경 이력](CHANGELOG.md)에서 볼 수 있습니다.
 
 ## 개발
 
@@ -19,8 +19,8 @@ pnpm dev
 | --- | --- |
 | `pnpm dev` | 개발 서버 실행(http://127.0.0.1:5173) |
 | `pnpm build` | 타입 검사 후 `dist/`에 빌드하고 `dist/third-party-notices.txt` 생성 |
-| `pnpm preview` | 운영 보안 헤더를 붙여 프로덕션 빌드 미리 보기 |
-| `pnpm check` | 포맷 검사와 린트(Biome), 디자인 토큰 검사, 의존성 라이선스 검사 |
+| `pnpm preview` | 운영 보안 헤더를 붙여 운영 빌드 미리보기 |
+| `pnpm check` | 포맷 검사와 린트(Biome), 디자인 토큰·문구 검사, 의존성 라이선스 검사, knip |
 | `pnpm lint` | 린트만 실행 |
 | `pnpm format` | 파일 포맷 |
 | `pnpm typecheck` | 타입 검사 |
@@ -28,10 +28,14 @@ pnpm dev
 | `pnpm test:watch` | 단위·컴포넌트 테스트를 감시 모드로 실행 |
 | `pnpm test:e2e` | 빌드 후 E2E·접근성·보안 헤더 테스트 실행(Playwright, axe-core) |
 | `pnpm check:licenses` | 의존성 라이선스 검사만 실행 |
+| `pnpm check:content` | UI 문구 금지 패턴 검사만 실행 |
+| `pnpm knip` | 쓰지 않는 파일, export, 의존성 찾기 |
 
 ## 배포
 
-앱은 Cloudflare Workers에 정적 파일로 배포되며, 설정은 `wrangler.jsonc`에 있습니다. Cloudflare Workers Builds가 이 저장소에 연결되어 있으면, `main`에 머지할 때 <https://argmax.dev1f965x.workers.dev>에 운영 배포되고, 다른 브랜치는 Worker Preview(`wrangler.jsonc`의 `previews` 블록으로 켬. Wrangler는 `wrangler preview`를 오픈 베타 명령으로 표시함)로 배포되어 그 URL이 풀 리퀘스트에 달립니다. 미리보기 URL은 공개됩니다. 미리보기에서는 첫 화면에서 앱 안으로 이동해야 하며, `/lists/...` 같은 앱 경로로 바로 접속하면 운영과 달리 404가 납니다.
+앱은 Cloudflare Workers에 정적 파일로 배포되며, 설정은 `wrangler.jsonc`에 있습니다. Cloudflare Workers Builds가 이 저장소에 연결되어 있으면, `main`에 머지할 때 <https://argmax.dev1f965x.workers.dev>에 운영 배포됩니다.
+
+다른 브랜치는 Worker Preview로 배포되며, 그 URL이 풀 리퀘스트에 달립니다. 미리보기는 `wrangler.jsonc`의 `previews` 블록으로 켜며, Wrangler에서는 `wrangler preview`가 오픈 베타 명령입니다. 미리보기 URL은 공개됩니다. 미리보기에서는 첫 화면에서 앱 안으로 이동해야 하며, `/lists/...` 같은 앱 경로로 바로 접속하면 운영과 달리 404가 납니다.
 
 Workers Builds 설정:
 
@@ -44,7 +48,7 @@ Workers Builds 설정:
 
 Node.js 버전은 `.node-version`을 따릅니다. 운영 배포는 GitHub CI를 기다리지 않으며, `main` 규칙셋이 머지 전에 CI 통과를 강제합니다.
 
-롤백은 Cloudflare 대시보드에서 Worker의 **Deployments**를 열고 이전 버전으로 되돌리거나, `pnpm exec wrangler login` 후 `pnpm exec wrangler rollback`을 실행합니다. 롤백 뒤 `main`에 다시 머지하면 그 버전이 새로 배포됩니다.
+롤백은 Cloudflare 대시보드에서 Worker의 **Deployments**를 열고 이전 버전으로 되돌리거나, `pnpm exec wrangler login` 후 `pnpm exec wrangler rollback`을 실행합니다. 롤백한 뒤에도 다음 `main` 머지가 배포되면 롤백 상태는 덮어쓰입니다.
 
 ## 개인정보
 

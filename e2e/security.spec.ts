@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { createList } from "./support.ts";
 
 test("responses carry the security headers", async ({ request }) => {
   for (const path of ["/", "/lists/example", "/privacy"]) {
@@ -67,7 +68,7 @@ test("the footer links to the generated third-party notices", async ({
 }) => {
   await page.goto("/");
   const href = await page
-    .getByRole("link", { name: "Open-source licenses" })
+    .getByRole("link", { name: "Licenses" })
     .getAttribute("href");
   const notices = await request.get(href ?? "");
   expect(notices.ok()).toBe(true);
@@ -84,8 +85,7 @@ test("no usage events leave a non-production site", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByRole("textbox", { name: "New list name" }).fill("Lunch");
-  await page.keyboard.press("Enter");
+  await createList(page, "Lunch");
   await page.getByRole("link", { name: /Lunch/ }).click();
   await page.getByRole("textbox", { name: "New item" }).fill("Ramen");
   await page.keyboard.press("Enter");

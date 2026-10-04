@@ -5,7 +5,7 @@ import { describeError } from "./errors";
  * it with every event.
  */
 export const umamiWebsiteId = "c00a1d2c-91a4-4738-9b11-2ab748c166f6";
-export const umamiEndpoint = "https://cloud.umami.is/api/send";
+const umamiEndpoint = "https://cloud.umami.is/api/send";
 /** Only the production site reports; development, tests, and previews never do. */
 export const productionHostname = "argmax.dev1f965x.workers.dev";
 
@@ -92,7 +92,7 @@ function originOf(address: string): string {
  * When this visit started: the page load. Lists created earlier belong to an
  * earlier visit. Uses the device clock, so a clock set back can misclassify.
  */
-export const visitStartedAt = new Date();
+const visitStartedAt = new Date();
 
 /** Whether a list was created before this visit. */
 export function fromEarlierVisit(createdAt: string): boolean {

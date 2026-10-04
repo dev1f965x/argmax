@@ -101,29 +101,29 @@ components:
 
 # Argmax design system
 
-Source of truth for tokens is `src/index.css`; this file explains them. Change both together. Product context is in `PRODUCT.md`; screen structure and states are in the Confluence page "Wireframes: First Release".
+Source of truth for tokens is `src/index.css`; this file explains them. Change both together. Product context is in `PRODUCT.md`; screen structure and states come from the private wireframes ("Wireframes: First Release"); UI text follows [CONTENT.md](CONTENT.md).
 
 ## Overview
 
-Personality: **calm, quick, fair**. Argmax is a tool people open in the middle of a conversation to settle a small decision, usually on a phone. The interface stays quiet so the one moment that matters, the pick result, is unmistakable.
+Personality: calm, quick, fair. Argmax is a tool people open in the middle of a conversation to settle a small decision, usually on a phone. The interface stays quiet so the pick result stands out.
 
 References and what each contributes:
 
 | Product | What to take |
 | --- | --- |
-| Toss | Korean typography, one large action per screen, plain and friendly sentences in the UI |
+| Toss | Korean typography, one large action per screen |
 | Things 3 | Calm list layouts, light-weight add and edit interactions, color used sparingly |
 | Linear | Restrained neutrals, precise spacing and borders, keyboard-first details |
 | Apple Reminders | Familiar mobile list editing and empty states |
 
-The direction follows the category standard executed carefully, not a novel visual world. Brand shows in the green, the mark, and the pick moment.
+The layout follows common list apps; the brand shows in the green, the mark, and the pick moment.
 
 ## Colors
 
-Restrained strategy: tinted neutrals plus one brand hue (green, hue 168 in OKLCH) and semantic colors. All neutrals carry a trace of the brand hue so the page does not read as default gray.
+Tinted neutrals plus one brand hue (green, hue 168 in OKLCH) and semantic colors. All neutrals carry a trace of the brand hue so the page does not read as default gray.
 
 - `primary` is for the main action on a screen and for focus rings. It is not used for decoration.
-- `brand-soft` with `brand-strong` text marks the pick result, and nothing else carries a large tinted area.
+- `brand-soft` is behind the pick result, with the "Picked" label in `brand-strong`; nothing else carries a large tinted area.
 - `destructive` is for errors and destructive actions; `warning` for recoverable problems such as storage being unavailable.
 - `input` is the border of form controls; `border` is for dividers only.
 
@@ -139,7 +139,7 @@ One family: Pretendard Variable, self-hosted from the `pretendard` package with 
 - Korean text uses `word-break: keep-all` so words are not split across lines.
 - Weights: 400 body, 500 secondary emphasis, 600 labels and buttons, 700 titles and the result.
 
-Pretendard's Latin glyphs are derived from Inter. ARG-20 lists Inter as a pattern to avoid; the owner accepted this exception because one family keeps Hangul and Latin consistent in mixed text, and the brand is carried by color, the mark, and layout rather than the typeface.
+Pretendard's Latin glyphs are derived from Inter, which is otherwise avoided (see Don'ts). Pretendard is kept because one family keeps Hangul and Latin consistent in mixed text, and the brand is carried by color, the mark, and layout rather than the typeface.
 
 ## Layout
 
@@ -165,8 +165,8 @@ Flat by default: separation comes from dividers and tinted surfaces, not shadows
 
 ## Components
 
-- Components come from shadcn/ui on Base UI and use only the tokens above. App components may not use raw colors or arbitrary values; `pnpm check` enforces this with `scripts/check-design-tokens.mjs`. Generated files in `src/components/ui` are excluded from that check and changed only to apply this file: 44 px buttons, inputs, and menu items, 16 px semibold button text, `primary-hover`, `input` borders on outline buttons, a solid destructive button, the dialog scrim, shadow, 20 px bold title, and one right-aligned row of buttons at every width, and the menu shadow, width, and a `primary` focus ring on items. Review those edits when regenerating a component.
-- Links that look like buttons stay links: use `buttonVariants()` on `<Link>`, not `Button` with `render`, which adds `role="button"`.
+- Components come from shadcn/ui on Base UI and use only the tokens above. App components may not use raw colors or arbitrary values; `pnpm check` enforces this with `scripts/check-design-tokens.mjs`. Generated files in `src/components/ui` are excluded from that check and changed only to apply this file: 44 px buttons, inputs, and menu items, 16 px semibold button text, `primary-hover`, `input` borders on outline buttons, a solid destructive button, the dialog scrim, shadow, 20 px bold title, and one right-aligned row of buttons at every width, the menu shadow, width, and a `primary` focus ring on items, and the disabled input surface. Review those edits when regenerating a component.
+- Disabled controls use `surface` or `surface-2` with `subtle-foreground` text, so they read as unavailable at a glance.
 - Icons: Lucide only, 20 px in rows and buttons, 16 to 18 px inline, stroke width 2.
 - Mark and wordmark: `src/components/wordmark.tsx`. Three dots, one raised and green: the argument that maximizes. Favicon, Apple touch icon, and Open Graph image in `public/` use the same mark.
 
@@ -185,7 +185,7 @@ Not in 0.1.0. Argmax is used mostly in daylight with other people, the light pal
 Do:
 
 - Keep one primary action per screen and make the pick result the most prominent thing after a pick.
-- Write UI text in plain sentences that name the action ("Delete list", not "Confirm").
+- Follow [CONTENT.md](CONTENT.md) for UI text.
 - Check every screen at 360 px and 1280 px, in English and Korean, before calling it done.
 
 Don't:
@@ -195,5 +195,4 @@ Don't:
 - Borders and shadows on every card, nested cards, or identical card grids.
 - Emoji or Unicode glyphs as icons.
 - All-caps eyebrow labels above headings, or arrows appended to button text.
-- A dark mode nobody asked for.
 - Truncating the pick result.

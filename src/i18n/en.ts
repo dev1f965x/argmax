@@ -15,7 +15,6 @@ export const en = {
       "Lists are saved only in this browser. Clearing browser data deletes them, and other devices don’t show them.",
     emptyTitle: "No lists yet",
     emptyBody: "Create your first list, for example “Lunch”.",
-    itemCount_zero: "No items yet",
     itemCount_one: "{{count, number}} item",
     itemCount_other: "{{count, number}} items",
     limitReached:
@@ -27,7 +26,6 @@ export const en = {
   },
   list: {
     allLists: "All lists",
-    itemCount_zero: "0 items",
     itemCount_one: "{{count, number}} item",
     itemCount_other: "{{count, number}} items",
     addLabel: "New item",
@@ -100,7 +98,7 @@ export const en = {
   },
   footer: {
     privacy: "Privacy policy",
-    licenses: "Open-source licenses",
+    licenses: "Licenses",
     source: "Source code",
   },
   privacy: {

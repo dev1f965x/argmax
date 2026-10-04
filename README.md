@@ -18,20 +18,24 @@ pnpm dev
 | Script | Purpose |
 | --- | --- |
 | `pnpm dev` | Start the dev server at http://127.0.0.1:5173 |
-| `pnpm build` | Type-check, build to `dist/`, and write `dist/third-party-notices.txt` |
+| `pnpm build` | Type check, build to `dist/`, and write `dist/third-party-notices.txt` |
 | `pnpm preview` | Serve the production build with the production security headers |
-| `pnpm check` | Format check and lint (Biome), the design token check, and the dependency license check |
+| `pnpm check` | Format check and lint (Biome), the design token and content checks, the dependency license check, and knip |
 | `pnpm lint` | Lint only |
 | `pnpm format` | Format files |
-| `pnpm typecheck` | Type-check |
+| `pnpm typecheck` | Type check |
 | `pnpm test` | Run unit and component tests (Vitest) |
 | `pnpm test:watch` | Run unit and component tests in watch mode |
 | `pnpm test:e2e` | Build and run end-to-end, accessibility, and security header tests (Playwright, axe-core) |
 | `pnpm check:licenses` | Dependency license check only |
+| `pnpm check:content` | Banned-pattern check for UI text only |
+| `pnpm knip` | Find unused files, exports, and dependencies |
 
 ## Deployment
 
-The app is deployed to Cloudflare Workers as static assets, configured in `wrangler.jsonc`. When Cloudflare Workers Builds is connected to this repository, a merge to `main` deploys to production at <https://argmax.dev1f965x.workers.dev>, and other branches get a Worker Preview (enabled by the `previews` block in `wrangler.jsonc`; Wrangler labels `wrangler preview` an open beta command) whose URL is posted on the pull request. Preview URLs are public. In previews, open the root URL and navigate in the app; direct links to app routes such as `/lists/...` return 404 there, unlike in production.
+The app is deployed to Cloudflare Workers as static assets, configured in `wrangler.jsonc`. When Cloudflare Workers Builds is connected to this repository, a merge to `main` deploys to production at <https://argmax.dev1f965x.workers.dev>.
+
+Other branches get a Worker Preview, whose URL is posted on the pull request. The `previews` block in `wrangler.jsonc` turns previews on; Wrangler labels `wrangler preview` an open beta command. Preview URLs are public. In a preview, open the root URL and navigate in the app: direct links to app routes such as `/lists/...` return 404 there, unlike in production.
 
 Workers Builds settings:
 

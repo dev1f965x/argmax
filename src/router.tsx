@@ -1,11 +1,11 @@
-import { createBrowserRouter } from "react-router";
+import type { RouteObject } from "react-router";
 import { ListPage } from "@/routes/list-page";
 import { ListsPage } from "@/routes/lists-page";
 import { NotFoundPage } from "@/routes/not-found-page";
 import { PrivacyPage } from "@/routes/privacy-page";
 import { RootLayout } from "@/routes/root-layout";
 
-export const router = createBrowserRouter([
+export const routes: RouteObject[] = [
   {
     Component: RootLayout,
     children: [
@@ -15,4 +15,4 @@ export const router = createBrowserRouter([
       { path: "*", Component: NotFoundPage },
     ],
   },
-]);
+];

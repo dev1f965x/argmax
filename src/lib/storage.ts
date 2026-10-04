@@ -45,7 +45,7 @@ const listSchema = z.object({
   items: z
     .array(itemSchema)
     .max(limits.itemsPerList)
-    .refine((items) => hasUniqueIds(items), "duplicate item ids"),
+    .refine(hasUniqueIds, "duplicate item ids"),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
@@ -55,7 +55,7 @@ const storedStateSchema = z.object({
   lists: z
     .array(listSchema)
     .max(limits.lists)
-    .refine((lists) => hasUniqueIds(lists), "duplicate list ids"),
+    .refine(hasUniqueIds, "duplicate list ids"),
 });
 
 function hasUniqueIds(entries: { id: string }[]): boolean {

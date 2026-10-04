@@ -1,29 +1,15 @@
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
+import { openWithStorage, storedState } from "./support.ts";
 
 const items = Array.from({ length: 12 }, (_, index) => `Item ${index + 1}`);
 
-async function openList(page: Page) {
-  await page.goto("/");
-  await page.evaluate((texts) => {
-    localStorage.setItem(
-      "argmax",
-      JSON.stringify({
-        schemaVersion: 1,
-        lists: [
-          {
-            id: "lunch",
-            name: "Lunch",
-            items: texts.map((text, index) => ({ id: `i${index}`, text })),
-            createdAt: "2026-10-04T00:00:00.000Z",
-            updatedAt: "2026-10-04T00:00:00.000Z",
-          },
-        ],
-      }),
-    );
-  }, items);
-  await page.goto("/lists/lunch");
-}
+const openList = (page: Page) =>
+  openWithStorage(
+    page,
+    storedState([{ id: "lunch", name: "Lunch", items }]),
+    "/lists/lunch",
+  );
 
 test("picks an item, announces it, and passes the accessibility check", async ({
   page,
@@ -90,26 +76,12 @@ test.describe("on a phone in landscape", () => {
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/");
-    await page.evaluate(() => {
-      localStorage.setItem(
-        "argmax",
-        JSON.stringify({
-          schemaVersion: 1,
-          lists: [
-            {
-              id: "long",
-              name: "Long",
-              // 100 wide letters wrap to more lines than the capped area holds.
-              items: [{ id: "a", text: "W".repeat(100) }],
-              createdAt: "2026-10-04T00:00:00.000Z",
-              updatedAt: "2026-10-04T00:00:00.000Z",
-            },
-          ],
-        }),
-      );
-    });
-    await page.goto("/lists/long");
+    await openWithStorage(
+      page,
+      // 100 wide letters wrap to more lines than the capped area holds.
+      storedState([{ id: "long", name: "Long", items: ["W".repeat(100)] }]),
+      "/lists/long",
+    );
     await page.getByRole("button", { name: "Pick", exact: true }).click();
     const result = page.getByText("Picked", { exact: true }).locator("..");
     await expect(result).toBeVisible();

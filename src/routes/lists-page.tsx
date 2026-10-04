@@ -3,13 +3,18 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useAnnouncer } from "@/components/announcer";
+import { EmptyState } from "@/components/empty-state";
 import { useLists } from "@/components/lists-provider";
 import { Note } from "@/components/note";
 import { PageHeading } from "@/components/page-heading";
-import { TextEntryForm } from "@/components/text-entry-form";
+import { StatusNotice } from "@/components/status-notice";
+import {
+  type SubmitOutcome,
+  TextEntryForm,
+} from "@/components/text-entry-form";
 import { useScreenView } from "@/components/use-screen-view";
 import { fromEarlierVisit, tracker } from "@/lib/analytics";
-import { createList } from "@/lib/lists";
+import { createList, type ListError } from "@/lib/lists";
 import { limits } from "@/lib/storage";
 
 function deletedListName(state: unknown): string | null {
@@ -36,12 +41,9 @@ export function ListsPage() {
   // Read once: the history entry is then cleared, so a reload or Back does not
   // show the confirmation again.
   const [deleted] = useState(() => deletedListName(location.state));
-  const deletedNotice = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
     if (!deleted) return;
-    // The deleted list's screen is gone, so focus moves to the confirmation.
-    deletedNotice.current?.focus();
     navigate(location.pathname, { replace: true, state: null });
   }, [deleted, navigate, location.pathname]);
 
@@ -53,7 +55,7 @@ export function ListsPage() {
   // Newest first, so a list just created appears right under the form.
   const lists = state.lists.toReversed();
 
-  function create(name: string) {
+  function create(name: string): SubmitOutcome {
     const result = change((current, context) =>
       createList(current, name, context),
     );
@@ -68,29 +70,23 @@ export function ListsPage() {
       } else {
         announce(created);
       }
-      return { ok: true } as const;
+      return { ok: true };
     }
-    const message = {
+    const message: Record<ListError | "read-only", string> = {
       empty: t("lists.errors.empty"),
       "too-long": t("lists.errors.tooLong", { limit: limits.textLength }),
       "list-limit": limitMessage,
       "not-found": t("common.saveFailed"),
       "read-only": t("common.saveFailed"),
-    }[result.error];
-    return { ok: false, message } as const;
+    };
+    return { ok: false, message: message[result.error] };
   }
 
   return (
     <div className="max-w-160">
       {deleted && (
-        <p
-          ref={deletedNotice}
-          tabIndex={-1}
-          role="status"
-          className="mb-5 rounded-xl bg-surface px-3.5 py-3 outline-none wrap-anywhere"
-        >
-          {t("lists.deleted", { name: deleted })}
-        </p>
+        // The deleted list's screen is gone, so focus moves to the confirmation.
+        <StatusNotice>{t("lists.deleted", { name: deleted })}</StatusNotice>
       )}
       <PageHeading
         title={t("lists.title")}
@@ -113,12 +109,7 @@ export function ListsPage() {
 
       {/* While invalid data is kept, the empty state's advice to create a list would not work. */}
       {!editable ? null : lists.length === 0 ? (
-        <div className="mt-6 rounded-xl bg-surface px-4 py-9 text-center text-muted-foreground">
-          <p className="mb-1 text-lg font-semibold text-foreground">
-            {t("lists.emptyTitle")}
-          </p>
-          <p className="text-balance">{t("lists.emptyBody")}</p>
-        </div>
+        <EmptyState title={t("lists.emptyTitle")} body={t("lists.emptyBody")} />
       ) : (
         <ul className="mt-6 border-t">
           {lists.map((list) => (
