@@ -30,6 +30,12 @@
       ]
     },
     {
+      "description": "Pin the Dev Container image by digest, like the GitHub Actions, so a rebuild uses a reviewed image.",
+      "matchManagers": ["devcontainer"],
+      "matchDepTypes": ["image"],
+      "pinDigests": true
+    },
+    {
       "description": "Testing Library and Vitest move together.",
       "groupName": "test tooling",
       "matchPackageNames": ["vitest", "jsdom", "/^@testing-library//"]

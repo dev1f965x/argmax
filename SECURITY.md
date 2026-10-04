@@ -12,6 +12,12 @@ Argmax is maintained by one person, so reports are handled on a best-effort basi
 
 Fixes go to the `main` branch and the deployed site.
 
+## Dependency checks
+
+CI fails when a production dependency has a known high or critical vulnerability (`pnpm audit --prod`). GitHub secret scanning with push protection, Dependabot alerts, and CodeQL are enabled for the repository, and Renovate opens update pull requests.
+
+Accepted advisory: [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) (high, `braces`), reached only through the development tool `shadcn` (through `fast-glob` and `ts-morph`). It has no patched version for that path, the tool runs only when components are added on a developer's machine, and nothing from it ships in the site. Reviewed 2026-10-04; revisit when a patched release is available.
+
 ## Scope
 
 Argmax is a static web app with no backend and no accounts. Lists are stored in the browser's local storage only. Relevant reports include cross-site scripting, ways to read or alter another visitor's stored lists, and weaknesses in the security headers or dependencies.

@@ -18,7 +18,7 @@ Argmax keeps lists of options in the browser and picks one at random with equal 
 
 ## Positioning
 
-Differentiation from existing tools (Wheel of Names, Picker Wheel, random.org List Randomizer, Naver's roulette and ladder) is explicitly not a goal; they are references for expected behavior. What Argmax can truthfully claim: saved lists, a pick that is provably fair (cryptographic randomness without modulo bias), no account, and no data leaving the browser.
+Differentiation from existing tools (Wheel of Names, Picker Wheel, random.org List Randomizer, Naver's roulette and ladder) is explicitly not a goal; they are references for expected behavior. What Argmax can truthfully claim: saved lists, a fair pick (the browser's cryptographic random source, mapped to an item without modulo bias and covered by a distribution test), no account, and lists that never leave the browser.
 
 ## Operating Context
 

@@ -67,3 +67,5 @@ CI (`.github/workflows/ci.yml`) runs the same commands on every pull request; bo
 - Branch: `<type>/ARG-<n>-<short-description>`. Commits follow Conventional Commits and end with a `Refs: ARG-<n>` paragraph.
 - `main` changes only through squash-merged pull requests.
 - Do not push, open pull requests, or merge; the owner does that.
+- The Dev Container and the owner's WSL terminal share this working tree. Do not switch the checked-out branch while the owner works in it; use a separate `git worktree`.
+- Before handing a change to the owner, have it reviewed by a separate agent or review tool that did not write it. Reviewers use read-only git commands on the worktree and run code only in a copy without git metadata.

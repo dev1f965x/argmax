@@ -1,7 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { PageHeading } from "@/components/page-heading";
 import { useScreenView } from "@/components/use-screen-view";
-import { issuesUrl, umamiPrivacyUrl } from "@/lib/links";
+import {
+  contactEmail,
+  issuesUrl,
+  umamiPrivacyUrl,
+  umamiTermsUrl,
+} from "@/lib/links";
+
+const linkClass = "text-primary underline underline-offset-4";
 
 export function PrivacyPage() {
   const { t } = useTranslation();
@@ -16,23 +23,26 @@ export function PrivacyPage() {
       <p>{t("privacy.noAccounts")}</p>
       <p>{t("privacy.localOnly")}</p>
       <p>{t("privacy.analytics")}</p>
-      <p>
-        <a
-          href={umamiPrivacyUrl}
-          className="text-primary underline underline-offset-4"
-        >
+      <p className="flex flex-wrap gap-x-4">
+        <a href={umamiPrivacyUrl} className={linkClass}>
           {t("privacy.umamiPolicy")}
+        </a>
+        <a href={umamiTermsUrl} className={linkClass}>
+          {t("privacy.umamiTerms")}
         </a>
       </p>
       <p>{t("privacy.hosting")}</p>
       <p>
-        <a
-          href={issuesUrl}
-          className="text-primary underline underline-offset-4"
-        >
+        <a href={issuesUrl} className={linkClass}>
           {t("privacy.questions")}
         </a>
       </p>
+      <p>
+        <a href={`mailto:${contactEmail}`} className={linkClass}>
+          {t("privacy.privacyContact", { email: contactEmail })}
+        </a>
+      </p>
+      <p className="text-sm text-muted-foreground">{t("privacy.updated")}</p>
     </article>
   );
 }
