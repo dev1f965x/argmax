@@ -64,6 +64,22 @@ export function PickPanel({
     };
   }, []);
 
+  // Firefox does not apply scroll-padding when Tab moves focus, so a control
+  // could stay behind the fixed bar; scroll it out from under the bar.
+  useEffect(() => {
+    function reveal(event: FocusEvent) {
+      const bar = panel.current;
+      const target = event.target;
+      if (!bar || !(target instanceof Element) || bar.contains(target)) return;
+      if (getComputedStyle(bar).position !== "fixed") return;
+      const overlap =
+        target.getBoundingClientRect().bottom - bar.getBoundingClientRect().top;
+      if (overlap > 0) window.scrollBy({ top: overlap });
+    }
+    document.addEventListener("focusin", reveal);
+    return () => document.removeEventListener("focusin", reveal);
+  }, []);
+
   // The result follows edits to the picked item and disappears if it is removed.
   const result = items.find((item) => item.id === resultId) ?? null;
   const empty = items.length === 0;

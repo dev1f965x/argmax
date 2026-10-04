@@ -114,6 +114,15 @@
   }
   html {
     @apply font-sans;
+    /* On phones the pick bar is fixed to the bottom; scrolling a focused
+       control into view stops above it instead of behind it (WCAG 2.4.11).
+       Firefox ignores this when Tab moves focus; PickPanel covers that case. */
+    scroll-padding-bottom: var(--pick-bar-height, 0px);
+  }
+  @media (width >= 48rem) {
+    html {
+      scroll-padding-bottom: 0;
+    }
   }
   body {
     @apply bg-background text-foreground;

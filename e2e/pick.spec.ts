@@ -97,3 +97,29 @@ test.describe("on a phone in landscape", () => {
     expect(results.violations).toEqual([]);
   });
 });
+
+test("on a phone, keyboard focus is never hidden behind the pick bar", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await openWithStorage(
+    page,
+    storedState([{ id: "lunch", name: "Lunch", items }]),
+    "/lists/lunch",
+  );
+  const bar = page.getByRole("region", { name: "Pick result" });
+  await page.getByRole("textbox", { name: "New item" }).focus();
+  // Edit and Remove for every item, then Pick.
+  for (let stop = 0; stop < items.length * 2 + 1; stop += 1) {
+    await page.keyboard.press("Tab");
+    const focused = await page.evaluate(() => {
+      const box = document.activeElement?.getBoundingClientRect();
+      return { name: document.activeElement?.ariaLabel, bottom: box?.bottom };
+    });
+    const barTop = (await bar.boundingBox())?.y ?? 0;
+    if ((await bar.locator(":focus").count()) > 0) continue;
+    expect(focused.bottom, `${focused.name} is covered`).toBeLessThanOrEqual(
+      barTop,
+    );
+  }
+});
