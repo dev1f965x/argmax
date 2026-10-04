@@ -95,6 +95,7 @@ export const en = {
   },
   notFound: {
     title: "Page not found",
+    body: "This page or list doesn’t exist.",
     backToLists: "Back to lists",
   },
   footer: {
