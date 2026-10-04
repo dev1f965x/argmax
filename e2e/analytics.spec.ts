@@ -46,7 +46,6 @@ async function captureReports(page: Page): Promise<Report[]> {
 async function useTheApp(page: Page) {
   await page.goto("/");
   await createList(page, "Secret lunch");
-  await page.getByRole("link", { name: /Secret lunch/ }).click();
   await page.getByRole("textbox", { name: "New item" }).fill("Secret ramen");
   await page.keyboard.press("Enter");
   await page.getByRole("button", { name: "Pick", exact: true }).click();

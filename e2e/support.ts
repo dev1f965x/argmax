@@ -30,7 +30,7 @@ export async function openWithStorage(page: Page, value: string, path = "/") {
   await page.goto(path);
 }
 
-/** Creates a list with the keyboard on the lists screen. */
+/** Creates a list with the keyboard on the lists screen, which then opens it. */
 export async function createList(page: Page, name: string) {
   await page.getByRole("textbox", { name: "New list name" }).fill(name);
   await page.keyboard.press("Enter");

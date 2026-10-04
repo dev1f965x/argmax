@@ -1,7 +1,7 @@
 import { ChevronLeft, Ellipsis, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { useAnnouncer } from "@/components/announcer";
 import { EmptyState } from "@/components/empty-state";
 import { useLists } from "@/components/lists-provider";
@@ -39,6 +39,7 @@ import {
   removeItem,
   renameList,
 } from "@/lib/lists";
+import { navigationString } from "@/lib/navigation-state";
 import { type Item, limits } from "@/lib/storage";
 import { NotFoundPage } from "@/routes/not-found-page";
 
@@ -54,6 +55,11 @@ interface DeletedListState {
   deletedListName: string;
 }
 
+/** Navigation state from the Lists screen when it opens a list it just created. */
+export interface CreatedListState {
+  createdListName: string;
+}
+
 export function ListPage() {
   const { t } = useTranslation();
   const { id } = useParams();
@@ -67,7 +73,16 @@ export function ListPage() {
   const actionsButton = useRef<HTMLButtonElement>(null);
   // One row is edited at a time; opening another row's editor discards an unsaved draft.
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [focusTarget, setFocusTarget] = useState<FocusTarget>(null);
+  const location = useLocation();
+  // Read once: the history entry is then cleared, so a reload or Back does not
+  // announce the new list or move focus again.
+  const [created] = useState(() =>
+    navigationString(location.state, "createdListName"),
+  );
+  // A list just created is empty, so focus starts in the add field.
+  const [focusTarget, setFocusTarget] = useState<FocusTarget>(
+    created ? "entry" : null,
+  );
   const { announce, region } = useAnnouncer();
   const editButtons = useRef(new Map<string, HTMLButtonElement>());
   const editButtonRefs = useRef(
@@ -79,6 +94,12 @@ export function ListPage() {
   const list = state.lists.find((candidate) => candidate.id === id);
   // An unknown list renders NotFoundPage, which reports itself.
   useScreenView(list ? "list" : null);
+
+  useEffect(() => {
+    if (!created) return;
+    announce(t("lists.created", { name: created }));
+    navigate(location.pathname, { replace: true, state: null });
+  }, [created, announce, t, navigate, location.pathname]);
 
   useEffect(() => {
     if (!focusTarget) return;

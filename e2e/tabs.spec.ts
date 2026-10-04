@@ -13,6 +13,8 @@ test("two tabs show each other's lists and never overwrite them", async ({
   // The browser's storage event updates the other tab without a reload.
   await expect(b.getByRole("link", { name: /From A/ })).toBeVisible();
 
+  // Creating a list opens it, so tab A returns to Lists to watch for B's list.
+  await a.getByRole("link", { name: "All lists" }).click();
   await createList(b, "From B");
   await expect(a.getByRole("link", { name: /From B/ })).toBeVisible();
 

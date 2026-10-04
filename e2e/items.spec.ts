@@ -6,7 +6,6 @@ test("items can be added, edited, and removed with the keyboard, and stay after 
 }) => {
   await page.goto("/");
   await createList(page, "Lunch");
-  await page.getByRole("link", { name: /Lunch/ }).click();
 
   const add = page.getByRole("textbox", { name: "New item" });
   await add.fill("Ramen");
