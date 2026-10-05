@@ -89,11 +89,7 @@ export function RootLayout() {
           <Outlet />
         </div>
       </main>
-      {/* On desktop a list screen's footer keeps room below its links for the
-          Undo snackbar, so the snackbar never covers them. */}
-      <SiteFooter
-        className={pickBarScreen ? "hidden md:block md:pb-24" : undefined}
-      />
+      <SiteFooter className={pickBarScreen ? "hidden md:block" : undefined} />
       {/* New screens start at the top; Back and Forward restore the position. */}
       <ScrollRestoration />
     </div>
