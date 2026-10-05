@@ -37,14 +37,14 @@ export function RootLayout() {
   // page load leaves focus where the browser put it.
   // Firefox does not apply scroll-padding when Tab moves focus, so a control
   // could stay behind a fixed bottom bar; scroll it out from under. The line
-  // is the page's scroll-padding, which already covers every bar. A mouse
-  // click on a partly covered control also scrolls it by the overlap, and the
-  // pointer stays on it because only the covered part moves out from under.
+  // is the page's scroll-padding, which already covers every bar.
   useEffect(() => {
     function reveal(event: FocusEvent) {
       const target = event.target;
       if (!(target instanceof Element) || target.closest("[data-bottom-bar]"))
         return;
+      // Only keyboard focus; a tap or click must not scroll the page.
+      if (!target.matches(":focus-visible")) return;
       const covered =
         Number.parseFloat(
           getComputedStyle(document.documentElement).scrollPaddingBottom,
@@ -67,9 +67,9 @@ export function RootLayout() {
   }, [key]);
 
   return (
-    // The List screen's pick bar (phones) and snackbar are fixed to the bottom;
-    // the layout reserves their height so the last items stay reachable.
-    <div className="flex min-h-svh flex-col pb-bottom-bars md:pb-(--snackbar-height)">
+    // On phones the List screen's pick bar is fixed to the bottom; the layout
+    // reserves its height so the last items stay reachable.
+    <div className="flex min-h-svh flex-col pb-(--pick-bar-height) md:pb-0">
       <header className="border-b">
         <div className="mx-auto flex h-14 max-w-240 items-center justify-between px-4">
           <Link

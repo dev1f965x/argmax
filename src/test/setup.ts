@@ -8,6 +8,9 @@ afterEach(() => {
   cleanup();
 });
 
+// jsdom has no layout, so scrolling a control into view does nothing.
+Element.prototype.scrollIntoView ??= () => {};
+
 // jsdom implements neither; the app uses them for the pick bar and its motion.
 class NoopResizeObserver {
   observe() {}

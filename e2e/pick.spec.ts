@@ -101,7 +101,7 @@ test.describe("on a phone", () => {
       expect(last.y + last.height).toBeLessThanOrEqual(covered.y);
   });
 
-  test("focus after a removal near the bottom is not hidden by the snackbar", async ({
+  test("after a keyboard removal near the bottom, focus is not hidden by the snackbar", async ({
     page,
   }) => {
     await openWithStorage(
@@ -123,7 +123,8 @@ test.describe("on a phone", () => {
       const box = element.getBoundingClientRect();
       window.scrollBy({ top: box.bottom - top + 4 });
     }, barTop);
-    await remove.click();
+    await remove.focus();
+    await page.keyboard.press("Enter");
 
     const snackbar = await page
       .getByRole("button", { name: "Undo" })
@@ -136,6 +137,35 @@ test.describe("on a phone", () => {
     expect(focused).toBeDefined();
     if (snackbar && focused !== undefined)
       expect(focused).toBeLessThanOrEqual(snackbar.y);
+  });
+});
+
+test.describe("on a phone with touch", () => {
+  test.use({ viewport: { width: 393, height: 740 }, hasTouch: true });
+
+  test("tapping Remove and then Pick never moves the page", async ({
+    page,
+  }) => {
+    await openList(page);
+    const bar = page.getByRole("region", { name: "Pick result" });
+    // A Remove button just above the bar, where the snackbar appears: the case
+    // that used to scroll the page.
+    const remove = page.getByRole("button", { name: "Remove “Item 5”" });
+    const barTop = (await bar.boundingBox())?.y ?? 0;
+    await remove.evaluate((element, top) => {
+      const box = element.getBoundingClientRect();
+      window.scrollBy({ top: box.bottom - top + 4 });
+    }, barTop);
+    const before = await page.evaluate(() => window.scrollY);
+
+    await remove.tap();
+    await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
+    await page.waitForTimeout(300);
+    expect(await page.evaluate(() => window.scrollY)).toBe(before);
+
+    await page.getByRole("button", { name: "Pick", exact: true }).tap();
+    await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
+    expect(await page.evaluate(() => window.scrollY)).toBe(before);
   });
 });
 
