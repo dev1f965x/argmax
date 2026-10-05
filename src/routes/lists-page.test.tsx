@@ -12,14 +12,25 @@ const createButton = () => screen.getByRole("button", { name: "Create" });
 const itemField = () => screen.getByRole("textbox", { name: "New item" });
 
 describe("ListsPage", () => {
-  it("says what the app does on a first visit and where lists are stored", () => {
-    renderApp();
+  it("explains what to do first and where lists are stored, with details on request", async () => {
+    const { user } = renderApp();
 
     expect(screen.getByRole("heading", { name: "Lists" })).toBeInTheDocument();
+    expect(screen.getByText("No lists yet")).toBeInTheDocument();
+    const note = screen.getByRole("button", {
+      name: "Lists are saved only in this browser.",
+    });
     expect(
-      screen.getByText(/^Make a list, add items, and pick one at random/),
+      screen.queryByText(/^Clearing browser data/),
+    ).not.toBeInTheDocument();
+
+    // Tapping or Enter opens the details too; phones have no hover.
+    await user.click(note);
+    expect(
+      await screen.findByText(
+        "Clearing browser data deletes them, and other devices don’t show them.",
+      ),
     ).toBeInTheDocument();
-    expect(screen.getByText(/saved only in this browser/)).toBeInTheDocument();
   });
 
   it("reports list_created for a created list, and nothing for a rejected name", async () => {
@@ -197,7 +208,7 @@ describe("ListsPage", () => {
       ).toBeInTheDocument();
       expect(nameField()).toBeDisabled();
       expect(createButton()).toBeDisabled();
-      expect(screen.queryByText(/^Make a list/)).not.toBeInTheDocument();
+      expect(screen.queryByText("No lists yet")).not.toBeInTheDocument();
     });
 
     it("copies the raw data", async () => {

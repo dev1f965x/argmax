@@ -11,10 +11,11 @@ export const en = {
     create: "Create",
     created: "Created “{{name}}”.",
     deleted: "Deleted “{{name}}”.",
-    storedLocally:
-      "Lists are saved only in this browser. Clearing browser data deletes them, and other devices don’t show them.",
-    emptyBody:
-      "Make a list, add items, and pick one at random. For example, “Lunch” or “Who goes first”.",
+    storedLocally: "Lists are saved only in this browser.",
+    storedLocallyDetail:
+      "Clearing browser data deletes them, and other devices don’t show them.",
+    emptyTitle: "No lists yet",
+    emptyBody: "Create your first list, for example “Lunch”.",
     itemCount_one: "{{count, number}} item",
     itemCount_other: "{{count, number}} items",
     limitReached:

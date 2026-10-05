@@ -47,10 +47,16 @@ Product name: Argmax, always in Latin letters, in both languages.
 
 ### Empty states
 
-Plain text, no card or title. Say what the screen is for only where a first-time user needs it; do not repeat what the field or a disabled button already says.
+A short title that states the situation, then one sentence that names the next action. Do not repeat what a field or a disabled button already says.
 
-- Lists, first visit: "Make a list, add items, and pick one at random. For example, “Lunch” or “Who goes first”." / "목록을 만들고 항목을 추가하면 그중 하나를 무작위로 뽑습니다. 예: “점심 메뉴”, “발표 순서”"
+- Lists, no lists yet: "No lists yet" / "Create your first list, for example “Lunch”." (아직 목록이 없습니다 / 첫 목록을 만드세요. 예: “점심 메뉴”)
 - An empty list shows nothing extra: the count reads "0 items" and Pick states its reason.
+
+### Notes with details
+
+A note that must stay short gives the essential fact in one line and puts the rest in a popover opened by hovering or tapping the line.
+
+- "Lists are saved only in this browser." → "Clearing browser data deletes them, and other devices don’t show them." / "목록은 이 브라우저에만 저장됩니다." → "브라우저 데이터를 지우면 삭제되며, 다른 기기에서는 보이지 않습니다."
 
 ### Errors and warnings
 
