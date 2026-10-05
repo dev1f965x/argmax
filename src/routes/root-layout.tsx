@@ -35,6 +35,28 @@ export function RootLayout() {
   // a header, footer, or storage banner control. A screen that moved focus
   // inside itself on purpose keeps it (child effects run first), and the first
   // page load leaves focus where the browser put it.
+  // Firefox does not apply scroll-padding when Tab moves focus, so a control
+  // could stay behind a fixed bottom bar; scroll it out from under. The line
+  // is the page's scroll-padding, which already covers every bar. A mouse
+  // click on a partly covered control also scrolls it by the overlap, and the
+  // pointer stays on it because only the covered part moves out from under.
+  useEffect(() => {
+    function reveal(event: FocusEvent) {
+      const target = event.target;
+      if (!(target instanceof Element) || target.closest("[data-bottom-bar]"))
+        return;
+      const covered =
+        Number.parseFloat(
+          getComputedStyle(document.documentElement).scrollPaddingBottom,
+        ) || 0;
+      const overlap =
+        target.getBoundingClientRect().bottom - (window.innerHeight - covered);
+      if (overlap > 0) window.scrollBy({ top: overlap });
+    }
+    document.addEventListener("focusin", reveal);
+    return () => document.removeEventListener("focusin", reveal);
+  }, []);
+
   useEffect(() => {
     if (key === handledKey.current) return;
     handledKey.current = key;
@@ -45,9 +67,9 @@ export function RootLayout() {
   }, [key]);
 
   return (
-    // On phones the List screen's pick bar is fixed to the bottom; the layout
-    // reserves its height so the last items stay reachable.
-    <div className="flex min-h-svh flex-col pb-(--pick-bar-height) md:pb-0">
+    // The List screen's pick bar (phones) and snackbar are fixed to the bottom;
+    // the layout reserves their height so the last items stay reachable.
+    <div className="flex min-h-svh flex-col pb-bottom-bars md:pb-(--snackbar-height)">
       <header className="border-b">
         <div className="mx-auto flex h-14 max-w-240 items-center justify-between px-4">
           <Link

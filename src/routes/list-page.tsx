@@ -8,6 +8,7 @@ import { useLists } from "@/components/lists-provider";
 import { Note } from "@/components/note";
 import { PageHeading } from "@/components/page-heading";
 import { PickPanel } from "@/components/pick-panel";
+import { Snackbar } from "@/components/snackbar";
 import {
   type SubmitOutcome,
   TextEntryForm,
@@ -395,8 +396,10 @@ export function ListPage() {
             )}
           </div>
           {region}
+          {/* Shown at the bottom of the screen, but placed here in the DOM so
+              Undo is a short Shift+Tab from the row that took the removed row's place. */}
           {undo?.listId === listId && (
-            <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-surface py-1 pr-1 pl-3.5">
+            <Snackbar>
               <p id={undoId} className="min-w-0 text-sm wrap-anywhere">
                 {t("list.removed", { text: undo.item.text })}
               </p>
@@ -410,7 +413,7 @@ export function ListPage() {
               >
                 {t("list.undo")}
               </Button>
-            </div>
+            </Snackbar>
           )}
 
           {items.length === 0 ? (

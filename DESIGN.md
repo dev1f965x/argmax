@@ -144,7 +144,8 @@ Pretendard's Latin glyphs are derived from Inter, which is otherwise avoided (se
 ## Layout
 
 - Content width 960 px with 16 px side padding. The Lists screen keeps the same left edge and limits its column to 640 px.
-- List screen: one column on mobile with a fixed pick bar at the bottom; from 768 px, two columns with a 320 px sticky pick panel on the right. The bar publishes its height as `--pick-bar-height`, and the layout reserves that space so the footer and the last items are never covered.
+- List screen: one column on mobile with a fixed pick bar at the bottom; from 768 px, two columns with a 320 px sticky pick panel on the right. The bar publishes its height as `--pick-bar-height`, and the layout reserves that space so the last items are never covered. On mobile this screen leaves out the site footer: links between the items and the bar would read as part of the list, and the Lists screen keeps them.
+- Snackbar: a short message with one action (Undo after removing an item), fixed above the pick bar on mobile and at the bottom of the viewport on desktop, at most 640 px wide. It publishes `--snackbar-height`, which the layout and focus scrolling reserve like the bar's. It stays until the user's next change; it has no timer.
 - Spacing follows the 4 px Tailwind scale. Groups use 8 to 12 px, sections 24 to 32 px, and there is more space above a heading than below it.
 - Touch targets are at least 44 px.
 - Single-field forms that add something (a new list, a new item) use the placeholder as the visible prompt and a visually hidden label, following the approved wireframes and the reference apps; the screen title gives the context once the user types. Forms with more than one field use visible labels.
@@ -154,7 +155,7 @@ Pretendard's Latin glyphs are derived from Inter, which is otherwise avoided (se
 Flat by default: separation comes from dividers and tinted surfaces, not shadows.
 
 - `shadow-segment`: the selected segment of the language switch.
-- `shadow-overlay`: menus and popovers.
+- `shadow-overlay`: menus, popovers, and the snackbar.
 - `shadow-dialog`: dialogs, with a dark scrim behind.
 
 ## Shapes

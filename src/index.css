@@ -108,6 +108,14 @@
   grid-template-rows: auto 1fr;
 }
 
+/* Bottom space for the bars fixed there on phones: the pick bar and the snackbar. */
+@utility pb-bottom-bars {
+  padding-bottom: calc(
+    var(--pick-bar-height, 0px) +
+    var(--snackbar-height, 0px)
+  );
+}
+
 /* Caps the result in the phone pick bar; a longer result scrolls, never truncated. */
 @utility max-h-pick-result {
   max-height: 40svh;
@@ -122,14 +130,18 @@
   }
   html {
     @apply font-sans;
-    /* On phones the pick bar is fixed to the bottom; scrolling a focused
-       control into view stops above it instead of behind it (WCAG 2.4.11).
-       Firefox ignores this when Tab moves focus; PickPanel covers that case. */
-    scroll-padding-bottom: var(--pick-bar-height, 0px);
+    /* The pick bar (phones) and the snackbar are fixed to the bottom;
+       scrolling a focused control into view stops above them instead of
+       behind them (WCAG 2.4.11). Firefox ignores this when Tab moves focus;
+       RootLayout covers that case. */
+    scroll-padding-bottom: calc(
+      var(--pick-bar-height, 0px) +
+      var(--snackbar-height, 0px)
+    );
   }
   @media (width >= 48rem) {
     html {
-      scroll-padding-bottom: 0;
+      scroll-padding-bottom: var(--snackbar-height, 0px);
     }
   }
   body {

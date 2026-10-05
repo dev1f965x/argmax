@@ -71,6 +71,33 @@ test.describe("on a phone", () => {
     await page.getByRole("link", { name: "All lists" }).click();
     await expect(page.getByRole("contentinfo")).toBeVisible();
   });
+
+  test("the Undo snackbar sits above the pick bar and never covers the last item", async ({
+    page,
+  }) => {
+    await openList(page);
+    await page.getByRole("button", { name: "Remove “Item 12”" }).click();
+    const snackbar = await page
+      .getByRole("button", { name: "Undo" })
+      .locator("..")
+      .boundingBox();
+    const bar = await page
+      .getByRole("region", { name: "Pick result" })
+      .boundingBox();
+    expect(snackbar).not.toBeNull();
+    expect(bar).not.toBeNull();
+    if (!snackbar || !bar) return;
+    expect(snackbar.y + snackbar.height).toBeLessThanOrEqual(bar.y);
+
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    const last = await page.getByRole("listitem").last().boundingBox();
+    const covered = await page
+      .getByRole("button", { name: "Undo" })
+      .locator("..")
+      .boundingBox();
+    if (last && covered)
+      expect(last.y + last.height).toBeLessThanOrEqual(covered.y);
+  });
 });
 
 test.describe("on a phone in landscape", () => {
@@ -112,8 +139,12 @@ test("on a phone, keyboard focus is never hidden behind the pick bar", async ({
     "/lists/lunch",
   );
   const bar = page.getByRole("region", { name: "Pick result" });
+  // A removal adds the Undo snackbar above the bar; focus must clear both.
+  await page.getByRole("button", { name: "Remove “Item 1”" }).click();
+  const undo = page.getByRole("button", { name: "Undo" });
+  await expect(undo).toBeVisible();
   await page.getByRole("textbox", { name: "New item" }).focus();
-  // Edit and Remove for every item. This covers Tab navigation; scroll-padding
+  // Edit and Remove for every remaining item. This covers Tab navigation; scroll-padding
   // in index.css also covers other ways focus scrolls a control into view,
   // which a Tab test cannot tell apart.
   for (let stop = 0; stop < items.length * 2; stop += 1) {
@@ -122,10 +153,15 @@ test("on a phone, keyboard focus is never hidden behind the pick bar", async ({
       const box = document.activeElement?.getBoundingClientRect();
       return { name: document.activeElement?.ariaLabel, bottom: box?.bottom };
     });
-    const barTop = (await bar.boundingBox())?.y ?? 0;
     if ((await bar.locator(":focus").count()) > 0) continue;
+    if (await undo.evaluate((element) => element === document.activeElement))
+      continue;
+    const covered = Math.min(
+      (await bar.boundingBox())?.y ?? 0,
+      (await undo.boundingBox())?.y ?? 0,
+    );
     expect(focused.bottom, `${focused.name} is covered`).toBeLessThanOrEqual(
-      barTop,
+      covered,
     );
   }
 });
@@ -145,6 +181,21 @@ test("on desktop, Tab reaches Pick right after the list's actions", async ({
   ).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("textbox", { name: "New item" })).toBeFocused();
+});
+
+test("on desktop, removing an item shows Undo without moving the list", async ({
+  page,
+}) => {
+  await openWithStorage(
+    page,
+    storedState([{ id: "lunch", name: "Lunch", items }]),
+    "/lists/lunch",
+  );
+  const list = page.getByRole("list");
+  const before = (await list.boundingBox())?.y;
+  await page.getByRole("button", { name: "Remove “Item 12”" }).click();
+  await expect(page.getByRole("button", { name: "Undo" })).toBeInViewport();
+  expect((await list.boundingBox())?.y).toBe(before);
 });
 
 test("on desktop, a pick does not move the list below the title", async ({

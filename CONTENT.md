@@ -68,7 +68,7 @@ The title is a question that names the object; the body states what else is affe
 
 ### Undo
 
-Removing an item is one step and can be undone instead of confirmed. The result stays visible with an Undo button until the user’s next change in this list, with no timer, so keyboard and screen reader users can reach it.
+Removing an item is one step and can be undone instead of confirmed. The result appears in a snackbar at the bottom of the screen with an Undo button and stays until the user’s next change in this list, with no timer, so keyboard and screen reader users can reach it.
 
 - "Removed “Ramen”." + "Undo" / "“라멘” 항목을 삭제했습니다." + "되돌리기"
 - After Undo: "Restored “Ramen”." / "“라멘” 항목을 되돌렸습니다."
