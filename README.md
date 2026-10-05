@@ -18,7 +18,7 @@ Argmax is a web app for making picks: create a list, add items, and pick one at 
 - Add, edit, and remove items, with Undo after a removal; rename and delete lists.
 - Lists stay in this browser only, with no account, and stay in step across open tabs.
 - English and Korean, following the browser's language, with a switch in the header.
-- Works with a keyboard and screen readers (WCAG 2.2 AA), on phones from 360 px wide to desktops.
+- Works with a keyboard and screen readers, checked with automated axe scans against WCAG 2.2 AA and an NVDA pass; on phones from 360 px wide to desktops.
 
 Changes are listed in the [changelog](CHANGELOG.md).
 
