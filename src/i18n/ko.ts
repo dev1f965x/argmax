@@ -15,8 +15,8 @@ export const ko: Resources = {
     deleted: "“{{name}}” 목록을 삭제했습니다.",
     storedLocally:
       "목록은 이 브라우저에만 저장됩니다. 브라우저 데이터를 지우면 삭제되며, 다른 기기에서는 보이지 않습니다.",
-    emptyTitle: "아직 목록이 없습니다",
-    emptyBody: "첫 목록을 만드세요. 예: “점심 메뉴”",
+    emptyBody:
+      "목록을 만들고 항목을 추가하면 그중 하나를 무작위로 뽑습니다. 예: “점심 메뉴”, “발표 순서”",
     // Korean has no plural forms; the one and other keys exist to match the English resources.
     itemCount_one: "항목 {{count, number}}개",
     itemCount_other: "항목 {{count, number}}개",
@@ -54,8 +54,6 @@ export const ko: Resources = {
     remove: "“{{text}}” 삭제",
     save: "저장",
     cancel: "취소",
-    emptyTitle: "목록이 비어 있습니다",
-    emptyBody: "뽑으려면 항목을 하나 이상 추가하세요.",
     limitReached:
       "항목이 최대 개수인 {{limit, number}}개입니다. 추가하려면 항목을 삭제하세요.",
     errors: {
@@ -68,7 +66,6 @@ export const ko: Resources = {
     pick: "뽑기",
     again: "다시 뽑기",
     label: "뽑힌 항목",
-    hint: "뽑기를 누르면 항목 하나를 무작위로 뽑습니다.",
     needItem: "뽑을 항목을 추가하세요.",
     announced: "뽑힌 항목: “{{text}}”",
   },

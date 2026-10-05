@@ -47,9 +47,10 @@ Product name: Argmax, always in Latin letters, in both languages.
 
 ### Empty states
 
-A short title that states the situation, then one sentence that names the next action.
+Plain text, no card or title. Say what the screen is for only where a first-time user needs it; do not repeat what the field or a disabled button already says.
 
-- "No lists yet" / "Create your first list, for example “Lunch”."
+- Lists, first visit: "Make a list, add items, and pick one at random. For example, “Lunch” or “Who goes first”." / "목록을 만들고 항목을 추가하면 그중 하나를 무작위로 뽑습니다. 예: “점심 메뉴”, “발표 순서”"
+- An empty list shows nothing extra: the count reads "0 items" and Pick states its reason.
 
 ### Errors and warnings
 

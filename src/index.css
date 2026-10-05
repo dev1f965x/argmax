@@ -116,6 +116,9 @@
   );
 }
 
+/* Short viewports, such as a phone in landscape: the pick bar gets compact. */
+@custom-variant short (@media (max-height: 30rem));
+
 /* Caps the result in the phone pick bar; a longer result scrolls, never truncated. */
 @utility max-h-pick-result {
   max-height: 40svh;

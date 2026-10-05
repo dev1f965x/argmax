@@ -35,6 +35,25 @@ const rows = () =>
     .map((row) => row.textContent);
 
 describe("ListPage", () => {
+  it.each([
+    ["picking", "Pick"],
+    ["opening the list menu", "List actions"],
+    ["editing a row", "Edit “B”"],
+  ])("ends the Undo offer on %s", async (_, name) => {
+    const { user } = renderList(["A", "B", "C"]);
+
+    await user.click(screen.getByRole("button", { name: "Remove “A”" }));
+    expect(screen.getByRole("button", { name: "Undo" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name }));
+
+    // The menu opens after the click event, not within it.
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", { name: "Undo" }),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
   it("offers Undo after removing an item until the next change", async () => {
     const { user, storedItems } = renderList(["A", "B", "C"]);
 
@@ -58,12 +77,12 @@ describe("ListPage", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("shows the list name, item count, and an empty state", () => {
+  it("shows the list name and item count, and no list while it is empty", () => {
     renderList([]);
 
     expect(screen.getByRole("heading", { name: "Lunch" })).toBeInTheDocument();
     expect(screen.getByText("0 items")).toBeInTheDocument();
-    expect(screen.getByText("This list is empty")).toBeInTheDocument();
+    expect(screen.queryByRole("list")).not.toBeInTheDocument();
   });
 
   it("shows the not found page for an unknown list", () => {
@@ -180,7 +199,7 @@ describe("ListPage", () => {
     await user.click(screen.getByRole("button", { name: "Remove “Ramen”" }));
     expect(storedItems()).toEqual([]);
     expect(addField()).toHaveFocus();
-    expect(screen.getByText("This list is empty")).toBeInTheDocument();
+    expect(screen.queryByRole("list")).not.toBeInTheDocument();
   });
 
   it("focuses the previous row after removing the bottom row", async () => {

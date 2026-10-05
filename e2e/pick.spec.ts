@@ -142,6 +142,27 @@ test.describe("on a phone", () => {
 test.describe("on a phone in landscape", () => {
   test.use({ viewport: { width: 740, height: 360 } });
 
+  test("the pick bar is compact, leaving room for the list", async ({
+    page,
+  }) => {
+    await openList(page);
+    await page.getByRole("button", { name: "Pick", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "Pick again" }),
+    ).toBeVisible();
+    const bar = await page
+      .getByRole("region", { name: "Pick result" })
+      .boundingBox();
+    // The full-size bar took 163 px of 360; compact, it stays within a third.
+    expect(bar?.height ?? 360).toBeLessThanOrEqual(120);
+  });
+});
+
+// Tall enough for the full-size bar (not the landscape layout), short enough
+// that a 100-character result overflows the capped result area.
+test.describe("on a short phone", () => {
+  test.use({ viewport: { width: 360, height: 500 } });
+
   test("a long result that scrolls in the pick bar passes the accessibility check", async ({
     page,
   }) => {
@@ -235,6 +256,23 @@ test("on desktop, removing an item shows Undo without moving the list", async ({
   await page.getByRole("button", { name: "Remove “Item 12”" }).click();
   await expect(page.getByRole("button", { name: "Undo" })).toBeInViewport();
   expect((await list.boundingBox())?.y).toBe(before);
+});
+
+test("on desktop, Pick stays in place when the result appears", async ({
+  page,
+}) => {
+  await openWithStorage(
+    page,
+    storedState([{ id: "lunch", name: "Lunch", items }]),
+    "/lists/lunch",
+  );
+  const before = (
+    await page.getByRole("button", { name: "Pick", exact: true }).boundingBox()
+  )?.y;
+  await page.getByRole("button", { name: "Pick", exact: true }).click();
+  const again = page.getByRole("button", { name: "Pick again" });
+  await expect(again).toBeVisible();
+  expect((await again.boundingBox())?.y).toBe(before);
 });
 
 test("on desktop, a pick does not move the list below the title", async ({

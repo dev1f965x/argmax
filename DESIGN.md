@@ -145,7 +145,9 @@ Pretendard's Latin glyphs are derived from Inter, which is otherwise avoided (se
 
 - Content width 960 px with 16 px side padding. The Lists screen keeps the same left edge and limits its column to 640 px.
 - List screen: one column on mobile with a fixed pick bar at the bottom; from 768 px, two columns with a 320 px sticky pick panel on the right. The bar publishes its height as `--pick-bar-height`, and the layout reserves that space so the last items are never covered. On mobile this screen leaves out the site footer: links between the items and the bar would read as part of the list, and the Lists screen keeps them.
-- Snackbar: a short message with one action (Undo after removing an item), fixed above the pick bar on mobile and at the bottom of the viewport on desktop, at most 640 px wide. It publishes `--snackbar-height`, which the layout and focus scrolling reserve like the bar's. It stays until the user's next change; it has no timer.
+- Snackbar: a short message with one action (Undo after removing an item), fixed above the pick bar on mobile and at the bottom of the viewport on desktop, at most 640 px wide. It publishes `--snackbar-height`, which the layout and focus scrolling reserve like the bar's. It stays until the user does something else in the list (a change, a pick, the menu, editing a row); it has no timer.
+- Pick panel: before the first pick only the button shows. On desktop the result appears below the button, so the button never moves; in the phone bar it appears above the button. Below 480 px of height (a phone in landscape) the bar is compact: label and result on one line, a 44 px button.
+- Lists screen: the storage note is one small line below the lists, without an icon; an info icon would suggest hidden help. Screens other than a list's are reached back with the "All lists" link at the top, as on list screens.
 - Spacing follows the 4 px Tailwind scale. Groups use 8 to 12 px, sections 24 to 32 px, and there is more space above a heading than below it.
 - Touch targets are at least 44 px.
 - Single-field forms that add something (a new list, a new item) use the placeholder as the visible prompt and a visually hidden label, following the approved wireframes and the reference apps; the screen title gives the context once the user types. Forms with more than one field use visible labels.
@@ -161,7 +163,7 @@ Flat by default: separation comes from dividers and tinted surfaces, not shadows
 ## Shapes
 
 - Controls (inputs, buttons): `rounded-lg` (10 px).
-- Larger surfaces (pick result, banners, empty states, dialogs, the Pick button): `rounded-xl` (14 px).
+- Larger surfaces (pick result, banners, the snackbar, dialogs, the Pick button): `rounded-xl` (14 px).
 - Small elements (menu items, icon buttons): `rounded-md` or `rounded-sm`.
 
 ## Components
