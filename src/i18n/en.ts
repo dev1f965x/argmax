@@ -101,6 +101,7 @@ export const en = {
     privacy: "Privacy policy",
     licenses: "Licenses",
     source: "Source code",
+    feedback: "Feedback",
   },
   privacy: {
     title: "Privacy policy",

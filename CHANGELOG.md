@@ -6,19 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-05
+
+First release.
+
 ### Added
 
-- App scaffold with Vite, React, TypeScript, Tailwind CSS, shadcn/ui on Base UI, and React Router.
-- Visual design tokens, Pretendard typography, the logo mark, favicon, and Open Graph image.
-- English and Korean UI with a header language switcher; the choice is remembered in the browser.
-- Privacy page, security policy, security headers, and third-party license notices.
-- Lists screen: create lists, see them with their item counts, and open each one. Lists are saved in this browser, with warnings when storage is blocked or full and a way to copy or delete saved data that cannot be read.
-- List screen: add, edit, and remove items, with the 1,000-item and 100-character limits; every action works with a keyboard.
-- Rename and delete a list from the List actions menu; deleting asks for confirmation, states how many items go with it, and returns to the Lists screen.
-- Lists stay consistent across browser tabs: a change in one tab appears in the others, and no tab overwrites lists created in another.
-- Pick an item at random with equal chance: a short cycle settles on the result, which is shown in full and announced to screen readers; with reduced motion the result appears at once.
-- Not found page: unknown paths and list links say the page or list does not exist and link back to the Lists screen.
-- Each screen has its own page title; after navigation, focus moves to the new screen's heading, new screens start at the top, and Back restores the scroll position.
-- Usage data without names or account details sent to Umami Cloud from the production site: screen views, list creation, and picks, without list names or items, without cookies, and not when the browser sends Global Privacy Control or Do Not Track.
+- Lists: create lists, see them with their item counts, and open each one; a new list opens with the cursor in its item field. Up to 100 lists.
+- Items: add, edit, and remove items, up to 1,000 per list and 100 characters each; Undo after a removal; duplicates are allowed.
+- Rename and delete a list from its actions menu; deleting asks for confirmation, states how many items go with it, and returns to Lists.
+- Pick an item at random: names cycle briefly and settle on the result, which is announced to screen readers; with reduced motion the result appears at once.
+- Lists are saved only in this browser and stay in step across open tabs; storage that is blocked, full, or holds data that cannot be read is reported, with a way to copy or delete unreadable data.
+- English and Korean UI, following the browser's language, with a switch in the header that is remembered.
+- Keyboard and screen reader support, checked with automated axe scans against WCAG 2.2 AA and an NVDA pass; page titles per screen, focus moved to each new screen, and layouts from 360 px phones to desktops.
+- Privacy policy, security policy, security headers, and third-party license notices; a Feedback link to GitHub Issues with bug report and feature request templates.
+- Usage data without names or account details sent to Umami Cloud from the production site (screen views, list creation, and picks, with the browser language, screen size, and referring site), without list names or items, without cookies, and not when the browser sends Global Privacy Control or Do Not Track.
 
-[Unreleased]: https://github.com/dev1f965x/argmax/commits/main
+[Unreleased]: https://github.com/dev1f965x/argmax/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/dev1f965x/argmax/releases/tag/v0.1.0

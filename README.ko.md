@@ -2,9 +2,25 @@
 
 [English](README.md) | 한국어
 
+[![CI](https://github.com/dev1f965x/argmax/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dev1f965x/argmax/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/dev1f965x/argmax)](LICENSE)
 
-Argmax는 목록을 만들고 항목을 추가하면 그중 하나를 같은 확률로 무작위로 뽑는 웹 앱입니다. 첫 출시 전 개발 단계이며, 진행 상황은 [변경 이력](CHANGELOG.md)에서 볼 수 있습니다.
+Argmax는 목록을 만들고 항목을 추가하면 그중 하나를 무작위로 뽑는 웹 앱입니다.
+
+**사용하기:** <https://argmax.dev1f965x.workers.dev>
+
+![점심 메뉴 다섯 개가 있는 목록 화면에서 "비빔밥"이 뽑힌 모습](docs/screenshot-ko.png)
+
+## 기능
+
+- 목록 하나에 항목 최대 1,000개, 항목마다 최대 100자, 목록은 최대 100개까지 만들 수 있습니다.
+- 짧은 애니메이션과 함께 항목 하나를 무작위로 뽑고, 원하는 만큼 다시 뽑을 수 있습니다.
+- 항목 추가, 수정, 삭제(삭제 후 되돌리기 가능), 목록 이름 바꾸기와 삭제를 지원합니다.
+- 목록은 계정 없이 이 브라우저에만 저장되며, 열려 있는 탭끼리 같은 상태로 유지됩니다.
+- 영어와 한국어를 지원하며, 브라우저 언어를 따르고 상단에서 바꿀 수 있습니다.
+- 키보드와 화면 낭독기로 쓸 수 있으며, WCAG 2.2 AA 기준의 axe 자동 검사와 NVDA 확인을 거쳤습니다. 폭 360px 휴대폰부터 데스크톱까지 동작합니다.
+
+변경 사항은 [변경 이력](CHANGELOG.md)에 있습니다.
 
 ## 개발
 
@@ -66,12 +82,12 @@ Argmax에는 계정과 쿠키가 없으며, 개인정보를 요청하거나 저�
 | Umami Cloud | 사용 현황 분석 | Hobby, 0달러: 월 10만 이벤트, 사이트 1개, 6개월 보관, 이벤트당 추가 요금은 유료 플랜에만 적용, 결제 수단 없음 | 확인 안 됨 | [약관](https://umami.is/terms), [개인정보](https://umami.is/privacy) |
 | GitHub | 저장소, Actions, CodeQL, 비밀 정보 검사, Dependabot 알림 | 공개 저장소 무료 | 가능 | [약관](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) |
 | Mend Renovate(GitHub App) | 의존성 업데이트 풀 리퀘스트 | 무료 | 가능 | [약관](https://www.mend.io/terms-of-service/), [개인정보](https://www.mend.io/privacy-policy/) |
-| Shields.io | 이 README의 라이선스 배지 | 무료 | 확인 안 됨(약관 미게시) | [Shields.io](https://shields.io/) |
+| Shields.io | 이 README의 라이선스 배지(CI 배지는 GitHub가 제공) | 무료 | 확인 안 됨(약관 미게시) | [Shields.io](https://shields.io/) |
 | Dev Container 이미지와 Claude Code 기능 | 개발 환경 | `mcr.microsoft.com/devcontainers/typescript-node`, `ghcr.io/anthropics/devcontainer-features/claude-code`, 모두 MIT | 가능 | [이미지 라이선스](https://github.com/devcontainers/images/blob/main/LICENSE), [기능 저장소](https://github.com/anthropics/devcontainer-features) |
 
 ## 문의와 보안
 
-문의, 버그 제보, 요청은 [GitHub 이슈](https://github.com/dev1f965x/argmax/issues)로 남겨 주세요. 보안 문제는 [SECURITY.md](SECURITY.md)에 안내된 방법으로 비공개 제보해 주세요.
+문의, 버그 제보, 요청은 유형별 양식이 있는 [GitHub 이슈](https://github.com/dev1f965x/argmax/issues/new/choose)로 남겨 주세요. 앱 하단의 "의견 보내기"도 이곳으로 연결됩니다. 보안 문제는 [SECURITY.md](SECURITY.md)에 안내된 방법으로 비공개 제보해 주세요.
 
 ## 라이선스
 
