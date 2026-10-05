@@ -35,13 +35,15 @@ export function Snackbar({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    // The full-width wrapper only positions; it lets clicks through beside the bar.
+    // The wrapper only positions; it lets clicks through beside the bar. On
+    // desktop it spans the content column and the bar sits at its right, under
+    // the pick panel, clear of the list and of the footer links on the left.
     <div
       ref={snackbar}
       data-bottom-bar
-      className="pointer-events-none fixed inset-x-0 bottom-(--pick-bar-height) z-20 px-4 pb-2 md:bottom-0 md:pb-6"
+      className="pointer-events-none fixed inset-x-0 bottom-(--pick-bar-height) z-20 px-4 pb-2 md:bottom-0 md:mx-auto md:max-w-240 md:pb-6"
     >
-      <div className="pointer-events-auto mx-auto flex max-w-160 items-center justify-between gap-3 rounded-xl bg-popover py-1 pr-1 pl-3.5 shadow-overlay">
+      <div className="pointer-events-auto mx-auto flex max-w-160 items-center justify-between gap-3 rounded-xl bg-popover py-1 pr-1 pl-3.5 shadow-overlay md:mr-0 md:w-80">
         {children}
       </div>
     </div>

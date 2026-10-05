@@ -334,27 +334,131 @@ test("on desktop, Pick stays in place when the result appears", async ({
   expect((await again.boundingBox())?.y).toBe(before);
 });
 
-test("on desktop, the Undo snackbar never covers the footer links", async ({
+for (const width of [768, 1280]) {
+  test(`at ${width} px, the Undo snackbar covers neither the list nor the footer links`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 700 });
+    await openWithStorage(
+      page,
+      storedState([{ id: "lunch", name: "Lunch", items }]),
+      "/lists/lunch",
+    );
+    await page.getByRole("button", { name: "Remove “Item 12”" }).click();
+    const snackbar = await page
+      .getByRole("button", { name: "Undo" })
+      .locator("..")
+      .boundingBox();
+    expect(snackbar).not.toBeNull();
+    if (!snackbar) return;
+    const overlaps = (box: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    }) =>
+      box.x < snackbar.x + snackbar.width &&
+      snackbar.x < box.x + box.width &&
+      box.y < snackbar.y + snackbar.height &&
+      snackbar.y < box.y + box.height;
+    // Scroll through the page so every row and link passes the snackbar.
+    for (const top of [0, 10_000]) {
+      await page.evaluate((y) => window.scrollTo(0, y), top);
+      const targets = [
+        ...(await page.getByRole("listitem").all()),
+        ...(await page.getByRole("contentinfo").getByRole("link").all()),
+      ];
+      for (const target of targets) {
+        const box = await target.boundingBox();
+        if (box) expect(overlaps(box), await target.innerText()).toBe(false);
+      }
+    }
+  });
+}
+
+test("on desktop, the footer has the same height on every screen", async ({
   page,
 }) => {
   await openWithStorage(
     page,
     storedState([{ id: "lunch", name: "Lunch", items }]),
+  );
+  const onLists = (await page.getByRole("contentinfo").boundingBox())?.height;
+  await page.getByRole("link", { name: /Lunch/ }).click();
+  const onList = (await page.getByRole("contentinfo").boundingBox())?.height;
+  expect(onList).toBe(onLists);
+});
+
+test("on desktop, a 100-character result scrolls in its box and Pick stays put", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 600 });
+  const long = "가".repeat(100);
+  await openWithStorage(
+    page,
+    storedState([{ id: "lunch", name: "Lunch", items: [long] }]),
     "/lists/lunch",
   );
-  await page.getByRole("button", { name: "Remove “Item 12”" }).click();
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-  const snackbar = await page
-    .getByRole("button", { name: "Undo" })
-    .locator("..")
-    .boundingBox();
-  expect(snackbar).not.toBeNull();
-  for (const name of ["Privacy policy", "Licenses", "Source code"]) {
-    const link = await page.getByRole("link", { name }).boundingBox();
-    expect(link).not.toBeNull();
-    if (link && snackbar)
-      expect(link.y + link.height, name).toBeLessThanOrEqual(snackbar.y);
-  }
+  const pick = page.getByRole("button", { name: "Pick", exact: true });
+  const before = await pick.boundingBox();
+  await pick.click();
+  const again = page.getByRole("button", { name: "Pick again" });
+  await expect(again).toBeVisible();
+  await expect(
+    page.getByText("Picked", { exact: true }).locator(".."),
+  ).toContainText(long);
+  const after = await again.boundingBox();
+  expect(after?.y).toBe(before?.y);
+  expect((after?.y ?? 600) + (after?.height ?? 0)).toBeLessThanOrEqual(600);
+});
+
+for (const sentence of [
+  "Grilled mackerel set with miso soup, rolled omelette, spinach, and rice, a lunch option for today ok",
+  // Wraps to four lines at the smallest size in Chromium.
+  "Slow-braised short rib with roasted garlic mashed potatoes and seasonal greens from the market today",
+]) {
+  test(`on desktop, a long result shrinks until it fits its box: ${sentence.slice(0, 16)}`, async ({
+    page,
+  }) => {
+    await openWithStorage(
+      page,
+      storedState([{ id: "lunch", name: "Lunch", items: [sentence] }]),
+      "/lists/lunch",
+    );
+    await page.getByRole("button", { name: "Pick", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "Pick again" }),
+    ).toBeVisible();
+    const box = page.getByText("Picked", { exact: true }).locator("..");
+    await expect(box).toContainText(sentence);
+    expect(
+      await box.evaluate(
+        (element) => element.scrollHeight <= element.clientHeight,
+      ),
+    ).toBe(true);
+  });
+}
+
+test("a result picked on a narrow window fits again on a wide one", async ({
+  page,
+}) => {
+  const sentence =
+    "Grilled mackerel set with miso soup, rolled omelette, spinach, and rice";
+  await page.setViewportSize({ width: 360, height: 740 });
+  await openWithStorage(
+    page,
+    storedState([{ id: "lunch", name: "Lunch", items: [sentence] }]),
+    "/lists/lunch",
+  );
+  await page.getByRole("button", { name: "Pick", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Pick again" })).toBeVisible();
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const box = page.getByText("Picked", { exact: true }).locator("..");
+  await expect
+    .poll(() =>
+      box.evaluate((element) => element.scrollHeight <= element.clientHeight),
+    )
+    .toBe(true);
 });
 
 test("on desktop, a pick does not move the list below the title", async ({
