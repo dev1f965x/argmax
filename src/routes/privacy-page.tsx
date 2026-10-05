@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { BackToLists } from "@/components/back-to-lists";
 import { PageHeading } from "@/components/page-heading";
 import { useScreenView } from "@/components/use-screen-view";
 import {
@@ -16,6 +17,9 @@ export function PrivacyPage() {
 
   return (
     <article className="flex max-w-160 flex-col gap-4">
+      {/* In this flex column the link would stretch to full width, and the
+          column gap already spaces it from the title. */}
+      <BackToLists className="mb-0 self-start" />
       <PageHeading
         title={t("privacy.title")}
         className="text-title font-bold"

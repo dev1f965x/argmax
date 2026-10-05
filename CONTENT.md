@@ -47,9 +47,10 @@ Product name: Argmax, always in Latin letters, in both languages.
 
 ### Empty states
 
-A short title that states the situation, then one sentence that names the next action.
+Plain text, no card or title. Say what the screen is for only where a first-time user needs it; do not repeat what the field or a disabled button already says.
 
-- "No lists yet" / "Create your first list, for example “Lunch”."
+- Lists, first visit: "Make a list, add items, and pick one at random. For example, “Lunch” or “Who goes first”." / "목록을 만들고 항목을 추가하면 그중 하나를 무작위로 뽑습니다. 예: “점심 메뉴”, “발표 순서”"
+- An empty list shows nothing extra: the count reads "0 items" and Pick states its reason.
 
 ### Errors and warnings
 
@@ -68,7 +69,7 @@ The title is a question that names the object; the body states what else is affe
 
 ### Undo
 
-Removing an item is one step and can be undone instead of confirmed. The result stays visible with an Undo button until the user’s next change in this list, with no timer, so keyboard and screen reader users can reach it.
+Removing an item is one step and can be undone instead of confirmed. The result appears in a snackbar at the bottom of the screen with an Undo button and stays until the user’s next change in this list, with no timer, so keyboard and screen reader users can reach it.
 
 - "Removed “Ramen”." + "Undo" / "“라멘” 항목을 삭제했습니다." + "되돌리기"
 - After Undo: "Restored “Ramen”." / "“라멘” 항목을 되돌렸습니다."

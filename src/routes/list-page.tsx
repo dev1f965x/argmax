@@ -1,13 +1,14 @@
-import { ChevronLeft, Ellipsis, Pencil, Trash2 } from "lucide-react";
+import { Ellipsis, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useLocation, useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { useAnnouncer } from "@/components/announcer";
-import { EmptyState } from "@/components/empty-state";
+import { BackToLists } from "@/components/back-to-lists";
 import { useLists } from "@/components/lists-provider";
 import { Note } from "@/components/note";
 import { PageHeading } from "@/components/page-heading";
 import { PickPanel } from "@/components/pick-panel";
+import { Snackbar } from "@/components/snackbar";
 import {
   type SubmitOutcome,
   TextEntryForm,
@@ -81,7 +82,8 @@ export function ListPage() {
     navigationString(location.state, "createdListName"),
   );
   // A list just created is empty, so focus starts in the add field.
-  // The last removed item, offered for Undo until the next change in this list.
+  // The last removed item, offered for Undo until the user does something
+  // else in this list: a change, a pick, the menu, or editing a row.
   const [undo, setUndo] = useState<{
     listId: string;
     item: Item;
@@ -268,13 +270,7 @@ export function ListPage() {
 
   return (
     <>
-      <Link
-        to="/"
-        className="mb-2 inline-flex min-h-11 items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ChevronLeft aria-hidden="true" className="size-4" />
-        {t("list.allLists")}
-      </Link>
+      <BackToLists />
       {/* The pick panel starts level with the title, below the back link. */}
       {/* In the DOM the pick panel follows the title, so keyboard users reach
           Pick before the items; the grid places it in the right column on
@@ -309,7 +305,11 @@ export function ListPage() {
                 title={list.name}
                 className="pt-1 text-title font-bold wrap-anywhere"
               />
-              <DropdownMenu>
+              <DropdownMenu
+                onOpenChange={(open) => {
+                  if (open) setUndo(null);
+                }}
+              >
                 <DropdownMenuTrigger
                   render={
                     <Button
@@ -376,14 +376,13 @@ export function ListPage() {
           key={listId}
           items={items}
           announce={announce}
+          onPick={() => setUndo(null)}
           earlierVisit={fromEarlierVisit(list.createdAt)}
         />
         <div className="min-w-0">
           <div className="mt-5">
             {atLimit ? (
-              <Note strong ref={limitNote}>
-                {limitMessage}
-              </Note>
+              <Note ref={limitNote}>{limitMessage}</Note>
             ) : (
               <TextEntryForm
                 label={t("list.addLabel")}
@@ -395,8 +394,10 @@ export function ListPage() {
             )}
           </div>
           {region}
+          {/* Shown at the bottom of the screen, but placed after the add form
+              in the DOM, so Tab reaches Undo before the list. */}
           {undo?.listId === listId && (
-            <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-surface py-1 pr-1 pl-3.5">
+            <Snackbar>
               <p id={undoId} className="min-w-0 text-sm wrap-anywhere">
                 {t("list.removed", { text: undo.item.text })}
               </p>
@@ -410,15 +411,12 @@ export function ListPage() {
               >
                 {t("list.undo")}
               </Button>
-            </div>
+            </Snackbar>
           )}
 
-          {items.length === 0 ? (
-            <EmptyState
-              title={t("list.emptyTitle")}
-              body={t("list.emptyBody")}
-            />
-          ) : (
+          {/* An empty list needs no empty state: the count says "0 items",
+              focus is in the add field, and Pick says why it is unavailable. */}
+          {items.length > 0 && (
             <ul className="mt-4 border-t">
               {items.map((item, index) => (
                 <li key={item.id} className="border-b">
@@ -448,7 +446,10 @@ export function ListPage() {
                         size="icon"
                         disabled={!editable}
                         aria-label={t("list.edit", { text: item.text })}
-                        onClick={() => setEditingId(item.id)}
+                        onClick={() => {
+                          setUndo(null);
+                          setEditingId(item.id);
+                        }}
                         className="text-muted-foreground"
                       >
                         <Pencil aria-hidden="true" />

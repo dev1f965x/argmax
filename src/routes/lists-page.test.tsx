@@ -12,11 +12,13 @@ const createButton = () => screen.getByRole("button", { name: "Create" });
 const itemField = () => screen.getByRole("textbox", { name: "New item" });
 
 describe("ListsPage", () => {
-  it("explains what to do first and where lists are stored", () => {
+  it("says what the app does on a first visit and where lists are stored", () => {
     renderApp();
 
     expect(screen.getByRole("heading", { name: "Lists" })).toBeInTheDocument();
-    expect(screen.getByText("No lists yet")).toBeInTheDocument();
+    expect(
+      screen.getByText(/^Make a list, add items, and pick one at random/),
+    ).toBeInTheDocument();
     expect(screen.getByText(/saved only in this browser/)).toBeInTheDocument();
   });
 
@@ -195,7 +197,7 @@ describe("ListsPage", () => {
       ).toBeInTheDocument();
       expect(nameField()).toBeDisabled();
       expect(createButton()).toBeDisabled();
-      expect(screen.queryByText("No lists yet")).not.toBeInTheDocument();
+      expect(screen.queryByText(/^Make a list/)).not.toBeInTheDocument();
     });
 
     it("copies the raw data", async () => {

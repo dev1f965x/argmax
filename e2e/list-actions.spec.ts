@@ -42,6 +42,6 @@ test("a list can be renamed and deleted from its actions menu", async ({
   );
   expect(headings).toEqual(["Dinner", "Lists"]);
   await page.reload();
-  await expect(page.getByText("No lists yet")).toBeVisible();
+  await expect(page.getByText(/^Make a list, add items/)).toBeVisible();
   await expect(page.getByText("Deleted “Dinner”.")).toHaveCount(0);
 });

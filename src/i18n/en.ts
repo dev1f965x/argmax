@@ -13,8 +13,8 @@ export const en = {
     deleted: "Deleted “{{name}}”.",
     storedLocally:
       "Lists are saved only in this browser. Clearing browser data deletes them, and other devices don’t show them.",
-    emptyTitle: "No lists yet",
-    emptyBody: "Create your first list, for example “Lunch”.",
+    emptyBody:
+      "Make a list, add items, and pick one at random. For example, “Lunch” or “Who goes first”.",
     itemCount_one: "{{count, number}} item",
     itemCount_other: "{{count, number}} items",
     limitReached:
@@ -50,8 +50,6 @@ export const en = {
     remove: "Remove “{{text}}”",
     save: "Save",
     cancel: "Cancel",
-    emptyTitle: "This list is empty",
-    emptyBody: "Add at least one item to pick from.",
     limitReached:
       "This list has {{limit, number}} items, the maximum. Remove an item to add another.",
     errors: {
@@ -64,7 +62,6 @@ export const en = {
     pick: "Pick",
     again: "Pick again",
     label: "Picked",
-    hint: "Select Pick to pick one item at random.",
     needItem: "Add an item to pick from.",
     announced: "Picked “{{text}}”.",
   },

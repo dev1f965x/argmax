@@ -22,10 +22,12 @@ const cycleGaps = [30, 35, 40, 45, 50, 60, 70, 80, 90, 100];
 export function PickPanel({
   items,
   announce,
+  onPick,
   earlierVisit,
 }: {
   items: Item[];
   announce: (message: string) => void;
+  onPick: () => void;
   /** The list was created before this visit; reported with each pick (H2). */
   earlierVisit: boolean;
 }) {
@@ -64,24 +66,6 @@ export function PickPanel({
     };
   }, []);
 
-  // Firefox does not apply scroll-padding when Tab moves focus, so a control
-  // could stay behind the fixed bar; scroll it out from under the bar. A mouse
-  // click on a partly covered control also scrolls it by the overlap, and the
-  // pointer stays on it because only the covered part moves out from under.
-  useEffect(() => {
-    function reveal(event: FocusEvent) {
-      const bar = panel.current;
-      const target = event.target;
-      if (!bar || !(target instanceof Element) || bar.contains(target)) return;
-      if (getComputedStyle(bar).position !== "fixed") return;
-      const overlap =
-        target.getBoundingClientRect().bottom - bar.getBoundingClientRect().top;
-      if (overlap > 0) window.scrollBy({ top: overlap });
-    }
-    document.addEventListener("focusin", reveal);
-    return () => document.removeEventListener("focusin", reveal);
-  }, []);
-
   // The result follows edits to the picked item and disappears if it is removed.
   const result = items.find((item) => item.id === resultId) ?? null;
   const empty = items.length === 0;
@@ -89,6 +73,7 @@ export function PickPanel({
 
   function pick() {
     if (empty || rolling.current) return;
+    onPick();
     const pickedId = items[pickIndex(items.length)]?.id;
     if (pickedId === undefined) return;
 
@@ -132,17 +117,36 @@ export function PickPanel({
   return (
     <section
       ref={panel}
+      data-bottom-bar
       aria-label={t("pick.region")}
-      className="fixed inset-x-0 bottom-0 z-10 border-t bg-background px-4 pt-3 pb-4 md:sticky md:top-6 md:col-start-2 md:row-span-2 md:row-start-1 md:w-80 md:border-0 md:bg-transparent md:p-0"
+      className="fixed inset-x-0 bottom-0 z-10 flex flex-col-reverse border-t bg-background px-4 pt-3 pb-4 short:max-md:py-2 md:sticky md:flex-col md:top-6 md:col-start-2 md:row-span-2 md:row-start-1 md:w-80 md:border-0 md:bg-transparent md:p-0"
     >
-      {/* With no items, the reason under the button is the only hint. */}
-      {shown === null ? (
-        !empty && (
-          <div className="mb-3 hidden min-h-32 flex-col justify-center rounded-xl bg-surface p-5 text-center text-sm text-muted-foreground md:flex">
-            {t("pick.hint")}
-          </div>
-        )
-      ) : (
+      {/* The actions come first in the DOM: on desktop the result appears
+          below Pick, so the button does not move; in the phone bar the
+          column is reversed and the result grows upward above the button.
+          Tab there goes from Pick up to the result, which reads in order:
+          "Pick again", then "Picked …". */}
+      <div>
+        {/* aria-disabled rather than disabled: the button keeps focus when the
+            list empties under it, and its reason is read when it is focused. */}
+        <Button
+          onClick={pick}
+          aria-disabled={empty}
+          aria-describedby={empty ? reasonId : undefined}
+          className="h-13.5 w-full rounded-xl bg-clip-border text-lg short:max-md:h-11 aria-disabled:cursor-not-allowed aria-disabled:bg-surface-2 aria-disabled:text-subtle-foreground aria-disabled:hover:bg-surface-2"
+        >
+          {result ? t("pick.again") : t("pick.pick")}
+        </Button>
+        {empty && (
+          <p
+            id={reasonId}
+            className="mt-2 text-center text-sm text-muted-foreground"
+          >
+            {t("pick.needItem")}
+          </p>
+        )}
+      </div>
+      {shown !== null && (
         <div
           // Hidden from screen readers while names cycle; the settled result is announced.
           aria-hidden={cycling !== null}
@@ -150,11 +154,11 @@ export function PickPanel({
           // takes focus for keyboard scrolling and for reading it again; its
           // text ("Picked" and the item) is what a screen reader reads.
           tabIndex={cycling === null ? 0 : undefined}
-          className="mb-2.5 max-h-pick-result overflow-y-auto rounded-xl bg-brand-soft px-3.5 py-2.5 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:mb-3 md:flex md:max-h-none md:min-h-32 md:flex-col md:justify-center md:overflow-visible md:p-5"
+          className="mb-2.5 max-h-pick-result overflow-y-auto rounded-xl bg-brand-soft px-3.5 py-2.5 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 short:max-md:flex short:max-md:items-baseline short:max-md:gap-2 short:max-md:py-1.5 md:mt-3 md:mb-0 md:flex md:max-h-none md:min-h-32 md:flex-col md:justify-center md:overflow-visible md:p-5"
         >
           <p
             className={cn(
-              "text-sm font-semibold text-brand-strong",
+              "shrink-0 text-sm font-semibold text-brand-strong",
               cycling !== null && "invisible",
             )}
           >
@@ -162,7 +166,7 @@ export function PickPanel({
           </p>
           <p
             className={cn(
-              "text-result font-bold wrap-anywhere transition-colors duration-150 ease-out-expo md:text-result-lg",
+              "text-result font-bold wrap-anywhere transition-colors duration-150 ease-out-expo short:max-md:text-lg md:text-result-lg",
               // One line while cycling, so the panel and button do not jump;
               // the settled result is never truncated.
               cycling !== null && "line-clamp-1 text-muted-foreground",
@@ -171,24 +175,6 @@ export function PickPanel({
             {shown}
           </p>
         </div>
-      )}
-      {/* aria-disabled rather than disabled: the button keeps focus when the
-          list empties under it, and its reason is read when it is focused. */}
-      <Button
-        onClick={pick}
-        aria-disabled={empty}
-        aria-describedby={empty ? reasonId : undefined}
-        className="h-13.5 w-full rounded-xl bg-clip-border text-lg aria-disabled:cursor-not-allowed aria-disabled:bg-surface-2 aria-disabled:text-subtle-foreground aria-disabled:hover:bg-surface-2"
-      >
-        {result ? t("pick.again") : t("pick.pick")}
-      </Button>
-      {empty && (
-        <p
-          id={reasonId}
-          className="mt-2 text-center text-sm text-muted-foreground"
-        >
-          {t("pick.needItem")}
-        </p>
       )}
     </section>
   );

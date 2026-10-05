@@ -53,6 +53,13 @@ describe("RootLayout navigation", () => {
     ).toHaveFocus();
   });
 
+  it("links back to all lists from the privacy policy", async () => {
+    const { user } = renderAt("/privacy");
+
+    await user.click(screen.getByRole("link", { name: "All lists" }));
+    expect(screen.getByRole("heading", { name: "Lists" })).toBeInTheDocument();
+  });
+
   it("moves focus on Back to the first page", async () => {
     const { user, router } = renderAt("/");
 
