@@ -412,11 +412,39 @@ test("on desktop, a 100-character result scrolls in its box and Pick stays put",
   expect((after?.y ?? 600) + (after?.height ?? 0)).toBeLessThanOrEqual(600);
 });
 
-test("on desktop, a long result shrinks until it fits its box", async ({
+for (const sentence of [
+  "Grilled mackerel set with miso soup, rolled omelette, spinach, and rice, a lunch option for today ok",
+  // Wraps to four lines at the smallest size in Chromium.
+  "Slow-braised short rib with roasted garlic mashed potatoes and seasonal greens from the market today",
+]) {
+  test(`on desktop, a long result shrinks until it fits its box: ${sentence.slice(0, 16)}`, async ({
+    page,
+  }) => {
+    await openWithStorage(
+      page,
+      storedState([{ id: "lunch", name: "Lunch", items: [sentence] }]),
+      "/lists/lunch",
+    );
+    await page.getByRole("button", { name: "Pick", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "Pick again" }),
+    ).toBeVisible();
+    const box = page.getByText("Picked", { exact: true }).locator("..");
+    await expect(box).toContainText(sentence);
+    expect(
+      await box.evaluate(
+        (element) => element.scrollHeight <= element.clientHeight,
+      ),
+    ).toBe(true);
+  });
+}
+
+test("a result picked on a narrow window fits again on a wide one", async ({
   page,
 }) => {
   const sentence =
-    "Grilled mackerel set with miso soup, rolled omelette, spinach, and rice, a lunch option for today ok";
+    "Grilled mackerel set with miso soup, rolled omelette, spinach, and rice";
+  await page.setViewportSize({ width: 360, height: 740 });
   await openWithStorage(
     page,
     storedState([{ id: "lunch", name: "Lunch", items: [sentence] }]),
@@ -424,13 +452,13 @@ test("on desktop, a long result shrinks until it fits its box", async ({
   );
   await page.getByRole("button", { name: "Pick", exact: true }).click();
   await expect(page.getByRole("button", { name: "Pick again" })).toBeVisible();
+  await page.setViewportSize({ width: 1280, height: 800 });
   const box = page.getByText("Picked", { exact: true }).locator("..");
-  await expect(box).toContainText(sentence);
-  expect(
-    await box.evaluate(
-      (element) => element.scrollHeight <= element.clientHeight,
-    ),
-  ).toBe(true);
+  await expect
+    .poll(() =>
+      box.evaluate((element) => element.scrollHeight <= element.clientHeight),
+    )
+    .toBe(true);
 });
 
 test("on desktop, a pick does not move the list below the title", async ({

@@ -86,15 +86,35 @@ export function PickPanel({
   // The desktop box has a fixed height so Pick below never moves; a long
   // settled result steps down in size until it fits, and scrolls only past
   // the smallest size. Measured before paint, so no size flashes.
+  // It reads fit itself, not step, so a reset after a resize measures again
+  // even when step was already 0.
   useLayoutEffect(() => {
     const box = resultBox.current;
     if (!box || cycling !== null || !result) return;
+    const current = fit.text === result.text ? fit.step : 0;
     if (
       box.scrollHeight > box.clientHeight &&
-      step < desktopResultSizes.length - 1
+      current < desktopResultSizes.length - 1
     )
-      setFit({ text: result.text, step: step + 1 });
-  }, [cycling, result, step]);
+      setFit({ text: result.text, step: current + 1 });
+  }, [cycling, result, fit]);
+
+  // A new box width (a resized window, or crossing into the desktop layout)
+  // changes what fits, so the result is fitted again from the largest size.
+  // Only the width counts: on phones the box height follows the text.
+  const hasResult = shown !== null;
+  useEffect(() => {
+    const box = resultBox.current;
+    if (!hasResult || !box) return;
+    let width = box.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (box.clientWidth === width) return;
+      width = box.clientWidth;
+      setFit({ text: "", step: 0 });
+    });
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [hasResult]);
 
   function pick() {
     if (empty || rolling.current) return;
@@ -153,7 +173,7 @@ export function PickPanel({
         // small until there is a result.
         <div
           aria-hidden="true"
-          className="mb-3 hidden h-36 flex-col justify-center rounded-xl bg-surface p-5 md:flex"
+          className="mb-3 hidden h-40 flex-col justify-center rounded-xl bg-surface p-5 md:flex"
         >
           <p className="text-sm font-semibold text-muted-foreground">
             {t("pick.label")}
@@ -173,7 +193,7 @@ export function PickPanel({
           // a screen reader reads.
           ref={resultBox}
           tabIndex={cycling === null ? 0 : undefined}
-          className="mb-2.5 max-h-pick-result overflow-y-auto rounded-xl bg-brand-soft px-3.5 py-2.5 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 short:max-md:flex short:max-md:items-baseline short:max-md:gap-2 short:max-md:py-1.5 md:mb-3 md:flex md:h-36 md:max-h-none md:flex-col md:justify-center-safe md:p-5"
+          className="mb-2.5 max-h-pick-result overflow-y-auto rounded-xl bg-brand-soft px-3.5 py-2.5 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 short:max-md:flex short:max-md:items-baseline short:max-md:gap-2 short:max-md:py-1.5 md:mb-3 md:flex md:h-40 md:max-h-none md:flex-col md:justify-center-safe md:p-5"
         >
           <p
             // Stays visible while names cycle, so the box does not flicker
