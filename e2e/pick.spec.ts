@@ -147,6 +147,8 @@ test.describe("on a phone with touch", () => {
     page,
   }) => {
     await openList(page);
+    // The web font shifts the layout when it arrives; measure after it.
+    await page.evaluate(() => document.fonts.ready);
     const bar = page.getByRole("region", { name: "Pick result" });
     // A Remove button just above the bar, where the snackbar appears: the case
     // that used to scroll the page.
@@ -157,6 +159,8 @@ test.describe("on a phone with touch", () => {
       window.scrollBy({ top: box.bottom - top + 4 });
     }, barTop);
     const before = await page.evaluate(() => window.scrollY);
+    // Otherwise tap() scrolls to the button itself and tests nothing.
+    expect(before).toBeGreaterThan(0);
 
     await remove.tap();
     await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
@@ -166,6 +170,31 @@ test.describe("on a phone with touch", () => {
     await page.getByRole("button", { name: "Pick", exact: true }).tap();
     await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
     expect(await page.evaluate(() => window.scrollY)).toBe(before);
+  });
+
+  test("a snackbar for a 100-character item never covers the last row", async ({
+    page,
+  }) => {
+    await openWithStorage(
+      page,
+      storedState([
+        { id: "lunch", name: "Lunch", items: [...items, "W".repeat(100)] },
+      ]),
+      "/lists/lunch",
+    );
+    await page
+      .getByRole("button", { name: `Remove “${"W".repeat(100)}”` })
+      .tap();
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    const last = await page.getByRole("listitem").last().boundingBox();
+    const snackbar = await page
+      .getByRole("button", { name: "Undo" })
+      .locator("..")
+      .boundingBox();
+    expect(last).not.toBeNull();
+    expect(snackbar).not.toBeNull();
+    if (last && snackbar)
+      expect(last.y + last.height).toBeLessThanOrEqual(snackbar.y);
   });
 });
 
@@ -303,6 +332,29 @@ test("on desktop, Pick stays in place when the result appears", async ({
   const again = page.getByRole("button", { name: "Pick again" });
   await expect(again).toBeVisible();
   expect((await again.boundingBox())?.y).toBe(before);
+});
+
+test("on desktop, the Undo snackbar never covers the footer links", async ({
+  page,
+}) => {
+  await openWithStorage(
+    page,
+    storedState([{ id: "lunch", name: "Lunch", items }]),
+    "/lists/lunch",
+  );
+  await page.getByRole("button", { name: "Remove “Item 12”" }).click();
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  const snackbar = await page
+    .getByRole("button", { name: "Undo" })
+    .locator("..")
+    .boundingBox();
+  expect(snackbar).not.toBeNull();
+  for (const name of ["Privacy policy", "Licenses", "Source code"]) {
+    const link = await page.getByRole("link", { name }).boundingBox();
+    expect(link).not.toBeNull();
+    if (link && snackbar)
+      expect(link.y + link.height, name).toBeLessThanOrEqual(snackbar.y);
+  }
 });
 
 test("on desktop, a pick does not move the list below the title", async ({

@@ -391,10 +391,11 @@ export function ListPage() {
           onPick={() => setUndo(null)}
           earlierVisit={fromEarlierVisit(list.createdAt)}
         />
-        {/* The bottom padding keeps room for the Undo snackbar at all times, so
-            it overlays nothing that cannot be scrolled to, and showing or
-            hiding it never moves the page. */}
-        <div className="min-w-0 pb-24">
+        {/* On phones the bottom padding keeps room for the Undo snackbar above
+            the pick bar at all times, so it overlays nothing that cannot be
+            scrolled to, and showing or hiding it never moves the page. On
+            desktop the layout keeps that room below the footer instead. */}
+        <div className="min-w-0 pb-24 md:pb-0">
           <div className="mt-5">
             {atLimit ? (
               <Note ref={limitNote}>{limitMessage}</Note>
@@ -413,7 +414,13 @@ export function ListPage() {
               in the DOM, so Tab reaches Undo before the list. */}
           {undo?.listId === listId && (
             <Snackbar>
-              <p id={undoId} className="min-w-0 text-sm wrap-anywhere">
+              {/* At most two lines, so the room kept for it always suffices;
+                  a long item name is cut visually, and Undo's description
+                  still gives screen readers the whole text. */}
+              <p
+                id={undoId}
+                className="line-clamp-2 min-w-0 text-sm wrap-anywhere"
+              >
                 {t("list.removed", { text: undo.item.text })}
               </p>
               <Button
