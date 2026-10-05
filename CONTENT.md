@@ -54,7 +54,7 @@ A short title that states the situation, then one sentence that names the next a
 
 ### Notes with details
 
-A note that must stay short gives the essential fact in one line and puts the rest in a popover opened by hovering or tapping the line.
+A note that must stay short gives the essential fact in one line and puts the rest in a popover opened by hovering over, tapping, or pressing Enter on the line.
 
 - "Lists are saved only in this browser." → "Clearing browser data deletes them, and other devices don’t show them." / "목록은 이 브라우저에만 저장됩니다." → "브라우저 데이터를 지우면 삭제되며, 다른 기기에서는 보이지 않습니다."
 

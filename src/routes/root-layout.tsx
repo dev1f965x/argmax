@@ -12,7 +12,6 @@ import { useLists } from "@/components/lists-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { StorageBanner } from "@/components/storage-banner";
 import { Wordmark } from "@/components/wordmark";
-import { cn } from "@/lib/utils";
 
 export function RootLayout() {
   const { t } = useTranslation();
@@ -69,14 +68,8 @@ export function RootLayout() {
 
   return (
     // On phones the List screen's pick bar is fixed to the bottom; the layout
-    // reserves its height so the last items stay reachable. On desktop a list
-    // screen keeps room below the footer for the Undo snackbar.
-    <div
-      className={cn(
-        "flex min-h-svh flex-col pb-(--pick-bar-height)",
-        pickBarScreen ? "md:pb-24" : "md:pb-0",
-      )}
-    >
+    // reserves its height so the last items stay reachable.
+    <div className="flex min-h-svh flex-col pb-(--pick-bar-height) md:pb-0">
       <header className="border-b">
         <div className="mx-auto flex h-14 max-w-240 items-center justify-between px-4">
           <Link
@@ -96,7 +89,11 @@ export function RootLayout() {
           <Outlet />
         </div>
       </main>
-      <SiteFooter className={pickBarScreen ? "hidden md:block" : undefined} />
+      {/* On desktop a list screen's footer keeps room below its links for the
+          Undo snackbar, so the snackbar never covers them. */}
+      <SiteFooter
+        className={pickBarScreen ? "hidden md:block md:pb-24" : undefined}
+      />
       {/* New screens start at the top; Back and Forward restore the position. */}
       <ScrollRestoration />
     </div>

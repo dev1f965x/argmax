@@ -64,6 +64,11 @@ test("the storage note shows its details on hover", async ({ page }) => {
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .analyze();
   expect(results.violations).toEqual([]);
+  // A best-practice rule outside the WCAG tags: the popup dialog is named.
+  const named = await new AxeBuilder({ page })
+    .withRules(["aria-dialog-name"])
+    .analyze();
+  expect(named.violations).toEqual([]);
 
   await page.mouse.move(0, 0);
   await expect(page.getByText(detail)).toBeHidden();
@@ -78,5 +83,9 @@ test.describe("on a phone with touch", () => {
       .getByRole("button", { name: "Lists are saved only in this browser." })
       .tap();
     await expect(page.getByText(detail)).toBeVisible();
+
+    // Tapping elsewhere closes it, without a hover race reopening it.
+    await page.getByRole("heading", { name: "Lists" }).tap();
+    await expect(page.getByText(detail)).toBeHidden();
   });
 });
