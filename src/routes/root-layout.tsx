@@ -1,7 +1,14 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, Outlet, ScrollRestoration, useLocation } from "react-router";
+import {
+  Link,
+  Outlet,
+  ScrollRestoration,
+  useLocation,
+  useMatch,
+} from "react-router";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { useLists } from "@/components/lists-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { StorageBanner } from "@/components/storage-banner";
 import { Wordmark } from "@/components/wordmark";
@@ -14,6 +21,14 @@ export function RootLayout() {
   // previous key, not the first, also handles Back to the first entry, which
   // keeps that entry's key.
   const handledKey = useRef(key);
+  const listMatch = useMatch("/lists/:id");
+  const { state } = useLists();
+  // A list's screen on a phone is an app screen with a fixed pick bar; site
+  // links between the items and the bar read as part of the list, so they are
+  // left to the Lists screen there.
+  const pickBarScreen =
+    listMatch !== null &&
+    state.lists.some((list) => list.id === listMatch.params.id);
 
   // After client-side navigation focus moves to the new screen's heading:
   // otherwise it falls to the page body (the clicked link is gone) or stays on
@@ -31,7 +46,7 @@ export function RootLayout() {
 
   return (
     // On phones the List screen's pick bar is fixed to the bottom; the layout
-    // reserves its height so the footer and the last items stay reachable.
+    // reserves its height so the last items stay reachable.
     <div className="flex min-h-svh flex-col pb-(--pick-bar-height) md:pb-0">
       <header className="border-b">
         <div className="mx-auto flex h-14 max-w-240 items-center justify-between px-4">
@@ -52,7 +67,7 @@ export function RootLayout() {
           <Outlet />
         </div>
       </main>
-      <SiteFooter />
+      <SiteFooter className={pickBarScreen ? "hidden md:block" : undefined} />
       {/* New screens start at the top; Back and Forward restore the position. */}
       <ScrollRestoration />
     </div>

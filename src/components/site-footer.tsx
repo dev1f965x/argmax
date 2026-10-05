@@ -1,15 +1,16 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { repositoryUrl } from "@/lib/links";
+import { cn } from "@/lib/utils";
 
 const linkClass =
   "inline-flex min-h-11 items-center underline-offset-4 hover:text-foreground hover:underline";
 
-export function SiteFooter() {
+export function SiteFooter({ className }: { className?: string }) {
   const { t } = useTranslation();
 
   return (
-    <footer className="border-t">
+    <footer className={cn("border-t", className)}>
       <nav className="mx-auto flex max-w-240 flex-wrap gap-x-5 px-4 py-3 text-sm text-muted-foreground">
         <Link to="/privacy" className={linkClass}>
           {t("footer.privacy")}

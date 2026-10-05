@@ -48,7 +48,7 @@ test("shows the result at once when reduced motion is requested", async ({
 test.describe("on a phone", () => {
   test.use({ viewport: { width: 360, height: 740 } });
 
-  test("the fixed pick bar never covers the last item or the footer", async ({
+  test("the fixed pick bar never covers the last item, and the site footer stays on Lists", async ({
     page,
   }) => {
     await openList(page);
@@ -61,11 +61,15 @@ test.describe("on a phone", () => {
     const bar = await page
       .getByRole("region", { name: "Pick result" })
       .boundingBox();
-    const footer = await page.getByRole("contentinfo").boundingBox();
+    const last = await page.getByRole("listitem").last().boundingBox();
     expect(bar).not.toBeNull();
-    expect(footer).not.toBeNull();
-    if (bar && footer)
-      expect(footer.y + footer.height).toBeLessThanOrEqual(bar.y + 1);
+    expect(last).not.toBeNull();
+    if (bar && last)
+      expect(last.y + last.height).toBeLessThanOrEqual(bar.y + 1);
+    await expect(page.getByRole("contentinfo")).toBeHidden();
+
+    await page.getByRole("link", { name: "All lists" }).click();
+    await expect(page.getByRole("contentinfo")).toBeVisible();
   });
 });
 
@@ -109,10 +113,10 @@ test("on a phone, keyboard focus is never hidden behind the pick bar", async ({
   );
   const bar = page.getByRole("region", { name: "Pick result" });
   await page.getByRole("textbox", { name: "New item" }).focus();
-  // Edit and Remove for every item, then the footer links. This covers Tab
-  // navigation; scroll-padding in index.css also covers other ways focus
-  // scrolls a control into view, which a Tab test cannot tell apart.
-  for (let stop = 0; stop < items.length * 2 + 1; stop += 1) {
+  // Edit and Remove for every item. This covers Tab navigation; scroll-padding
+  // in index.css also covers other ways focus scrolls a control into view,
+  // which a Tab test cannot tell apart.
+  for (let stop = 0; stop < items.length * 2; stop += 1) {
     await page.keyboard.press("Tab");
     const focused = await page.evaluate(() => {
       const box = document.activeElement?.getBoundingClientRect();
@@ -157,4 +161,6 @@ test("on desktop, a pick does not move the list below the title", async ({
   await page.getByRole("button", { name: "Pick", exact: true }).click();
   await expect(page.getByRole("button", { name: "Pick again" })).toBeVisible();
   expect((await field.boundingBox())?.y).toBe(before);
+  // Desktop keeps the site footer on the list screen.
+  await expect(page.getByRole("contentinfo")).toBeVisible();
 });
