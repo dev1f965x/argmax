@@ -52,7 +52,7 @@ describe("PickPanel", () => {
     renderList(["Ramen"]);
 
     expect(
-      screen.getByText("?").closest("[aria-hidden='true']"),
+      screen.getByText("—").closest("[aria-hidden='true']"),
     ).not.toBeNull();
     expect(shownResult()).not.toBeInTheDocument();
 
@@ -60,7 +60,7 @@ describe("PickPanel", () => {
     expect(
       await screen.findByText("Ramen", { selector: "p" }),
     ).toBeInTheDocument();
-    expect(screen.queryByText("?")).not.toBeInTheDocument();
+    expect(screen.queryByText("—")).not.toBeInTheDocument();
   });
 
   afterEach(() => {

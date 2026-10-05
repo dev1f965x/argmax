@@ -63,7 +63,7 @@ export const en = {
     pick: "Pick",
     again: "Pick again",
     label: "Picked",
-    placeholder: "?",
+    placeholder: "—",
     needItem: "Add an item to pick from.",
     announced: "Picked “{{text}}”.",
   },

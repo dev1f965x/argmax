@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { tracker } from "@/lib/analytics";
@@ -19,6 +19,14 @@ const cycleGaps = [30, 35, 40, 45, 50, 60, 70, 80, 90, 100];
  * a bar fixed to the bottom of the screen on phones. The result is announced
  * through `announce` once it settles.
  */
+// Desktop text sizes for the result, largest first.
+const desktopResultSizes = [
+  "md:text-result-lg",
+  "md:text-result",
+  "md:text-lg",
+  "md:text-base",
+] as const;
+
 export function PickPanel({
   items,
   announce,
@@ -34,6 +42,9 @@ export function PickPanel({
   const { t } = useTranslation();
   const [resultId, setResultId] = useState<string | null>(null);
   const [cycling, setCycling] = useState<string | null>(null);
+  // Index into desktopResultSizes for the settled result, kept per text.
+  const [fit, setFit] = useState({ text: "", step: 0 });
+  const resultBox = useRef<HTMLDivElement>(null);
   const timers = useRef<number[]>([]);
   // Set synchronously, so a second press before the first name shows is ignored.
   const rolling = useRef(false);
@@ -70,6 +81,20 @@ export function PickPanel({
   const result = items.find((item) => item.id === resultId) ?? null;
   const empty = items.length === 0;
   const shown = cycling ?? result?.text ?? null;
+  const step = result && fit.text === result.text ? fit.step : 0;
+
+  // The desktop box has a fixed height so Pick below never moves; a long
+  // settled result steps down in size until it fits, and scrolls only past
+  // the smallest size. Measured before paint, so no size flashes.
+  useLayoutEffect(() => {
+    const box = resultBox.current;
+    if (!box || cycling !== null || !result) return;
+    if (
+      box.scrollHeight > box.clientHeight &&
+      step < desktopResultSizes.length - 1
+    )
+      setFit({ text: result.text, step: step + 1 });
+  }, [cycling, result, step]);
 
   function pick() {
     if (empty || rolling.current) return;
@@ -128,7 +153,7 @@ export function PickPanel({
         // small until there is a result.
         <div
           aria-hidden="true"
-          className="mb-3 hidden min-h-32 flex-col justify-center rounded-xl bg-surface p-5 md:flex"
+          className="mb-3 hidden h-36 flex-col justify-center rounded-xl bg-surface p-5 md:flex"
         >
           <p className="text-sm font-semibold text-muted-foreground">
             {t("pick.label")}
@@ -141,23 +166,28 @@ export function PickPanel({
         <div
           // Hidden from screen readers while names cycle; the settled result is announced.
           aria-hidden={cycling !== null}
-          // A long result can scroll in the phone bar, so the settled result
-          // takes focus for keyboard scrolling and for reading it again; its
-          // text ("Picked" and the item) is what a screen reader reads.
+          // A long result scrolls inside the box (the phone bar caps its
+          // height; on desktop the box has a fixed height, so Pick below never
+          // moves), so the settled result takes focus for keyboard scrolling
+          // and for reading it again; its text ("Picked" and the item) is what
+          // a screen reader reads.
+          ref={resultBox}
           tabIndex={cycling === null ? 0 : undefined}
-          className="mb-2.5 max-h-pick-result overflow-y-auto rounded-xl bg-brand-soft px-3.5 py-2.5 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 short:max-md:flex short:max-md:items-baseline short:max-md:gap-2 short:max-md:py-1.5 md:mb-3 md:flex md:max-h-none md:min-h-32 md:flex-col md:justify-center md:overflow-visible md:p-5"
+          className="mb-2.5 max-h-pick-result overflow-y-auto rounded-xl bg-brand-soft px-3.5 py-2.5 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 short:max-md:flex short:max-md:items-baseline short:max-md:gap-2 short:max-md:py-1.5 md:mb-3 md:flex md:h-36 md:max-h-none md:flex-col md:justify-center-safe md:p-5"
         >
           <p
-            className={cn(
-              "shrink-0 text-sm font-semibold text-brand-strong",
-              cycling !== null && "invisible",
-            )}
+            // Stays visible while names cycle, so the box does not flicker
+            // from the empty state's label to nothing and back.
+            className="shrink-0 text-sm font-semibold text-brand-strong"
           >
             {t("pick.label")}
           </p>
           <p
             className={cn(
-              "text-result font-bold wrap-anywhere transition-colors duration-150 ease-out-expo short:max-md:text-lg md:text-result-lg",
+              "text-result font-bold wrap-anywhere transition-colors duration-150 ease-out-expo short:max-md:text-lg",
+              cycling === null
+                ? desktopResultSizes[step]
+                : desktopResultSizes[0],
               // One line while cycling, so the panel and button do not jump;
               // the settled result is never truncated.
               cycling !== null && "line-clamp-1 text-muted-foreground",
