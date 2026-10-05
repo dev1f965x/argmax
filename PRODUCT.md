@@ -10,15 +10,15 @@ web
 
 ## Users
 
-Individuals and small groups making everyday picks: what to eat, who goes first, which task to do next. The typical moment is a few people together, one of them on a phone, wanting the choice settled quickly and fairly so they can move on. Desktop use is supported but secondary.
+Individuals and small groups making everyday picks: what to eat, who goes first, which task to do next. The typical moment is a few people together, one of them on a phone, wanting the choice settled quickly so they can move on. Desktop use is supported but secondary.
 
 ## Product Purpose
 
-Argmax keeps lists of options in the browser and picks one at random with equal chance. Success means a first-time visitor can create a list and get a pick without instructions (H1), and people reuse saved lists instead of retyping them (H2).
+Argmax keeps lists of options in the browser and picks one at random. Success means a first-time visitor can create a list and get a pick without instructions (H1), and people reuse saved lists instead of retyping them (H2).
 
 ## Positioning
 
-Differentiation from existing tools (Wheel of Names, Picker Wheel, random.org List Randomizer, Naver's roulette and ladder) is explicitly not a goal; they are references for expected behavior. What Argmax can truthfully claim: saved lists, a fair pick (the browser's cryptographic random source, mapped to an item without modulo bias and covered by a distribution test), no account, and lists that never leave the browser.
+Differentiation from existing tools (Wheel of Names, Picker Wheel, random.org List Randomizer, Naver's roulette and ladder) is explicitly not a goal; they are references for expected behavior. What Argmax can truthfully claim: saved lists, an unbiased random pick (the browser's cryptographic random source, mapped to an item without modulo bias and covered by a distribution test; a quality property, not the product's theme), no account, and lists that never leave the browser.
 
 ## Operating Context
 
@@ -47,7 +47,7 @@ None. There are no users, testimonials, metrics, or case studies yet, and none m
 
 ## Product Principles
 
-1. The pick is the point: every screen shortens the way to a fair pick.
+1. The pick is the point: every screen shortens the way to a pick.
 2. Reuse over retyping: saved lists are easy to find and open.
 3. Honest about storage: users always know their lists stay in this browser, and failures are never silent.
 4. Works for everyone: keyboard, screen reader, 360 px phones, and both languages are part of done, not extras.

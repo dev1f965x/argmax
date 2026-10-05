@@ -4,7 +4,7 @@ Guidance for coding agents working in this repository. Humans should start with 
 
 ## Project
 
-Argmax is a static single-page web app that keeps lists in the browser and picks one item at random with equal chance. There is no backend. Product context is in [PRODUCT.md](PRODUCT.md); visual design rules and tokens are in [DESIGN.md](DESIGN.md); rules for UI text, terminology, and tone in both languages are in [CONTENT.md](CONTENT.md).
+Argmax is a static single-page web app that keeps lists in the browser and picks one item at random. There is no backend. Product context is in [PRODUCT.md](PRODUCT.md); visual design rules and tokens are in [DESIGN.md](DESIGN.md); rules for UI text, terminology, and tone in both languages are in [CONTENT.md](CONTENT.md).
 
 ## Setup
 

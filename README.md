@@ -5,7 +5,7 @@ English | [한국어](README.ko.md)
 [![CI](https://github.com/dev1f965x/argmax/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dev1f965x/argmax/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/dev1f965x/argmax)](LICENSE)
 
-Argmax is a web app for making picks: create a list, add items, and pick one at random with equal chance.
+Argmax is a web app for making picks: create a list, add items, and pick one at random.
 
 **Use it:** <https://argmax.dev1f965x.workers.dev>
 
@@ -14,7 +14,7 @@ Argmax is a web app for making picks: create a list, add items, and pick one at 
 ## Features
 
 - Lists of up to 1,000 items, each up to 100 characters; up to 100 lists.
-- A fair pick: every item has the same chance, using the browser's cryptographic random source.
+- Pick one item at random, with a short animation, and pick again as often as you like.
 - Add, edit, and remove items, with Undo after a removal; rename and delete lists.
 - Lists stay in this browser only, with no account, and stay in step across open tabs.
 - English and Korean, following the browser's language, with a switch in the header.

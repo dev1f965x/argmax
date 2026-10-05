@@ -1,6 +1,6 @@
 ---
 name: Argmax
-description: Keep lists in your browser and pick one item, fairly.
+description: Keep lists in your browser and pick one at random.
 colors:
   background: "oklch(0.995 0.003 168)"
   surface: "oklch(0.975 0.006 168)"
@@ -105,7 +105,7 @@ Source of truth for tokens is `src/index.css`; this file explains them. Change b
 
 ## Overview
 
-Personality: calm, quick, fair. Argmax is a tool people open in the middle of a conversation to settle a small decision, usually on a phone. The interface stays quiet so the pick result stands out.
+Personality: calm, quick, light. Argmax is a tool people open in the middle of a conversation to settle a small decision, usually on a phone. The interface stays quiet so the pick result stands out.
 
 References and what each contributes:
 

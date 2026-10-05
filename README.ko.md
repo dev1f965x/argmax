@@ -5,7 +5,7 @@
 [![CI](https://github.com/dev1f965x/argmax/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dev1f965x/argmax/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/dev1f965x/argmax)](LICENSE)
 
-Argmax는 목록을 만들고 항목을 추가하면 그중 하나를 같은 확률로 무작위로 뽑는 웹 앱입니다.
+Argmax는 목록을 만들고 항목을 추가하면 그중 하나를 무작위로 뽑는 웹 앱입니다.
 
 **사용하기:** <https://argmax.dev1f965x.workers.dev>
 
@@ -14,7 +14,7 @@ Argmax는 목록을 만들고 항목을 추가하면 그중 하나를 같은 확
 ## 기능
 
 - 목록 하나에 항목 최대 1,000개, 항목마다 최대 100자, 목록은 최대 100개까지 만들 수 있습니다.
-- 공정한 뽑기: 브라우저의 암호학적 난수를 써서 모든 항목이 같은 확률로 뽑힙니다.
+- 짧은 애니메이션과 함께 항목 하나를 무작위로 뽑고, 원하는 만큼 다시 뽑을 수 있습니다.
 - 항목 추가, 수정, 삭제(삭제 후 되돌리기 가능), 목록 이름 바꾸기와 삭제를 지원합니다.
 - 목록은 계정 없이 이 브라우저에만 저장되며, 열려 있는 탭끼리 같은 상태로 유지됩니다.
 - 영어와 한국어를 지원하며, 브라우저 언어를 따르고 상단에서 바꿀 수 있습니다.
