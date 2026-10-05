@@ -17,7 +17,9 @@ export function PrivacyPage() {
 
   return (
     <article className="flex max-w-160 flex-col gap-4">
-      <BackToLists />
+      {/* In this flex column the link would stretch to full width, and the
+          column gap already spaces it from the title. */}
+      <BackToLists className="mb-0 self-start" />
       <PageHeading
         title={t("privacy.title")}
         className="text-title font-bold"

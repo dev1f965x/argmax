@@ -123,7 +123,9 @@ export function PickPanel({
     >
       {/* The actions come first in the DOM: on desktop the result appears
           below Pick, so the button does not move; in the phone bar the
-          column is reversed and the result grows upward above the button. */}
+          column is reversed and the result grows upward above the button.
+          Tab there goes from Pick up to the result, which reads in order:
+          "Pick again", then "Picked …". */}
       <div>
         {/* aria-disabled rather than disabled: the button keeps focus when the
             list empties under it, and its reason is read when it is focused. */}

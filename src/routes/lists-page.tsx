@@ -117,8 +117,9 @@ export function ListsPage() {
           ))}
         </ul>
       )}
-      {/* Stated where lists are created (PRD risk), as one quiet line below
-          them rather than between the field and the lists on every visit. */}
+      {/* On the screen where lists are created (PRD risk), as one quiet line
+          below them: first-time users see it right away, and returning users,
+          who have seen it, are not shown it between the field and the lists. */}
       <p className="mt-8 text-sm text-muted-foreground">
         {t("lists.storedLocally")}
       </p>
