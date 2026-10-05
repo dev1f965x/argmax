@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
-import { repositoryUrl } from "@/lib/links";
+import { newIssueUrl, repositoryUrl } from "@/lib/links";
 import { cn } from "@/lib/utils";
 
 const linkClass =
@@ -11,7 +11,9 @@ export function SiteFooter({ className }: { className?: string }) {
 
   return (
     <footer className={cn("border-t", className)}>
-      <nav className="mx-auto flex max-w-240 flex-wrap gap-x-5 px-4 py-3 text-sm text-muted-foreground">
+      {/* The narrower gap on phones keeps the four links on one row at 360 px
+          in English (281 px of text in 328 px). */}
+      <nav className="mx-auto flex max-w-240 flex-wrap gap-x-3 px-4 py-3 text-sm text-muted-foreground md:gap-x-5">
         <Link to="/privacy" className={linkClass}>
           {t("footer.privacy")}
         </Link>
@@ -21,6 +23,9 @@ export function SiteFooter({ className }: { className?: string }) {
         </a>
         <a href={repositoryUrl} className={linkClass}>
           {t("footer.source")}
+        </a>
+        <a href={newIssueUrl} className={linkClass}>
+          {t("footer.feedback")}
         </a>
       </nav>
     </footer>

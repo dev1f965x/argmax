@@ -70,3 +70,25 @@ test("a new screen starts at the top, and Back restores the scroll position", as
     .poll(() => page.evaluate(() => window.scrollY))
     .toBe(listsScroll);
 });
+
+for (const locale of ["en-US", "ko-KR"]) {
+  test.describe(`${locale} at 360 px`, () => {
+    test.use({ locale, viewport: { width: 360, height: 740 } });
+
+    test("the footer links fit on one row and include feedback", async ({
+      page,
+    }) => {
+      await page.goto("/");
+      const links = await page.getByRole("contentinfo").getByRole("link").all();
+      expect(links).toHaveLength(4);
+      const rows = new Set<number>();
+      for (const link of links)
+        rows.add(Math.round((await link.boundingBox())?.y ?? -1));
+      expect(rows.size).toBe(1);
+      await expect(links[3] ?? page.locator("missing")).toHaveAttribute(
+        "href",
+        "https://github.com/dev1f965x/argmax/issues/new/choose",
+      );
+    });
+  });
+}

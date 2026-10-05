@@ -109,6 +109,7 @@ export const ko: Resources = {
     privacy: "개인정보 처리방침",
     licenses: "라이선스",
     source: "소스 코드",
+    feedback: "의견 보내기",
   },
   privacy: {
     title: "개인정보 처리방침",

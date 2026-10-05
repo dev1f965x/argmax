@@ -2,9 +2,25 @@
 
 English | [한국어](README.ko.md)
 
+[![CI](https://github.com/dev1f965x/argmax/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dev1f965x/argmax/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/dev1f965x/argmax)](LICENSE)
 
-Argmax is a web app for making picks: create a list, add items, and pick one at random with equal chance. It is in development toward its first release; see the [changelog](CHANGELOG.md).
+Argmax is a web app for making picks: create a list, add items, and pick one at random with equal chance.
+
+**Use it:** <https://argmax.dev1f965x.workers.dev>
+
+![The list screen with five lunch options and "Bibimbap" picked](docs/screenshot-en.png)
+
+## Features
+
+- Lists of up to 1,000 items, each up to 100 characters; up to 100 lists.
+- A fair pick: every item has the same chance, using the browser's cryptographic random source.
+- Add, edit, and remove items, with Undo after a removal; rename and delete lists.
+- Lists stay in this browser only, with no account, and stay in step across open tabs.
+- English and Korean, following the browser's language, with a switch in the header.
+- Works with a keyboard and screen readers (WCAG 2.2 AA), on phones from 360 px wide to desktops.
+
+Changes are listed in the [changelog](CHANGELOG.md).
 
 ## Development
 
@@ -66,12 +82,12 @@ Terms were checked on 2026-10-04. Argmax is a non-commercial project; before any
 | Umami Cloud | Usage analytics | Hobby, $0: 100K events per month, 1 website, 6-month retention; per-event overage applies only to paid plans; no payment method | Not confirmed | [Terms](https://umami.is/terms), [privacy](https://umami.is/privacy) |
 | GitHub | Repository, Actions, CodeQL, secret scanning, Dependabot alerts | Free for public repositories | Allowed | [Terms](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) |
 | Mend Renovate (GitHub App) | Dependency update pull requests | Free | Allowed | [Terms](https://www.mend.io/terms-of-service/), [privacy](https://www.mend.io/privacy-policy/) |
-| Shields.io | License badge in this README | Free | Not confirmed (no terms published) | [Shields.io](https://shields.io/) |
+| Shields.io | License badge in this README; the CI badge is served by GitHub | Free | Not confirmed (no terms published) | [Shields.io](https://shields.io/) |
 | Dev Container image and Claude Code feature | Development environment | `mcr.microsoft.com/devcontainers/typescript-node` and `ghcr.io/anthropics/devcontainer-features/claude-code`, both MIT | Allowed | [Image license](https://github.com/devcontainers/images/blob/main/LICENSE), [feature repository](https://github.com/anthropics/devcontainer-features) |
 
 ## Feedback and security
 
-Questions, bug reports, and requests go to [GitHub Issues](https://github.com/dev1f965x/argmax/issues). Report security issues privately as described in [SECURITY.md](SECURITY.md).
+Questions, bug reports, and requests go to [GitHub Issues](https://github.com/dev1f965x/argmax/issues/new/choose), which has a template for each; the app's footer links there as "Feedback". Report security issues privately as described in [SECURITY.md](SECURITY.md).
 
 ## License
 
