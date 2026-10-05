@@ -67,6 +67,7 @@ export const ko: Resources = {
     pick: "뽑기",
     again: "다시 뽑기",
     label: "뽑힌 항목",
+    placeholder: "?",
     needItem: "뽑을 항목을 추가하세요.",
     announced: "뽑힌 항목: “{{text}}”",
   },

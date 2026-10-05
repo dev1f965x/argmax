@@ -41,8 +41,28 @@ function reduceMotion(reduce: boolean) {
 
 const pickButton = () => screen.getByRole("button", { name: /^Pick/ });
 const result = () => screen.getByText("Picked").nextElementSibling;
+// The empty box before a pick repeats the label but is hidden from assistive
+// technology; a shown result is not.
+const shownResult = () =>
+  screen.queryByText("Picked", { ignore: "[aria-hidden='true'] *" });
 
 describe("PickPanel", () => {
+  it("shows an empty result box before the first pick, hidden from screen readers", async () => {
+    const user = userEvent.setup();
+    renderList(["Ramen"]);
+
+    expect(
+      screen.getByText("?").closest("[aria-hidden='true']"),
+    ).not.toBeNull();
+    expect(shownResult()).not.toBeInTheDocument();
+
+    await user.click(pickButton());
+    expect(
+      await screen.findByText("Ramen", { selector: "p" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("?")).not.toBeInTheDocument();
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
     vi.useRealTimers();
@@ -58,7 +78,7 @@ describe("PickPanel", () => {
     // The reason is the only hint; the idle hint would ask for a pick that cannot happen.
     expect(screen.queryByText(/^Select Pick/)).not.toBeInTheDocument();
     fireEvent.click(pickButton());
-    expect(screen.queryByText("Picked")).not.toBeInTheDocument();
+    expect(shownResult()).not.toBeInTheDocument();
   });
 
   it("reports a settled pick with earlier_visit, without the item", async () => {
@@ -130,7 +150,7 @@ describe("PickPanel", () => {
     expect(result()).toHaveTextContent("Udon");
 
     await user.click(screen.getByRole("button", { name: "Remove “Udon”" }));
-    expect(screen.queryByText("Picked")).not.toBeInTheDocument();
+    expect(shownResult()).not.toBeInTheDocument();
     expect(pickButton()).toHaveAccessibleName("Pick");
   });
 
@@ -148,7 +168,7 @@ describe("PickPanel", () => {
     });
     act(() => vi.advanceTimersByTime(600));
 
-    expect(screen.queryByText("Picked")).not.toBeInTheDocument();
+    expect(shownResult()).not.toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("");
     expect(pickButton()).toHaveFocus();
     expect(pickButton()).toHaveAttribute("aria-disabled", "true");
