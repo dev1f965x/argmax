@@ -62,6 +62,17 @@ export interface CreatedListState {
   createdListName: string;
 }
 
+/**
+ * Moves focus without moving the page for touch and mouse users, who do not
+ * follow focus; keyboard users (focus-visible) get the control scrolled into
+ * view above the fixed bars, which scroll-padding accounts for.
+ */
+function moveFocus(element: HTMLElement) {
+  element.focus({ preventScroll: true });
+  if (element.matches(":focus-visible"))
+    element.scrollIntoView({ block: "nearest" });
+}
+
 export function ListPage() {
   const { t } = useTranslation();
   const { id } = useParams();
@@ -113,14 +124,15 @@ export function ListPage() {
 
   useEffect(() => {
     if (!focusTarget) return;
-    if (focusTarget === "actions") actionsButton.current?.focus();
-    else {
-      const button =
-        focusTarget === "entry"
-          ? undefined
-          : editButtons.current.get(focusTarget.itemId);
-      (button ?? addField.current ?? limitNote.current)?.focus();
-    }
+    const element =
+      focusTarget === "actions"
+        ? actionsButton.current
+        : ((focusTarget === "entry"
+            ? undefined
+            : editButtons.current.get(focusTarget.itemId)) ??
+          addField.current ??
+          limitNote.current);
+    if (element) moveFocus(element);
     setFocusTarget(null);
   }, [focusTarget]);
 
@@ -379,7 +391,11 @@ export function ListPage() {
           onPick={() => setUndo(null)}
           earlierVisit={fromEarlierVisit(list.createdAt)}
         />
-        <div className="min-w-0">
+        {/* On phones the bottom padding keeps room for the Undo snackbar above
+            the pick bar at all times, so it overlays nothing that cannot be
+            scrolled to, and showing or hiding it never moves the page. On
+            desktop the layout keeps that room below the footer instead. */}
+        <div className="min-w-0 pb-24 md:pb-0">
           <div className="mt-5">
             {atLimit ? (
               <Note ref={limitNote}>{limitMessage}</Note>
@@ -398,7 +414,13 @@ export function ListPage() {
               in the DOM, so Tab reaches Undo before the list. */}
           {undo?.listId === listId && (
             <Snackbar>
-              <p id={undoId} className="min-w-0 text-sm wrap-anywhere">
+              {/* At most two lines, so the room kept for it always suffices;
+                  a long item name is cut visually, and Undo's description
+                  still gives screen readers the whole text. */}
+              <p
+                id={undoId}
+                className="line-clamp-2 min-w-0 text-sm wrap-anywhere"
+              >
                 {t("list.removed", { text: undo.item.text })}
               </p>
               <Button

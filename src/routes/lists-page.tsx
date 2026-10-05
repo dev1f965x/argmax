@@ -2,10 +2,12 @@ import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router";
+import { EmptyState } from "@/components/empty-state";
 import { useLists } from "@/components/lists-provider";
 import { Note } from "@/components/note";
 import { PageHeading } from "@/components/page-heading";
 import { StatusNotice } from "@/components/status-notice";
+import { StorageNote } from "@/components/storage-note";
 import {
   type SubmitOutcome,
   TextEntryForm,
@@ -88,10 +90,11 @@ export function ListsPage() {
           onSubmit={create}
         />
       )}
-      {/* While invalid data is kept, the advice to create a list would not work. */}
+      <StorageNote />
+
+      {/* While invalid data is kept, the empty state's advice to create a list would not work. */}
       {!editable ? null : lists.length === 0 ? (
-        // First visit: say what the app does, plainly, without a card.
-        <p className="mt-6 text-muted-foreground">{t("lists.emptyBody")}</p>
+        <EmptyState title={t("lists.emptyTitle")} body={t("lists.emptyBody")} />
       ) : (
         <ul className="mt-6 border-t">
           {lists.map((list) => (
@@ -117,12 +120,6 @@ export function ListsPage() {
           ))}
         </ul>
       )}
-      {/* On the screen where lists are created (PRD risk), as one quiet line
-          below them: first-time users see it right away, and returning users,
-          who have seen it, are not shown it between the field and the lists. */}
-      <p className="mt-8 text-sm text-muted-foreground">
-        {t("lists.storedLocally")}
-      </p>
     </div>
   );
 }

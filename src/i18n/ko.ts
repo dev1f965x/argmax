@@ -13,10 +13,11 @@ export const ko: Resources = {
     create: "만들기",
     created: "“{{name}}” 목록을 만들었습니다.",
     deleted: "“{{name}}” 목록을 삭제했습니다.",
-    storedLocally:
-      "목록은 이 브라우저에만 저장됩니다. 브라우저 데이터를 지우면 삭제되며, 다른 기기에서는 보이지 않습니다.",
-    emptyBody:
-      "목록을 만들고 항목을 추가하면 그중 하나를 무작위로 뽑습니다. 예: “점심 메뉴”, “발표 순서”",
+    storedLocally: "목록은 이 브라우저에만 저장됩니다.",
+    storedLocallyDetail:
+      "브라우저 데이터를 지우면 삭제되며, 다른 기기에서는 보이지 않습니다.",
+    emptyTitle: "아직 목록이 없습니다",
+    emptyBody: "첫 목록을 만드세요. 예: “점심 메뉴”",
     // Korean has no plural forms; the one and other keys exist to match the English resources.
     itemCount_one: "항목 {{count, number}}개",
     itemCount_other: "항목 {{count, number}}개",
