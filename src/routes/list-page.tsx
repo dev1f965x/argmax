@@ -396,8 +396,8 @@ export function ListPage() {
             )}
           </div>
           {region}
-          {/* Shown at the bottom of the screen, but placed here in the DOM so
-              Undo is a short Shift+Tab from the row that took the removed row's place. */}
+          {/* Shown at the bottom of the screen, but placed after the add form
+              in the DOM, so Tab reaches Undo before the list. */}
           {undo?.listId === listId && (
             <Snackbar>
               <p id={undoId} className="min-w-0 text-sm wrap-anywhere">

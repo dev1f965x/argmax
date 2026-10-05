@@ -95,8 +95,47 @@ test.describe("on a phone", () => {
       .getByRole("button", { name: "Undo" })
       .locator("..")
       .boundingBox();
+    expect(last).not.toBeNull();
+    expect(covered).not.toBeNull();
     if (last && covered)
       expect(last.y + last.height).toBeLessThanOrEqual(covered.y);
+  });
+
+  test("focus after a removal near the bottom is not hidden by the snackbar", async ({
+    page,
+  }) => {
+    await openWithStorage(
+      page,
+      storedState([
+        {
+          id: "long",
+          name: "Long",
+          items: Array.from({ length: 20 }, (_, index) => `Item ${index + 1}`),
+        },
+      ]),
+      "/lists/long",
+    );
+    const bar = page.getByRole("region", { name: "Pick result" });
+    // Bring a Remove button to just above the bar, where the snackbar appears.
+    const remove = page.getByRole("button", { name: "Remove “Item 15”" });
+    const barTop = (await bar.boundingBox())?.y ?? 0;
+    await remove.evaluate((element, top) => {
+      const box = element.getBoundingClientRect();
+      window.scrollBy({ top: box.bottom - top + 4 });
+    }, barTop);
+    await remove.click();
+
+    const snackbar = await page
+      .getByRole("button", { name: "Undo" })
+      .locator("..")
+      .boundingBox();
+    const focused = await page.evaluate(
+      () => document.activeElement?.getBoundingClientRect().bottom,
+    );
+    expect(snackbar).not.toBeNull();
+    expect(focused).toBeDefined();
+    if (snackbar && focused !== undefined)
+      expect(focused).toBeLessThanOrEqual(snackbar.y);
   });
 });
 

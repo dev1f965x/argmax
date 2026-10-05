@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useLayoutEffect, useRef } from "react";
 
 /**
  * A short message with one action, fixed to the bottom of the viewport: above
@@ -8,10 +8,18 @@ import { type ReactNode, useEffect, useRef } from "react";
 export function Snackbar({ children }: { children: ReactNode }) {
   const snackbar = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  // A layout effect, with the height set before the observer's first
+  // (asynchronous) callback: the screen moves focus in its own effect right
+  // after a removal, and scrolling that focus into view must already account
+  // for the snackbar.
+  useLayoutEffect(() => {
     const element = snackbar.current;
     if (!element) return;
     const root = document.documentElement;
+    root.style.setProperty(
+      "--snackbar-height",
+      `${element.getBoundingClientRect().height}px`,
+    );
     const observer = new ResizeObserver(([entry]) => {
       if (entry)
         root.style.setProperty(
