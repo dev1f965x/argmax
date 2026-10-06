@@ -74,6 +74,40 @@ describe("createTracker", () => {
     );
   });
 
+  it("reports the shared-list screen and the sharing events with fixed values only", () => {
+    const { env, sent } = environment();
+    const tracker = createTracker(env);
+
+    tracker.screenView("shared");
+    tracker.listShared("share");
+    tracker.listShared("copy");
+    tracker.listAddedFromLink();
+
+    expect(sent.map((event) => (event as { payload: object }).payload)).toEqual(
+      [
+        expect.objectContaining({ url: "/shared", title: "Shared list" }),
+        expect.objectContaining({
+          url: "/lists/:id",
+          name: "list_shared",
+          data: { method: "share" },
+        }),
+        expect.objectContaining({
+          url: "/lists/:id",
+          name: "list_shared",
+          data: { method: "copy" },
+        }),
+        expect.objectContaining({
+          url: "/shared",
+          name: "list_added_from_link",
+        }),
+      ],
+    );
+    // list_added_from_link carries no data at all.
+    expect(Object.keys((sent[3] as { payload: object }).payload)).not.toContain(
+      "data",
+    );
+  });
+
   it("sends only the referring site, not its full address", () => {
     const { env, sent } = environment({
       referrer: "https://chat.example/room/123?invite=secret",
@@ -95,6 +129,8 @@ describe("createTracker", () => {
     tracker.screenView("lists");
     tracker.listCreated(false);
     tracker.pick(false);
+    tracker.listShared("copy");
+    tracker.listAddedFromLink();
 
     expect(sent).toEqual([]);
   });

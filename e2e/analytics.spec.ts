@@ -1,47 +1,16 @@
 import { expect, type Page, test } from "@playwright/test";
-import { createList } from "./support.ts";
-
-// The browser opens the production address, but every request to it is
-// answered by the local preview build (with its security headers), so the app
-// runs exactly as in production. Requests to Umami are intercepted and
-// inspected; nothing leaves the machine. (.dev is HTTPS-only in browsers, so
-// mapping the hostname to the plain-HTTP preview is not an option.)
-const production = "https://argmax.dev1f965x.workers.dev";
+import {
+  captureReports,
+  createList,
+  production,
+  serveProductionLocally,
+} from "./support.ts";
 
 test.use({ baseURL: production, reducedMotion: "reduce" });
 
 test.beforeEach(async ({ page }) => {
-  await page.route(`${production}/**`, async (route) => {
-    const local = route
-      .request()
-      .url()
-      .replace(production, "http://127.0.0.1:4173");
-    // Firefox keeps the original Host header when the URL changes, and the
-    // preview server rejects hosts it does not serve.
-    const headers = { ...route.request().headers(), host: "127.0.0.1:4173" };
-    await route.fulfill({
-      response: await route.fetch({ url: local, headers }),
-    });
-  });
+  await serveProductionLocally(page);
 });
-
-type Report = {
-  payload: { url: string; title: string; name?: string; data?: object };
-};
-
-async function captureReports(page: Page): Promise<Report[]> {
-  const reports: Report[] = [];
-  await page.route("https://cloud.umami.is/**", async (route) => {
-    reports.push(route.request().postDataJSON() as Report);
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      headers: { "access-control-allow-origin": "*" },
-      body: "{}",
-    });
-  });
-  return reports;
-}
 
 async function useTheApp(page: Page) {
   await page.goto("/");

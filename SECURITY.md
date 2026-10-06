@@ -20,7 +20,7 @@ Accepted advisory: [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7
 
 ## Scope
 
-Argmax is a static web app with no backend and no accounts. Lists are stored in the browser's local storage only. Relevant reports include cross-site scripting, ways to read or alter another visitor's stored lists, and weaknesses in the security headers or dependencies.
+Argmax is a static web app with no backend and no accounts. Lists are stored in the browser's local storage only. A share link carries a list in its URL fragment, and the app reads it as untrusted input. Relevant reports include cross-site scripting, crafted share links that run code, hang the page, or store data the app then rejects, ways to read or alter another visitor's stored lists, and weaknesses in the security headers or dependencies.
 
 ## Other requests
 

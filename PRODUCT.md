@@ -18,7 +18,7 @@ Argmax keeps lists of options in the browser and picks one at random. Success me
 
 ## Positioning
 
-Differentiation from existing tools (Wheel of Names, Picker Wheel, random.org List Randomizer, Naver's roulette and ladder) is explicitly not a goal; they are references for expected behavior. What Argmax can truthfully claim: saved lists, an unbiased random pick (the browser's cryptographic random source, mapped to an item without modulo bias and covered by a distribution test; a quality property, not the product's theme), no account, and lists that never leave the browser.
+Differentiation from existing tools (Wheel of Names, Picker Wheel, random.org List Randomizer, Naver's roulette and ladder) is explicitly not a goal; they are references for expected behavior. What Argmax can truthfully claim: saved lists, an unbiased random pick (the browser's cryptographic random source, mapped to an item without modulo bias and covered by a distribution test; a quality property, not the product's theme), no account, and lists that never leave the browser except inside a share link the user sends.
 
 ## Operating Context
 
@@ -30,7 +30,8 @@ Differentiation from existing tools (Wheel of Names, Picker Wheel, random.org Li
 
 - First release (0.1.0): create, rename, and delete lists; add, edit, and remove items; pick one item; English and Korean UI.
 - 0.2.0: item weights, a whole number from 1 to the list's item count, set while editing an item; a pick selects each item with its weight's share of the total, and a "Show chances" switch, off by default and remembered in this browser, shows each item's chance.
-- Later: picking several items at once. Not in 0.1.0 or 0.2.0: accounts, syncing, pick history, monetization.
+- 0.2.0: share a list as a link from its menu. The link carries the list name and each item's text and weight in the URL fragment, compressed and encoded on the device, so no server stores or receives it; anyone with the link can see the list, which every share step says. Opening a link shows the list read-only with Add this list, which saves a separate copy; broken and newer-version links get their own messages, and inside messenger in-app browsers a notice suggests the phone's browser.
+- Later: picking several items at once. Not in 0.1.0 or 0.2.0: accounts, syncing, short links or any server storage of shared lists, pick history, monetization.
 - Lists live only in this browser's `localStorage`. Clearing browser data or switching devices loses them, and the UI must say so where lists are created.
 - Limits: names and items up to 100 characters, up to 1,000 items per list, up to 100 lists. Reaching a limit shows a message.
 - Empty or whitespace-only names and items, including those made only of invisible characters such as zero-width spaces, are rejected with a message. Control characters and bidirectional formatting characters are removed from what users enter; line breaks and tabs become spaces. Text whose stacked combining marks push it past the length limit keeps at most eight marks per character. Lists saved by 0.1.0 get the same cleaning when loaded, and items left empty are dropped; a list whose name would be left empty keeps the data read-only rather than getting an invented name. Duplicate items are allowed without a warning.

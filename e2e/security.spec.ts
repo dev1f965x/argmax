@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { createList } from "./support.ts";
 
 test("responses carry the security headers", async ({ request }) => {
-  for (const path of ["/", "/lists/example", "/privacy"]) {
+  for (const path of ["/", "/lists/example", "/privacy", "/shared"]) {
     const headers = (await request.get(path)).headers();
     expect(headers["content-security-policy"], path).toContain(
       "default-src 'self'",
@@ -15,6 +15,10 @@ test("responses carry the security headers", async ({ request }) => {
       "connect-src 'self' https://cloud.umami.is;",
     );
     expect(headers["permissions-policy"], path).toContain("camera=()");
+    // A shared list shows text from a link, so no other site may frame it.
+    expect(headers["content-security-policy"], path).toContain(
+      "frame-ancestors 'none'",
+    );
     expect(headers["cross-origin-opener-policy"], path).toBe("same-origin");
   }
 });

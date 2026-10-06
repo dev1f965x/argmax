@@ -15,6 +15,8 @@ const screens = {
   list: { url: "/lists/:id", title: "List" },
   privacy: { url: "/privacy", title: "Privacy" },
   "not-found": { url: "/not-found", title: "Not found" },
+  // The fixed path only: the fragment holds the shared list itself.
+  shared: { url: "/shared", title: "Shared list" },
 } as const;
 
 export type Screen = keyof typeof screens;
@@ -35,6 +37,9 @@ export interface Tracker {
   listCreated: (firstVisit: boolean) => void;
   /** `earlierVisit`: the list was created before this visit (H2). */
   pick: (earlierVisit: boolean) => void;
+  /** How the link left the device: the share sheet or the clipboard. */
+  listShared: (method: "share" | "copy") => void;
+  listAddedFromLink: () => void;
 }
 
 export function createTracker(environment: TrackerEnvironment): Tracker {
@@ -45,7 +50,7 @@ export function createTracker(environment: TrackerEnvironment): Tracker {
 
   function report(
     screen: Screen,
-    event?: { name: string; data?: Record<string, boolean> },
+    event?: { name: string; data?: Record<string, boolean | string> },
   ) {
     if (!enabled) return;
     const body = JSON.stringify({
@@ -75,6 +80,9 @@ export function createTracker(environment: TrackerEnvironment): Tracker {
       }),
     pick: (earlierVisit) =>
       report("list", { name: "pick", data: { earlier_visit: earlierVisit } }),
+    listShared: (method) =>
+      report("list", { name: "list_shared", data: { method } }),
+    listAddedFromLink: () => report("shared", { name: "list_added_from_link" }),
   };
 }
 

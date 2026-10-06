@@ -44,6 +44,7 @@ export const ko: Resources = {
     restored: "“{{text}}” 항목을 되돌렸습니다.",
     actions: "목록 메뉴",
     rename: "이름 바꾸기",
+    share: "공유",
     renamed: "목록 이름을 바꿨습니다: “{{name}}”",
     delete: "목록 삭제",
     deleteTitle: "“{{name}}” 목록을 삭제할까요?",
@@ -74,18 +75,47 @@ export const ko: Resources = {
       tooLong: "{{limit, number}}자 이하로 입력하세요.",
     },
   },
+  share: {
+    title: "“{{name}}” 공유",
+    body: "링크를 받은 사람은 누구나 목록 이름과 항목을 볼 수 있습니다. 나중에 변경한 내용은 반영되지 않습니다.",
+    longLink: "링크가 길어서 일부 메신저에서 잘릴 수 있습니다.",
+    tooLarge:
+      "목록이 너무 길어 링크로 공유할 수 없습니다. 항목을 일부 삭제한 뒤 다시 시도하세요.",
+    share: "링크 공유",
+    copy: "링크 복사",
+    copied: "링크를 복사했습니다.",
+    copyFailed: "복사하지 못했습니다. 링크를 선택해 복사하세요.",
+    link: "링크",
+  },
+  shared: {
+    title: "공유받은 목록",
+    sender: "보낸 사람이 만든 목록입니다. 추가해야 저장됩니다.",
+    add: "이 목록 추가",
+    added: "“{{name}}” 목록을 추가했습니다.",
+    limitReached:
+      "목록이 최대 개수인 {{limit, number}}개입니다. 하나를 삭제하면 추가할 수 있습니다.",
+    inAppTitle: "이 앱에서 추가하면 휴대폰 브라우저에서는 보이지 않습니다",
+    inAppBody: "링크를 복사해 브라우저에서 여세요.",
+    invalidTitle: "링크를 열 수 없습니다",
+    invalidBody:
+      "보내는 중에 링크가 잘렸을 수 있습니다. 보낸 사람에게 다시 공유해 달라고 하세요.",
+    toLists: "목록 보기",
+    newerTitle: "새 버전이 필요한 링크입니다",
+    newerBody: "페이지를 새로고침하면 최신 Argmax로 열립니다.",
+    reload: "새로고침",
+  },
   pick: {
     region: "뽑기 결과",
     pick: "뽑기",
     again: "다시 뽑기",
     label: "뽑힌 항목",
-    empty: "뽑힌 항목이 여기에 표시됩니다",
+    empty: "결과는 여기에 표시됩니다",
     needItem: "뽑을 항목을 추가하세요.",
     announced: "뽑힌 항목: “{{text}}”",
   },
   common: {
     saveFailed:
-      "변경 사항을 저장하지 못했습니다. 페이지를 새로 고친 뒤 다시 시도하세요.",
+      "변경 사항을 저장하지 못했습니다. 페이지를 새로고침한 뒤 다시 시도하세요.",
   },
   storage: {
     unavailableTitle: "목록을 저장할 수 없습니다",
@@ -99,8 +129,8 @@ export const ko: Resources = {
       "저장된 데이터가 손상되었거나 알 수 없는 버전입니다. 데이터는 그대로 두고 편집을 껐습니다.",
     newerTitle: "이 탭에서는 목록을 편집할 수 없습니다",
     newerBody:
-      "더 최신 버전의 Argmax에서 저장한 목록이며 그대로 있습니다. 페이지를 새로 고치세요.",
-    reload: "새로 고침",
+      "더 최신 버전의 Argmax에서 저장한 목록이며 그대로 있습니다. 페이지를 새로고침하세요.",
+    reload: "새로고침",
     copy: "데이터 복사",
     copied: "저장된 데이터를 복사했습니다.",
     copyFailed:
@@ -111,7 +141,7 @@ export const ko: Resources = {
       "읽을 수 없는 데이터를 이 브라우저에서 삭제하고 목록 없이 다시 시작합니다. 사본이 필요하면 먼저 데이터 복사를 누르세요. 되돌릴 수 없습니다.",
     discardConfirm: "데이터 삭제",
     discardFailed:
-      "데이터를 삭제하지 못했습니다. 페이지를 새로 고친 뒤 다시 시도하세요.",
+      "데이터를 삭제하지 못했습니다. 페이지를 새로고침한 뒤 다시 시도하세요.",
     cancel: "취소",
     discarded:
       "저장된 데이터를 삭제했습니다. 이제 목록을 다시 만들 수 있습니다.",
@@ -134,13 +164,17 @@ export const ko: Resources = {
     localOnly:
       "목록, 선택한 언어, 확률 보기 설정은 이 브라우저의 로컬 저장소에만 저장됩니다. 어디로도 전송되지 않으며, 브라우저 데이터를 지우면 함께 지워집니다. 탭이 열려 있는 동안에는 브라우저가 뒤로·앞으로 가기에 쓸 스크롤 위치도 보관하며, 탭을 닫으면 지워집니다.",
     analyticsIntro:
-      "사용 현황을 파악하기 위해 Argmax는 미국의 Umami Software, Inc.가 운영하는 Umami Cloud로 사용 데이터를 보냅니다. 화면을 열거나 목록을 만들거나 뽑기를 할 때마다 다음 내용을 HTTPS로 보냅니다.",
+      "사용 현황을 파악하기 위해 Argmax는 미국의 Umami Software, Inc.가 운영하는 Umami Cloud로 사용 데이터를 보냅니다. 화면을 열거나, 목록을 만들거나 공유하거나 추가하거나, 뽑기를 할 때마다 다음 내용을 HTTPS로 보냅니다.",
     analyticsScreen: "어떤 화면을 열었는지",
     analyticsEvent:
       "목록을 만들었거나 뽑기를 했는지, 그리고 첫 방문인지(이 브라우저에 있는 목록을 만든 시각으로 판단)",
+    analyticsShare:
+      "목록을 공유했는지와 기기의 공유 시트를 썼는지 링크를 복사했는지, 또는 공유받은 목록을 추가했는지",
     analyticsDevice: "브라우저 언어와 화면 크기",
     analyticsReferrer: "링크한 사이트(페이지 주소 제외)",
     analyticsNever: "목록 이름과 항목은 보내지 않습니다.",
+    shareLinks:
+      "목록을 공유하면 링크는 이 기기에서 만들어지며, 목록 이름, 항목, 비중까지 목록 전체가 링크에 담깁니다. 링크는 대화방이나 브라우저 방문 기록(다른 기기와 동기화된 기록 포함)처럼 저장된 곳에 그대로 남으며, 링크가 있는 사람은 누구나 목록을 볼 수 있습니다. 브라우저는 링크의 “#” 뒷부분을 웹사이트로 보내지 않으므로 목록은 Argmax나 Umami로 전송되지 않습니다. 다른 사람이 가진 링크에서 Argmax가 목록을 지울 수는 없습니다.",
     analyticsUmami:
       "모든 웹 요청과 마찬가지로 IP 주소와 브라우저 정보(User-Agent)가 Umami에 전달됩니다. Umami의 오픈소스 데이터 모델에 따르면 Umami는 IP 주소를 저장하지 않습니다. IP 주소로 대략적인 위치(국가, 지역, 도시)를, User-Agent로 브라우저, 운영체제, 기기 종류를 알아내 기록합니다. Umami는 이 정보를 6개월 동안 보관합니다.",
     analyticsOptOut:

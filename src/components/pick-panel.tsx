@@ -2,6 +2,7 @@ import { Dices } from "lucide-react";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { useBottomBarHeight } from "@/components/use-bottom-bar-height";
 import { tracker } from "@/lib/analytics";
 import { pickIndex, pickWeightedIndex } from "@/lib/pick";
 import type { Item } from "@/lib/storage";
@@ -58,25 +59,7 @@ export function PickPanel({
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
-  // The bar is fixed on phones, so the page reserves its height at the bottom
-  // (see RootLayout); the height changes with long results and translations.
-  useEffect(() => {
-    const element = panel.current;
-    if (!element) return;
-    const root = document.documentElement;
-    const observer = new ResizeObserver(([entry]) => {
-      if (entry)
-        root.style.setProperty(
-          "--pick-bar-height",
-          `${entry.borderBoxSize[0]?.blockSize ?? 0}px`,
-        );
-    });
-    observer.observe(element);
-    return () => {
-      observer.disconnect();
-      root.style.removeProperty("--pick-bar-height");
-    };
-  }, []);
+  useBottomBarHeight(panel);
 
   // The result follows edits to the picked item and disappears if it is removed.
   const result = items.find((item) => item.id === resultId) ?? null;

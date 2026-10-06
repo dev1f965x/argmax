@@ -6,7 +6,9 @@ import {
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { i18n } from "@/i18n";
+import { tracker } from "@/lib/analytics";
 import { showChancesStorageKey } from "@/lib/preferences";
+import { decodeSharedList } from "@/lib/share-link";
 import { limits, storageKey } from "@/lib/storage";
 import { renderApp, storedState } from "@/test/fixtures";
 
@@ -728,5 +730,236 @@ describe("ListPage weights", () => {
 
     expect(row("A")).toHaveTextContent("AChance 33%");
     expect(row("B")).toHaveTextContent("BChance 67%Weight ×2");
+  });
+});
+
+describe("ListPage sharing", () => {
+  const originalShare = Object.getOwnPropertyDescriptor(navigator, "share");
+  const originalCanShare = Object.getOwnPropertyDescriptor(
+    navigator,
+    "canShare",
+  );
+
+  afterEach(() => {
+    for (const [name, descriptor] of [
+      ["share", originalShare],
+      ["canShare", originalCanShare],
+    ] as const) {
+      if (descriptor) Object.defineProperty(navigator, name, descriptor);
+      else Reflect.deleteProperty(navigator, name);
+    }
+    vi.restoreAllMocks();
+  });
+
+  /** Gives the browser a share sheet that behaves as `share` says. */
+  function withShareSheet(share: (data: ShareData) => Promise<void>) {
+    const spy = vi.fn(share);
+    Object.defineProperty(navigator, "share", {
+      value: spy,
+      configurable: true,
+    });
+    Object.defineProperty(navigator, "canShare", {
+      value: () => true,
+      configurable: true,
+    });
+    return spy;
+  }
+
+  async function openShareDialog(items = ["Ramen", "Sushi"]) {
+    const rendered = renderList(items);
+    await rendered.user.click(
+      screen.getByRole("button", { name: "List actions" }),
+    );
+    await rendered.user.click(
+      await screen.findByRole("menuitem", { name: "Share" }),
+    );
+    const dialog = await screen.findByRole("dialog", {
+      name: "Share “Lunch”",
+    });
+    return { ...rendered, dialog };
+  }
+
+  it("lists Rename, Share, and Delete list, with Delete list set apart", async () => {
+    const { user } = renderList(["Ramen"]);
+    await user.click(screen.getByRole("button", { name: "List actions" }));
+    const menu = await screen.findByRole("menu");
+
+    expect(
+      within(menu)
+        .getAllByRole("menuitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Rename", "Share", "Delete list"]);
+    const separator = within(menu).getByRole("separator");
+    expect(
+      separator.compareDocumentPosition(
+        within(menu).getByRole("menuitem", { name: "Delete list" }),
+      ) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("says that anyone with the link can see the list", async () => {
+    const { dialog } = await openShareDialog();
+    expect(dialog).toHaveAccessibleDescription(
+      "Anyone with the link can see the list name and items. Later changes aren’t included.",
+    );
+    expect(
+      within(dialog).queryByText(
+        "This link is long, so some messengers may cut it off.",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it("hands only the link and the list name to the share sheet", async () => {
+    const share = withShareSheet(() => Promise.resolve());
+    const listShared = vi.spyOn(tracker, "listShared");
+    const { user, dialog } = await openShareDialog();
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "Share link" }),
+    );
+
+    expect(share).toHaveBeenCalledOnce();
+    const data = share.mock.calls[0]?.[0];
+    expect(Object.keys(data ?? {}).sort()).toEqual(["title", "url"]);
+    expect(data?.title).toBe("Lunch");
+    const url = new URL(data?.url ?? "");
+    expect(url.pathname).toBe("/shared");
+    expect(await decodeSharedList(url.hash.slice(1))).toEqual({
+      status: "ok",
+      list: {
+        name: "Lunch",
+        items: [
+          { text: "Ramen", weight: 1 },
+          { text: "Sushi", weight: 1 },
+        ],
+      },
+    });
+    expect(listShared).toHaveBeenCalledExactlyOnceWith("share");
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    expect(screen.queryByText("Copied the link.")).not.toBeInTheDocument();
+  });
+
+  it("treats a closed share sheet as a cancel: no copy, no message, no event", async () => {
+    withShareSheet(() =>
+      Promise.reject(new DOMException("Share canceled", "AbortError")),
+    );
+    const listShared = vi.spyOn(tracker, "listShared");
+    const { user, dialog } = await openShareDialog();
+    const writeText = vi.spyOn(navigator.clipboard, "writeText");
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "Share link" }),
+    );
+
+    expect(writeText).not.toHaveBeenCalled();
+    expect(listShared).not.toHaveBeenCalled();
+    expect(within(dialog).queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("copies the link when the share sheet fails for another reason", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    withShareSheet(() =>
+      Promise.reject(new DOMException("Not allowed", "NotAllowedError")),
+    );
+    const listShared = vi.spyOn(tracker, "listShared");
+    const { user, dialog } = await openShareDialog();
+    const writeText = vi.spyOn(navigator.clipboard, "writeText");
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "Share link" }),
+    );
+
+    expect(writeText).toHaveBeenCalledOnce();
+    expect(listShared).toHaveBeenCalledExactlyOnceWith("copy");
+  });
+
+  it("copies the link without a share sheet and confirms it in a snackbar", async () => {
+    const listShared = vi.spyOn(tracker, "listShared");
+    const { user, dialog } = await openShareDialog();
+    const writeText = vi.spyOn(navigator.clipboard, "writeText");
+
+    await user.click(within(dialog).getByRole("button", { name: "Copy link" }));
+
+    expect(writeText).toHaveBeenCalledOnce();
+    const url = new URL(writeText.mock.calls[0]?.[0] ?? "");
+    expect(url.pathname).toBe("/shared");
+    expect(url.hash).toMatch(/^#1\.[A-Za-z0-9_-]+$/);
+    expect(listShared).toHaveBeenCalledExactlyOnceWith("copy");
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    // In the snackbar, without an action, and announced.
+    expect(screen.getAllByText("Copied the link.")).toHaveLength(2);
+    expect(
+      screen.queryByRole("button", { name: "Undo" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "List actions" })).toHaveFocus();
+  });
+
+  it("keeps the dialog open with the link selected when copying fails", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const listShared = vi.spyOn(tracker, "listShared");
+    const { user, dialog } = await openShareDialog();
+    vi.spyOn(navigator.clipboard, "writeText").mockRejectedValue(
+      new DOMException("Denied", "NotAllowedError"),
+    );
+
+    await user.click(within(dialog).getByRole("button", { name: "Copy link" }));
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "Couldn’t copy. Select the link and copy it.",
+    );
+    const field = within(dialog).getByRole<HTMLTextAreaElement>("textbox", {
+      name: "Link",
+    });
+    expect(field).toHaveAttribute("readonly");
+    expect(field.value).toMatch(/\/shared#1\.[A-Za-z0-9_-]+$/);
+    expect(field).toHaveFocus();
+    expect(field.selectionStart).toBe(0);
+    expect(field.selectionEnd).toBe(field.value.length);
+    expect(listShared).not.toHaveBeenCalled();
+    expect(screen.queryByText("Copied the link.")).not.toBeInTheDocument();
+  });
+
+  it("warns that a link over 2,000 characters may be cut, and still offers it", async () => {
+    // Distinct syllables, so the list does not compress below the limit.
+    const items = Array.from({ length: 120 }, (_, index) =>
+      Array.from({ length: 8 }, (_, offset) =>
+        String.fromCharCode(0xac00 + ((index * 997 + offset * 7919) % 11_172)),
+      ).join(""),
+    );
+    const { user, dialog } = await openShareDialog(items);
+    const writeText = vi.spyOn(navigator.clipboard, "writeText");
+
+    expect(
+      within(dialog).getByText(
+        "This link is long, so some messengers may cut it off.",
+      ),
+    ).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Copy link" }));
+    expect(writeText.mock.calls[0]?.[0].length).toBeGreaterThan(2_000);
+  });
+
+  it("names the share steps in Korean", async () => {
+    await i18n.changeLanguage("ko");
+    try {
+      const { user } = renderList(["라멘"]);
+      await user.click(screen.getByRole("button", { name: "목록 메뉴" }));
+      await user.click(await screen.findByRole("menuitem", { name: "공유" }));
+      const dialog = await screen.findByRole("dialog", {
+        name: "“Lunch” 공유",
+      });
+      expect(dialog).toHaveAccessibleDescription(
+        "링크를 받은 사람은 누구나 목록 이름과 항목을 볼 수 있습니다. 나중에 변경한 내용은 반영되지 않습니다.",
+      );
+      expect(
+        within(dialog).getByRole("button", { name: "링크 복사" }),
+      ).toBeInTheDocument();
+    } finally {
+      await i18n.changeLanguage("en");
+    }
   });
 });

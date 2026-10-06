@@ -27,6 +27,10 @@ Use these words and no synonyms. A new product noun or verb is added here before
 | Putting an item in a list | add | 추가하다, 추가 | |
 | Changing an item's text | edit | 수정하다, 수정 | |
 | Changing a list's name | rename | 이름 바꾸기 | |
+| Loading the page again | reload | 새로고침, 새로고침하다 | Written as one word, like the browser's own button (owner, 2026-10-06) |
+| Sending a list to someone as a link | share; "Share link", "Copy link" | 공유; "링크 공유", "링크 복사" | Every share step says that anyone with the link can see the list name and items |
+| A list opened from someone else's link, before it is added | shared list | 공유받은 목록 | Also the page title on /shared, which never contains the list name |
+| Saving a copy of a shared list | add this list (button "Add this list") | 이 목록 추가 | Not "import" or "save"; the copy is a new list, not linked to the sender's |
 | How likely an item is to be picked, set per item | weight; values "×1", "×2" | 비중 | The field's accessible name is its visible label, "Weight" / "비중", and its value is read as "×N". Not "odds", which reads like betting; "비중" is checked in UAT against "가중치" |
 | An item's share of the list's total weight | chance; "Chance 25%" | 확률; "확률 25%" | Only for the percentage, never for the control. Below 1%: "Chance <1%" / "확률 <1%"; above 99% while other items can be picked: "Chance >99%" / "확률 >99%". Screen readers hear these as "Chance under 1%" / "확률 1% 미만" and "Chance over 99%" / "확률 99% 초과". Only a single item reads 100% |
 | Taking an item out of a list | remove | 삭제하다, 삭제 | English separates remove (item) from delete (list); Korean uses 삭제 for both |
@@ -53,7 +57,7 @@ A short title that states the situation, then one sentence that names the next a
 
 - Lists, no lists yet: "No lists yet" / "Create your first list, for example “Lunch”." (아직 목록이 없습니다 / 첫 목록을 만드세요. 예: “점심 메뉴”)
 - An empty list adds no visible message: the count reads "0 items", and Pick's reason ("Add an item to pick from.") is read only by screen readers when Pick is focused.
-- Before the first pick, the desktop result box says where the result will appear: "Your pick appears here" / "뽑힌 항목이 여기에 표시됩니다". Never "?", which reads as an unknown result.
+- Before the first pick, the desktop result box says where the result will appear: "Your pick appears here" / "결과는 여기에 표시됩니다". The Korean uses 결과 here by the owner's choice (2026-10-06); it is a placeholder, not a sentence about the picked item. Never "?", which reads as an unknown result.
 
 ### Notes with details
 
@@ -88,6 +92,12 @@ Removing an item is one step and can be undone instead of confirmed. The result 
 State the limit as a fact, then how to make room.
 
 - "This list has 1,000 items, the maximum. Remove an item to add another."
+- "You have 100 lists, the maximum. Delete one to add this list."
+- "This list is too long to share as a link. Remove some items and try again." / "목록이 너무 길어 링크로 공유할 수 없습니다. 항목을 일부 삭제한 뒤 다시 시도하세요."
+
+### Confirmations without an action
+
+A snackbar without Undo confirms a step that has nothing to undo or that is undone elsewhere: "Copied the link." / "링크를 복사했습니다.", "Added “Lunch”." / "“점심 메뉴” 목록을 추가했습니다." Adding a shared list has no Undo; the list can be deleted from its menu.
 
 ### Announcements for screen readers
 

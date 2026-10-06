@@ -224,3 +224,34 @@ function replaceList(
     },
   };
 }
+
+/**
+ * Adds a copy of a list from a share link (FR19, FR21): new ids and the
+ * current time, never the sender's, and the existing lists untouched. The
+ * texts were validated when the link was read; saving validates the whole
+ * state again. A name already in use gives a separate list.
+ */
+export function addSharedList(
+  state: StoredState,
+  shared: {
+    name: string;
+    items: readonly { text: string; weight: number }[];
+  },
+  context: Context,
+): Result<"list-limit"> {
+  if (state.lists.length >= limits.lists)
+    return { ok: false, error: "list-limit" };
+  const timestamp = context.now().toISOString();
+  const list: List = {
+    id: context.newId(),
+    name: shared.name,
+    items: shared.items.map((item) => ({
+      id: context.newId(),
+      text: item.text,
+      weight: item.weight,
+    })),
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+  return { ok: true, state: { ...state, lists: [...state.lists, list] } };
+}

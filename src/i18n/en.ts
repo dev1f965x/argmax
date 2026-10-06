@@ -39,6 +39,7 @@ export const en = {
     restored: "Restored “{{text}}”.",
     actions: "List actions",
     rename: "Rename",
+    share: "Share",
     renamed: "Renamed the list to “{{name}}”.",
     delete: "Delete list",
     deleteTitle: "Delete “{{name}}”?",
@@ -68,6 +69,35 @@ export const en = {
       empty: "Enter an item.",
       tooLong: "Use {{limit, number}} characters or fewer.",
     },
+  },
+  share: {
+    title: "Share “{{name}}”",
+    body: "Anyone with the link can see the list name and items. Later changes aren’t included.",
+    longLink: "This link is long, so some messengers may cut it off.",
+    tooLarge:
+      "This list is too long to share as a link. Remove some items and try again.",
+    share: "Share link",
+    copy: "Copy link",
+    copied: "Copied the link.",
+    copyFailed: "Couldn’t copy. Select the link and copy it.",
+    link: "Link",
+  },
+  shared: {
+    title: "Shared list",
+    sender: "Made by the sender. Saved only when you add it.",
+    add: "Add this list",
+    added: "Added “{{name}}”.",
+    limitReached:
+      "You have {{limit, number}} lists, the maximum. Delete one to add this list.",
+    inAppTitle: "Lists added in this app don’t show in your phone’s browser",
+    inAppBody: "Copy the link and open it in your browser.",
+    invalidTitle: "This link can’t be opened",
+    invalidBody:
+      "It may have been cut off when it was sent. Ask the sender to share it again.",
+    toLists: "Go to lists",
+    newerTitle: "This link needs a newer version",
+    newerBody: "Reload the page to open it with the latest Argmax.",
+    reload: "Reload",
   },
   pick: {
     region: "Pick result",
@@ -125,13 +155,17 @@ export const en = {
     localOnly:
       "Your lists, your language choice, and whether chances are shown are saved only in this browser’s local storage. They aren’t sent anywhere, and clearing your browser data deletes them. While a tab is open, the browser also keeps your scroll positions for Back and Forward; closing the tab deletes them.",
     analyticsIntro:
-      "To learn how it’s used, Argmax sends usage data to Umami Cloud, run by Umami Software, Inc. in the United States. Each time you open a screen, create a list, or make a pick, it sends the following over HTTPS:",
+      "To learn how it’s used, Argmax sends usage data to Umami Cloud, run by Umami Software, Inc. in the United States. Each time you open a screen, create, share, or add a list, or make a pick, it sends the following over HTTPS:",
     analyticsScreen: "Which screen was opened",
     analyticsEvent:
       "That a list was created or a pick was made, and whether it was a first visit, judged from when the lists in this browser were created",
+    analyticsShare:
+      "That a list was shared, and whether through the device’s share sheet or by copying the link, or that a shared list was added",
     analyticsDevice: "Your browser language and screen size",
     analyticsReferrer: "The site that linked here, without the page address",
     analyticsNever: "List names and items are never sent.",
+    shareLinks:
+      "When you share a list, the link is created on your device and contains the list itself: its name, items, and weights. The link stays wherever it is kept, such as chats and browser history, including history synced to other devices, and anyone with the link can see the list. Browsers don’t send the part of a link after “#” to websites, so the list never reaches Argmax or Umami. Argmax can’t remove a list from a link that someone else has.",
     analyticsUmami:
       "Like any website request, it reaches Umami with your IP address and browser user agent. According to Umami’s open-source data model, Umami doesn’t store the IP address. It records an approximate location from it (country, region, and city) and the browser, operating system, and device type from the user agent. Umami keeps this data for 6 months.",
     analyticsOptOut:
