@@ -5,6 +5,7 @@ import {
   createRepository,
   emptyState,
   limits,
+  migrateV1,
   repairState,
   type StoredState,
   storageKey,
@@ -13,11 +14,14 @@ import {
 const list = {
   id: "list-1",
   name: "Lunch",
-  items: [{ id: "item-1", text: "Ramen" }],
+  items: [{ id: "item-1", text: "Ramen", weight: 1 }],
   createdAt: "2026-10-03T00:00:00.000Z",
   updatedAt: "2026-10-03T00:00:00.000Z",
 };
-const validState: StoredState = { schemaVersion: 1, lists: [list] };
+const validState: StoredState = { schemaVersion: 2, lists: [list] };
+
+/** A list as 0.1.0 saved it, in schema version 1, without weights. */
+const listV1 = { ...list, items: [{ id: "item-1", text: "Ramen" }] };
 
 const stored = (state: unknown) => JSON.stringify(state);
 
@@ -56,8 +60,29 @@ describe("createRepository", () => {
 
   it.each([
     ["malformed JSON", "{not json"],
-    ["an unknown schema version", stored({ ...validState, schemaVersion: 2 })],
-    ["a missing field", stored({ schemaVersion: 1 })],
+    ["schema version 0", stored({ ...validState, schemaVersion: 0 })],
+    [
+      "a fractional schema version",
+      stored({ ...validState, schemaVersion: 2.5 }),
+    ],
+    [
+      "a schema version as a string",
+      stored({ ...validState, schemaVersion: "2" }),
+    ],
+    ["no schema version", stored({ lists: [list] })],
+    ["schema version 1e20", stored({ ...validState, schemaVersion: 1e20 })],
+    ["schema version -1", stored({ ...validState, schemaVersion: -1 })],
+    [
+      "an object as schema version",
+      stored({ ...validState, schemaVersion: {} }),
+    ],
+    ["null as schema version", stored({ ...validState, schemaVersion: null })],
+    ["a missing field", stored({ schemaVersion: 2 })],
+    ["a missing field in version 1", stored({ schemaVersion: 1 })],
+    [
+      "version 1 data that is invalid besides its text",
+      stored({ schemaVersion: 1, lists: [{ ...listV1, id: "" }] }),
+    ],
     [
       "an empty list name",
       stored({ ...validState, lists: [{ ...list, name: "  " }] }),
@@ -81,7 +106,9 @@ describe("createRepository", () => {
       "an over-long item",
       stored({
         ...validState,
-        lists: [{ ...list, items: [{ id: "i", text: "x".repeat(101) }] }],
+        lists: [
+          { ...list, items: [{ id: "i", text: "x".repeat(101), weight: 1 }] },
+        ],
       }),
     ],
     [
@@ -94,6 +121,7 @@ describe("createRepository", () => {
             items: Array.from({ length: limits.itemsPerList + 1 }, (_, i) => ({
               id: `i${i}`,
               text: "x",
+              weight: 1,
             })),
           },
         ],
@@ -138,7 +166,7 @@ describe("createRepository", () => {
 
   it("accepts the maximum sizes", () => {
     const full: StoredState = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       lists: Array.from({ length: limits.lists }, (_, i) => ({
         ...list,
         id: `l${i}`,
@@ -293,7 +321,7 @@ describe("createRepository", () => {
 describe("stored text", () => {
   const withItem = (text: string): StoredState => ({
     ...validState,
-    lists: [{ ...list, items: [{ id: "item-1", text }] }],
+    lists: [{ ...list, items: [{ id: "item-1", text, weight: 1 }] }],
   });
   const loads = (text: string) => {
     const { storage } = memoryStorage({ [storageKey]: stored(withItem(text)) });
@@ -393,10 +421,10 @@ describe("stored text", () => {
 describe("repairing text saved by 0.1.0", () => {
   // 0.1.0 only trimmed and normalized, so any of these could be stored.
   const legacy = {
-    ...validState,
+    schemaVersion: 1,
     lists: [
       {
-        ...list,
+        ...listV1,
         name: "Lunch\u202E",
         items: [
           { id: "item-1", text: "Fried\trice" },
@@ -407,31 +435,51 @@ describe("repairing text saved by 0.1.0", () => {
       },
     ],
   };
+  const repairedItems = [
+    { id: "item-1", text: "Fried rice" },
+    { id: "item-3", text: "Ramen" },
+    { id: "item-4", text: "Gyoza" },
+  ];
+  // Loading also migrates the repaired data to version 2.
   const repaired: StoredState = {
-    ...validState,
+    schemaVersion: 2,
     lists: [
       {
         ...list,
         name: "Lunch",
-        items: [
-          { id: "item-1", text: "Fried rice" },
-          { id: "item-3", text: "Ramen" },
-          { id: "item-4", text: "Gyoza" },
-        ],
+        items: repairedItems.map((item) => ({ ...item, weight: 1 })),
       },
     ],
   };
 
   it("cleans text and drops items left blank", () => {
-    expect(repairState(legacy)).toEqual(repaired);
+    expect(repairState(legacy)).toEqual({
+      schemaVersion: 1,
+      lists: [{ ...listV1, name: "Lunch", items: repairedItems }],
+    });
+  });
+
+  it("does not repair version 2 data, which only a validating app writes", () => {
+    const raw = stored({
+      ...validState,
+      lists: [
+        { ...list, items: [{ id: "item-1", text: "Fried\trice", weight: 3 }] },
+      ],
+    });
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+    expect(createRepository(() => storage).load()).toMatchObject({
+      status: "invalid",
+      raw,
+    });
+    expect(data.get(storageKey)).toBe(raw);
   });
 
   it("shortens a character stacked past the unit cap so it loads", () => {
     // 0.1.0 saved NFC text, which composes the first mark into "á".
     const stacked = `a${"\u0301".repeat(1_700)}`.normalize("NFC");
     const raw = stored({
-      ...validState,
-      lists: [{ ...list, items: [{ id: "item-1", text: stacked }] }],
+      schemaVersion: 1,
+      lists: [{ ...listV1, items: [{ id: "item-1", text: stacked }] }],
     });
     const { storage, data } = memoryStorage({ [storageKey]: raw });
 
@@ -442,7 +490,13 @@ describe("repairing text saved by 0.1.0", () => {
         lists: [
           {
             ...list,
-            items: [{ id: "item-1", text: `\u00E1${"\u0301".repeat(8)}` }],
+            items: [
+              {
+                id: "item-1",
+                text: `\u00E1${"\u0301".repeat(8)}`,
+                weight: 1,
+              },
+            ],
           },
         ],
       },
@@ -481,17 +535,138 @@ describe("repairing text saved by 0.1.0", () => {
   });
 
   it.each([
-    ["a list name left blank", { ...list, name: "\u200B\u202E" }],
+    ["a list name left blank", { ...listV1, name: "\u200B\u202E" }],
     [
       "an item still too long",
-      { ...list, items: [{ id: "i", text: `${"x".repeat(101)}\t` }] },
+      { ...listV1, items: [{ id: "i", text: `${"x".repeat(101)}\t` }] },
     ],
   ])("keeps data with %s read-only and unchanged", (_, broken) => {
-    const raw = stored({ ...validState, lists: [broken] });
+    const raw = stored({ schemaVersion: 1, lists: [broken] });
     const { storage, data } = memoryStorage({ [storageKey]: raw });
     const repository = createRepository(() => storage);
 
     expect(repository.load()).toMatchObject({ status: "invalid", raw });
+    expect(repository.save(emptyState)).toEqual({
+      ok: false,
+      reason: "read-only",
+    });
+    expect(data.get(storageKey)).toBe(raw);
+  });
+});
+
+describe("schema version 2", () => {
+  /** A list as 0.1.0 wrote it, including a duplicate item, which 0.1.0 allowed. */
+  const v1Raw = stored({
+    schemaVersion: 1,
+    lists: [
+      {
+        ...listV1,
+        items: [
+          { id: "item-1", text: "Ramen" },
+          { id: "item-2", text: "Ramen" },
+          { id: "item-3", text: "Udon" },
+        ],
+      },
+    ],
+  });
+  const migrated: StoredState = {
+    schemaVersion: 2,
+    lists: [
+      {
+        ...list,
+        items: [
+          { id: "item-1", text: "Ramen", weight: 1 },
+          { id: "item-2", text: "Ramen", weight: 1 },
+          { id: "item-3", text: "Udon", weight: 1 },
+        ],
+      },
+    ],
+  };
+
+  it("migrates version 1 by giving every item weight 1, keeping duplicates as separate items", () => {
+    const v1 = { schemaVersion: 1 as const, lists: [listV1] };
+    expect(migrateV1(v1)).toEqual(validState);
+    // The input is left as it was.
+    expect(v1.lists[0]?.items[0]).toEqual({ id: "item-1", text: "Ramen" });
+  });
+
+  it("loads 0.1.0 data as version 2 without writing it", () => {
+    const { storage, data } = memoryStorage({ [storageKey]: v1Raw });
+    const repository = createRepository(() => storage);
+
+    expect(repository.load()).toEqual({ status: "ok", state: migrated });
+    expect(data.get(storageKey)).toBe(v1Raw);
+    // The cached value is the migrated state too.
+    expect(repository.load()).toEqual({ status: "ok", state: migrated });
+  });
+
+  it("writes version 2 with the first change", () => {
+    const { storage, data } = memoryStorage({ [storageKey]: v1Raw });
+    const repository = createRepository(() => storage);
+    repository.load();
+
+    expect(repository.save(migrated)).toEqual({ ok: true });
+    const written = JSON.parse(data.get(storageKey) ?? "");
+    expect(written).toEqual(migrated);
+    expect(written.schemaVersion).toBe(2);
+  });
+
+  it.each([
+    ["0", 0],
+    ["1,001", 1_001],
+    ["1.5", 1.5],
+    ["-1", -1],
+    ["a string", "1"],
+    ["null", null],
+    ["missing", undefined],
+  ])("reports weight %s as invalid and never overwrites it", (_, weight) => {
+    const raw = stored({
+      ...validState,
+      lists: [{ ...list, items: [{ id: "item-1", text: "Ramen", weight }] }],
+    });
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+    const repository = createRepository(() => storage);
+
+    expect(repository.load()).toMatchObject({ status: "invalid", raw });
+    expect(repository.save(emptyState)).toEqual({
+      ok: false,
+      reason: "read-only",
+    });
+    expect(data.get(storageKey)).toBe(raw);
+  });
+
+  it("accepts weights from 1 to 1,000", () => {
+    const state: StoredState = {
+      ...validState,
+      lists: [
+        {
+          ...list,
+          items: [
+            { id: "item-1", text: "Ramen", weight: 1 },
+            { id: "item-2", text: "Udon", weight: 1_000 },
+          ],
+        },
+      ],
+    };
+    const { storage } = memoryStorage({ [storageKey]: stored(state) });
+    expect(createRepository(() => storage).load()).toEqual({
+      status: "ok",
+      state,
+    });
+  });
+
+  it.each([
+    ["version 3", stored({ ...validState, schemaVersion: 3 })],
+    [
+      "version 3 in a shape unknown to this version",
+      stored({ schemaVersion: 3, data: "x" }),
+    ],
+    ["version 999", stored({ schemaVersion: 999 })],
+  ])("reports %s as newer, refuses to save, and keeps it", (_, raw) => {
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+    const repository = createRepository(() => storage);
+
+    expect(repository.load()).toEqual({ status: "newer", raw });
     expect(repository.save(emptyState)).toEqual({
       ok: false,
       reason: "read-only",

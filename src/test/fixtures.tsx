@@ -29,22 +29,40 @@ interface ListFixture {
   id?: string;
   name: string;
   items?: string[];
+  /** Weights in the order of items; 1 where missing. */
+  weights?: number[];
   createdAt?: string;
+}
+
+function listsOf(lists: ListFixture[]) {
+  return lists.map((list, index) => ({
+    id: list.id ?? `list-${index}`,
+    name: list.name,
+    items: (list.items ?? []).map((text, i) => ({
+      id: `item-${i}`,
+      text,
+      weight: list.weights?.[i] ?? 1,
+    })),
+    createdAt: list.createdAt ?? fixtureDate,
+    updatedAt: list.createdAt ?? fixtureDate,
+  }));
 }
 
 /** Stored lists as the app saves them. */
 export function storedState(lists: ListFixture[]): string {
-  const state: StoredState = {
-    schemaVersion: 1,
-    lists: lists.map((list, index) => ({
-      id: list.id ?? `list-${index}`,
-      name: list.name,
-      items: (list.items ?? []).map((text, i) => ({ id: `item-${i}`, text })),
-      createdAt: list.createdAt ?? fixtureDate,
-      updatedAt: list.createdAt ?? fixtureDate,
-    })),
-  };
+  const state: StoredState = { schemaVersion: 2, lists: listsOf(lists) };
   return JSON.stringify(state);
+}
+
+/** Stored lists as 0.1.0 saved them: schema version 1, without weights. */
+export function storedStateV1(lists: Omit<ListFixture, "weights">[]): string {
+  return JSON.stringify({
+    schemaVersion: 1,
+    lists: listsOf(lists).map((list) => ({
+      ...list,
+      items: list.items.map(({ id, text }) => ({ id, text })),
+    })),
+  });
 }
 
 /** Renders the app's real route table over in-memory storage. */

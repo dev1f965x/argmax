@@ -302,3 +302,39 @@ describe("ListsPage", () => {
     });
   });
 });
+
+describe("ListsPage with data from a newer version", () => {
+  const raw = JSON.stringify({ schemaVersion: 3, lists: [] });
+
+  it("asks for a reload, turns editing off, and offers no way to delete the data", () => {
+    const { data } = renderApp({ stored: raw });
+
+    expect(
+      screen.getByText("Lists can’t be edited in this tab"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "They were saved by a newer version of Argmax and are unchanged. Reload the page to use that version.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reload" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Copy data" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Delete data" }),
+    ).not.toBeInTheDocument();
+    expect(nameField()).toBeDisabled();
+    expect(screen.queryByText("No lists yet")).not.toBeInTheDocument();
+    expect(data.get(storageKey)).toBe(raw);
+  });
+
+  it("copies the raw data", async () => {
+    const { user } = renderApp({ stored: raw });
+
+    await user.click(screen.getByRole("button", { name: "Copy data" }));
+
+    expect(await navigator.clipboard.readText()).toBe(raw);
+    expect(screen.getByText("Copied the saved data.")).toBeInTheDocument();
+  });
+});

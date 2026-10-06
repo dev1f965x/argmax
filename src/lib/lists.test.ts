@@ -9,6 +9,7 @@ import {
   removeItem,
   renameList,
   restoreItem,
+  setItemWeight,
   validateText,
 } from "./lists";
 import {
@@ -153,12 +154,12 @@ describe("validateText with unsafe characters", () => {
     repository.load();
     const timestamp = "2026-10-06T00:00:00.000Z";
     return repository.save({
-      schemaVersion: 1,
+      schemaVersion: 2,
       lists: [
         {
           id: "list",
           name: text,
-          items: [{ id: "item", text }],
+          items: [{ id: "item", text, weight: 1 }],
           createdAt: timestamp,
           updatedAt: timestamp,
         },
@@ -310,13 +311,13 @@ describe("items", () => {
     return { context, state: mustOk(createList(emptyState, "Lunch", context)) };
   }
 
-  it("adds items, allowing duplicates", () => {
+  it("adds items at weight 1, allowing duplicates", () => {
     const { context, state } = withList();
     const once = mustOk(addItem(state, "id-1", "Ramen", context));
     const twice = mustOk(addItem(once, "id-1", " Ramen ", context));
-    expect(twice.lists[0]?.items.map((item) => item.text)).toEqual([
-      "Ramen",
-      "Ramen",
+    expect(twice.lists[0]?.items).toEqual([
+      { id: "id-2", text: "Ramen", weight: 1 },
+      { id: "id-3", text: "Ramen", weight: 1 },
     ]);
   });
 
@@ -352,7 +353,9 @@ describe("items", () => {
     const { context, state } = withList();
     const added = mustOk(addItem(state, "id-1", "Ramen", context));
     const edited = mustOk(editItem(added, "id-1", "id-2", "Udon", context));
-    expect(edited.lists[0]?.items).toEqual([{ id: "id-2", text: "Udon" }]);
+    expect(edited.lists[0]?.items).toEqual([
+      { id: "id-2", text: "Udon", weight: 1 },
+    ]);
     expect(editItem(added, "id-1", "id-2", " ", context)).toEqual({
       ok: false,
       error: "empty",
@@ -392,5 +395,132 @@ describe("items", () => {
       ok: false,
       error: "not-found",
     });
+  });
+
+  it("restores a removed item with its weight", () => {
+    const { context, state } = withList();
+    let added = state;
+    for (const text of ["Ramen", "Udon", "Soba"])
+      added = mustOk(addItem(added, "id-1", text, context));
+    const weighted = mustOk(setItemWeight(added, "id-1", "id-2", 3, context));
+    const [item] = weighted.lists[0]?.items ?? [];
+    if (!item) throw new Error("fixture has no item");
+    const removed = mustOk(removeItem(weighted, "id-1", item.id, context));
+
+    expect(
+      mustOk(restoreItem(removed, "id-1", item, 0, context)).lists[0]?.items[0],
+    ).toEqual({ id: "id-2", text: "Ramen", weight: 3 });
+  });
+});
+
+describe("item weights", () => {
+  function withItems() {
+    const context = testContext();
+    let state = mustOk(createList(emptyState, "Lunch", context));
+    for (const text of ["Ramen", "Udon"])
+      state = mustOk(addItem(state, "id-1", text, context));
+    return { context, state };
+  }
+  const weights = (state: StoredState) =>
+    state.lists[0]?.items.map((item) => item.weight);
+
+  it("sets one item's weight and the list's timestamp", () => {
+    const { context, state } = withItems();
+    const changed = mustOk(setItemWeight(state, "id-1", "id-3", 2, context));
+    expect(weights(changed)).toEqual([1, 2]);
+    expect(changed.lists[0]?.updatedAt).not.toBe(state.lists[0]?.updatedAt);
+    expect(weights(state)).toEqual([1, 1]);
+  });
+
+  it("accepts 1 to the item count and rejects raising a weight above it", () => {
+    const { context, state } = withItems();
+    const high = mustOk(setItemWeight(state, "id-1", "id-2", 2, context));
+    expect(weights(high)).toEqual([2, 1]);
+    const low = mustOk(setItemWeight(high, "id-1", "id-2", 1, context));
+    expect(weights(low)).toEqual([1, 1]);
+    expect(setItemWeight(state, "id-1", "id-2", 3, context)).toEqual({
+      ok: false,
+      error: "invalid-weight",
+    });
+  });
+
+  it("only lowers a stored weight left above the item count by removals", () => {
+    const context = testContext();
+    let state = mustOk(createList(emptyState, "Lunch", context));
+    for (const text of ["Ramen", "Udon", "Soba", "Pho"])
+      state = mustOk(addItem(state, "id-1", text, context));
+    state = mustOk(setItemWeight(state, "id-1", "id-2", 4, context));
+    for (const id of ["id-3", "id-4"])
+      state = mustOk(removeItem(state, "id-1", id, context));
+    // Two items left; Ramen keeps its stale weight 4.
+    expect(weights(state)).toEqual([4, 1]);
+
+    expect(setItemWeight(state, "id-1", "id-2", 5, context)).toEqual({
+      ok: false,
+      error: "invalid-weight",
+    });
+    // Saving the stale weight unchanged is a no-op, not an error.
+    expect(mustOk(setItemWeight(state, "id-1", "id-2", 4, context))).toBe(
+      state,
+    );
+    // Lower than before but still above the count.
+    const lower = mustOk(setItemWeight(state, "id-1", "id-2", 3, context));
+    expect(weights(lower)).toEqual([3, 1]);
+    const within = mustOk(setItemWeight(lower, "id-1", "id-2", 1, context));
+    expect(weights(within)).toEqual([1, 1]);
+    // The other item cannot be raised past the count.
+    expect(setItemWeight(state, "id-1", "id-5", 3, context)).toEqual({
+      ok: false,
+      error: "invalid-weight",
+    });
+  });
+
+  it("keeps the state when the weight is unchanged", () => {
+    const { context, state } = withItems();
+    expect(mustOk(setItemWeight(state, "id-1", "id-2", 1, context))).toBe(
+      state,
+    );
+  });
+
+  it.each([0, -1, 1_001, 1.5, Number.NaN, Number.POSITIVE_INFINITY])(
+    "rejects weight %s",
+    (weight) => {
+      const { context, state } = withItems();
+      expect(setItemWeight(state, "id-1", "id-2", weight, context)).toEqual({
+        ok: false,
+        error: "invalid-weight",
+      });
+    },
+  );
+
+  it("rejects unknown lists and items", () => {
+    const { context, state } = withItems();
+    expect(setItemWeight(state, "missing", "id-2", 2, context)).toEqual({
+      ok: false,
+      error: "not-found",
+    });
+    expect(setItemWeight(state, "id-1", "missing", 2, context)).toEqual({
+      ok: false,
+      error: "not-found",
+    });
+  });
+
+  it("keeps the weight when the item's text is edited", () => {
+    const { context, state } = withItems();
+    const weighted = mustOk(setItemWeight(state, "id-1", "id-2", 2, context));
+    const edited = mustOk(editItem(weighted, "id-1", "id-2", "Soba", context));
+    expect(edited.lists[0]?.items[0]).toEqual({
+      id: "id-2",
+      text: "Soba",
+      weight: 2,
+    });
+  });
+
+  it("keeps the other weights when items are removed", () => {
+    const { context, state } = withItems();
+    const weighted = mustOk(setItemWeight(state, "id-1", "id-3", 2, context));
+    const removed = mustOk(removeItem(weighted, "id-1", "id-2", context));
+    // Weight 2 now exceeds the single item's UI maximum and is still stored.
+    expect(weights(removed)).toEqual([2]);
   });
 });

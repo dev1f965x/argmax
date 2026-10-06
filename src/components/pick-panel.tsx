@@ -2,7 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { tracker } from "@/lib/analytics";
-import { pickIndex } from "@/lib/pick";
+import { pickIndex, pickWeightedIndex } from "@/lib/pick";
 import type { Item } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 
@@ -119,7 +119,8 @@ export function PickPanel({
   function pick() {
     if (empty || rolling.current) return;
     onPick();
-    const pickedId = items[pickIndex(items.length)]?.id;
+    const pickedId =
+      items[pickWeightedIndex(items.map((item) => item.weight))]?.id;
     if (pickedId === undefined) return;
 
     const settle = () => {
@@ -146,8 +147,9 @@ export function PickPanel({
     timers.current = cycleGaps.map((gap) => {
       elapsed += gap;
       return window.setTimeout(() => {
-        // Display only; the fair pick above already decided the result. A
-        // name differs from the one before, so every step visibly changes.
+        // Display only, so unweighted; the fair pick above already decided
+        // the result. A name differs from the one before, so every step
+        // visibly changes.
         const others = latestItems.current.filter(
           (item) => item.text !== previous,
         );

@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createList } from "@/lib/lists";
 import { createRepository, emptyState, storageKey } from "@/lib/storage";
 import { ListsPage } from "@/routes/lists-page";
-import { storedState, testContext } from "@/test/fixtures";
+import { storedState, storedStateV1, testContext } from "@/test/fixtures";
 import { memoryStorage } from "@/test/memory-storage";
 import { ListsProvider, useLists } from "./lists-provider";
 
@@ -247,7 +247,7 @@ describe("ListsProvider validation", () => {
 
 describe("ListsProvider with text saved by 0.1.0", () => {
   it("shows repaired lists, writes nothing until a change, then saves them cleaned", () => {
-    const raw = storedState([
+    const raw = storedStateV1([
       { id: "lunch", name: "Lunch\u202E", items: ["Fried\trice", "\u200B"] },
     ]);
     const { storage, data } = memoryStorage({ [storageKey]: raw });
@@ -260,9 +260,64 @@ describe("ListsProvider with text saved by 0.1.0", () => {
     tab.create("Dinner");
     const saved = JSON.parse(data.get(storageKey) ?? "");
     expect(saved.lists[0].name).toBe("Lunch");
+    expect(saved.schemaVersion).toBe(2);
     expect(saved.lists[0].items).toEqual([
-      { id: "item-0", text: "Fried rice" },
+      { id: "item-0", text: "Fried rice", weight: 1 },
     ]);
     expect(storedNames(data)).toEqual(["Lunch", "Dinner"]);
+  });
+});
+
+describe("ListsProvider with data from a newer version", () => {
+  const raw = JSON.stringify({ schemaVersion: 3, lists: [] });
+
+  it("turns editing off on load and never overwrites the data", () => {
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+    const tab = renderTab(storage, "A");
+
+    expect(tab.value().issue).toEqual({ kind: "newer", raw });
+    expect(tab.value().editable).toBe(false);
+    tab.create("Dinner");
+    expect(data.get(storageKey)).toBe(raw);
+  });
+
+  it("turns editing off when another tab saves a newer version", () => {
+    const { storage, data } = memoryStorage();
+    const tab = renderTab(storage, "A");
+    tab.create("Mine");
+
+    data.set(storageKey, raw);
+    storageEvent();
+
+    expect(tab.value().issue).toEqual({ kind: "newer", raw });
+    expect(tab.value().editable).toBe(false);
+    expect(tab.names()).toEqual([]);
+    tab.create("Dinner");
+    expect(data.get(storageKey)).toBe(raw);
+  });
+});
+
+describe("ListsProvider with lists saved by 0.1.0", () => {
+  it("shows them, keeps the stored value until a change, then writes version 2", () => {
+    const raw = storedStateV1([
+      { id: "lunch", name: "Lunch", items: ["Ramen", "Ramen"] },
+    ]);
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+    const tab = renderTab(storage, "A");
+
+    expect(tab.names()).toEqual(["Lunch"]);
+    expect(tab.value().state.lists[0]?.items).toEqual([
+      { id: "item-0", text: "Ramen", weight: 1 },
+      { id: "item-1", text: "Ramen", weight: 1 },
+    ]);
+    expect(data.get(storageKey)).toBe(raw);
+
+    tab.create("Dinner");
+    const saved = JSON.parse(data.get(storageKey) ?? "");
+    expect(saved.schemaVersion).toBe(2);
+    expect(saved.lists[0].items).toEqual([
+      { id: "item-0", text: "Ramen", weight: 1 },
+      { id: "item-1", text: "Ramen", weight: 1 },
+    ]);
   });
 });

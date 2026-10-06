@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pickIndex, type RandomSource } from "./pick";
+import { pickIndex, pickWeightedIndex, type RandomSource } from "./pick";
 
 /** Returns the given values in order, one per call. */
 function fakeRandom(values: number[]): RandomSource {
@@ -65,5 +65,79 @@ describe("pickIndex", () => {
       0,
     );
     expect(chiSquare).toBeLessThan(27.63);
+  });
+});
+
+describe("pickWeightedIndex", () => {
+  it("returns 0 when there is one item, whatever its weight", () => {
+    expect(pickWeightedIndex([1])).toBe(0);
+    expect(pickWeightedIndex([1_000])).toBe(0);
+  });
+
+  it.each([
+    [0, 0],
+    [1, 0],
+    [2, 1],
+    [3, 2],
+    [4, 2],
+    [5, 2],
+  ])("maps position %i of weights [2, 1, 3] to index %i", (position, index) => {
+    // The total 6 does not divide 2^32, so values below the limit map by remainder.
+    expect(pickWeightedIndex([2, 1, 3], fakeRandom([position]))).toBe(index);
+    expect(pickWeightedIndex([2, 1, 3], fakeRandom([position + 6]))).toBe(
+      index,
+    );
+  });
+
+  it("draws again in the rejected range, like pickIndex", () => {
+    const limit = range - (range % 6);
+    expect(pickWeightedIndex([2, 1, 3], fakeRandom([limit, 2]))).toBe(1);
+  });
+
+  it("treats equal weights like pickIndex", () => {
+    for (const value of [0, 1, 2, 7, range - 2]) {
+      expect(pickWeightedIndex([1, 1, 1], fakeRandom([value]))).toBe(
+        pickIndex(3, fakeRandom([value])),
+      );
+    }
+  });
+
+  it.each([
+    ["no weights", []],
+    ["a weight of 0", [1, 0]],
+    ["a negative weight", [-1]],
+    ["a fractional weight", [1.5]],
+    ["NaN", [Number.NaN]],
+    ["infinity", [Number.POSITIVE_INFINITY]],
+    ["a total above 2^32", [range, 1]],
+  ])("rejects %s", (_, weights) => {
+    expect(() => pickWeightedIndex(weights)).toThrow(RangeError);
+  });
+
+  it("accepts a total of exactly 2^32", () => {
+    expect(pickWeightedIndex([range - 1, 1], fakeRandom([range - 1]))).toBe(1);
+  });
+
+  it("gives each index a share proportional to its weight over many draws", () => {
+    const weights = [1, 2, 3, 4];
+    const total = 10;
+    const draws = 40_000;
+    const counts = new Array<number>(weights.length).fill(0);
+    for (let i = 0; i < draws; i += 1) {
+      const index = pickWeightedIndex(weights);
+      counts[index] = (counts[index] ?? 0) + 1;
+    }
+
+    // A smoke check like the one for pickIndex; the boundary tests above are
+    // what prove the mapping. Chi-square goodness of fit with 4 - 1 = 3 degrees
+    // of freedom. For 3 degrees of freedom
+    // P(X > x) = erfc(sqrt(x / 2)) + sqrt(2x / pi) * exp(-x / 2), so 30.66 is
+    // the critical value at p = 1e-6: a fair picker fails about once in a
+    // million runs.
+    const chiSquare = counts.reduce((sum, count, index) => {
+      const expected = (draws * (weights[index] ?? 0)) / total;
+      return sum + (count - expected) ** 2 / expected;
+    }, 0);
+    expect(chiSquare).toBeLessThan(30.66);
   });
 });

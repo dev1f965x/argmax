@@ -119,29 +119,57 @@ const text = z
   .refine((value) => !isBlank(value), "empty")
   .refine(withinTextLimit, "too long");
 
-const itemSchema = z.object({
+/** The schema version this app writes. */
+const currentSchemaVersion = 2;
+
+/**
+ * Item weights stored in version 2 (FR12). The UI limits a weight to the
+ * number of items in its list, but storage allows up to the item limit, so
+ * removing items never makes the stored weights of the others invalid.
+ */
+export const weightRange = { min: 1, max: limits.itemsPerList } as const;
+
+const itemSchemaV1 = z.object({
   id: z.string().min(1),
   text,
 });
 
-const listSchema = z.object({
-  id: z.string().min(1),
-  name: text,
-  items: z
-    .array(itemSchema)
-    .max(limits.itemsPerList)
-    .refine(hasUniqueIds, "duplicate item ids"),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
+const itemSchema = itemSchemaV1.extend({
+  weight: z.int().min(weightRange.min).max(weightRange.max),
 });
 
-const storedStateSchema = z.object({
+function listSchemaOf<Item extends z.ZodType<{ id: string }>>(item: Item) {
+  return z.object({
+    id: z.string().min(1),
+    name: text,
+    items: z
+      .array(item)
+      .max(limits.itemsPerList)
+      .refine(hasUniqueIds, "duplicate item ids"),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+  });
+}
+
+/** Version 1, written by 0.1.0; read only to migrate it. */
+const storedStateSchemaV1 = z.object({
   schemaVersion: z.literal(1),
   lists: z
-    .array(listSchema)
+    .array(listSchemaOf(itemSchemaV1))
     .max(limits.lists)
     .refine(hasUniqueIds, "duplicate list ids"),
 });
+
+const storedStateSchema = z.object({
+  schemaVersion: z.literal(currentSchemaVersion),
+  lists: z
+    .array(listSchemaOf(itemSchema))
+    .max(limits.lists)
+    .refine(hasUniqueIds, "duplicate list ids"),
+});
+
+/** Reads only the version, so data from a newer app can be told apart from damaged data. */
+const versionSchema = z.looseObject({ schemaVersion: z.int().positive() });
 
 function hasUniqueIds(entries: { id: string }[]): boolean {
   return new Set(entries.map((entry) => entry.id)).size === entries.length;
@@ -169,11 +197,14 @@ const repairText = (value: string) =>
 
 /**
  * Cleans every list name and item text the way entered text is cleaned and
- * drops items left blank, so data saved under 0.1.0's looser text rules still
- * loads. Text 0.1.0 would not have saved (untrimmed or not NFC) is not data
- * it wrote, so it is left unchanged and the data stays read-only. A list whose name is left blank is not dropped and gets no invented
- * name, so the strict schema rejects the data and it stays read-only, as
- * before. Returns the input itself when its shape is unknown or nothing changes.
+ * drops items left blank, so version 1 data saved under 0.1.0's looser text
+ * rules still loads. Only version 1 is repaired: version 2 is written by an
+ * app that validates before saving, so text it rejects means damaged data.
+ * Text 0.1.0 would not have saved (untrimmed or not NFC) is not data it
+ * wrote, so it is left unchanged and the data stays read-only. A list whose
+ * name is left blank is not dropped and gets no invented name, so the strict
+ * schema rejects the data and it stays read-only, as before. Returns the
+ * input itself when its shape is unknown or nothing changes.
  */
 export function repairState(parsed: unknown): unknown {
   const shape = repairableSchema.safeParse(parsed);
@@ -195,14 +226,48 @@ export function repairState(parsed: unknown): unknown {
 }
 
 export type Item = z.infer<typeof itemSchema>;
-export type List = z.infer<typeof listSchema>;
+export type List = StoredState["lists"][number];
 export type StoredState = z.infer<typeof storedStateSchema>;
+type StoredStateV1 = z.infer<typeof storedStateSchemaV1>;
 
-export const emptyState: StoredState = { schemaVersion: 1, lists: [] };
+export const emptyState: StoredState = {
+  schemaVersion: currentSchemaVersion,
+  lists: [],
+};
+
+/**
+ * Turns 0.1.0 data into version 2 without loss: every item gets weight 1,
+ * the equal chance it had in 0.1.0, and duplicates stay separate items.
+ */
+export function migrateV1(state: StoredStateV1): StoredState {
+  return {
+    schemaVersion: currentSchemaVersion,
+    lists: state.lists.map((list) => ({
+      ...list,
+      items: list.items.map((item) => ({ ...item, weight: 1 })),
+    })),
+  };
+}
+
+/** Validates parsed JSON of any known version and returns it as the current version. */
+function readState(
+  parsed: unknown,
+): { success: true; data: StoredState } | { success: false; error: unknown } {
+  const version = versionSchema.safeParse(parsed);
+  if (version.success && version.data.schemaVersion === 1) {
+    // Valid data skips the repair, which only text 0.1.0 could have saved needs.
+    let v1 = storedStateSchemaV1.safeParse(parsed);
+    if (!v1.success) v1 = storedStateSchemaV1.safeParse(repairState(parsed));
+    return v1.success ? { success: true, data: migrateV1(v1.data) } : v1;
+  }
+  return storedStateSchema.safeParse(parsed);
+}
 
 export type LoadResult =
   | { status: "ok"; state: StoredState }
   | { status: "invalid"; raw: string; cause: unknown }
+  /** Saved by a later version of the app, which this one must not overwrite. */
+  | { status: "newer"; raw: string }
   | { status: "unavailable"; cause: unknown };
 
 export type SaveResult =
@@ -250,11 +315,14 @@ export function createRepository(getStorage: () => Storage) {
       mode = "read-only";
       return { status: "invalid", raw, cause };
     }
-    // Valid data skips the repair. A repaired state is not written here; the
-    // next change saves it.
-    let result = storedStateSchema.safeParse(parsed);
-    if (!result.success)
-      result = storedStateSchema.safeParse(repairState(parsed));
+    const version = versionSchema.safeParse(parsed);
+    if (version.success && version.data.schemaVersion > currentSchemaVersion) {
+      mode = "read-only";
+      return { status: "newer", raw };
+    }
+    // A repaired or migrated state is not written here, so a 0.1.0 tab still
+    // open reads the data until the next change saves it as version 2.
+    const result = readState(parsed);
     if (!result.success) {
       mode = "read-only";
       return { status: "invalid", raw, cause: result.error };

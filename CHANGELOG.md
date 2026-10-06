@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Items have a weight, 1 by default, and a pick selects each item with a chance of its weight divided by the list's total weight, still using the browser's cryptographic random source without bias.
+- Saved data from a newer version of Argmax shows a message that lists can't be edited in this tab, with Reload and Copy data; the data is left unchanged and cannot be deleted from this tab.
+
+### Changed
+
+- Saved data moves to schema version 2, which stores each item's weight. Lists saved by 0.1.0 load with weight 1 on every item and are written in the new format only with the next change.
+
 ### Security
 
 - Names and items are limited to 1,600 UTF-16 code units in addition to 100 characters, so one character cannot carry thousands of combining marks: text over that limit keeps at most eight marks per character, which real scripts stay well below, and stacked marks are clipped so they cannot cover neighboring rows or buttons.

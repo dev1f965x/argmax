@@ -1,6 +1,6 @@
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { storageKey } from "./support.ts";
+import { openWithStorage, storageKey, storedStateV1 } from "./support.ts";
 
 test("a created list opens, stays after a reload, and appears on Lists", async ({
   page,
@@ -88,4 +88,69 @@ test.describe("on a phone with touch", () => {
     await page.getByRole("heading", { name: "Lists" }).tap();
     await expect(page.getByText(detail)).toBeHidden();
   });
+});
+
+test("lists saved by 0.1.0 show and pick, and are saved as version 2 only on a change", async ({
+  page,
+}) => {
+  const v1 = storedStateV1([
+    { id: "lunch", name: "Lunch", items: ["Ramen", "Ramen", "Udon"] },
+  ]);
+  await openWithStorage(page, v1);
+  const stored = () =>
+    page.evaluate((key) => localStorage.getItem(key), storageKey);
+
+  await page.getByRole("link", { name: /Lunch/ }).click();
+  await expect(page.getByText("3 items")).toBeVisible();
+  await page.getByRole("button", { name: "Pick", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText(
+    /Picked “(Ramen|Udon)”/,
+    {
+      timeout: 2_000,
+    },
+  );
+  expect(await stored()).toBe(v1);
+
+  await page.getByRole("textbox", { name: "New item" }).fill("Soba");
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("4 items")).toBeVisible();
+  const saved = JSON.parse((await stored()) ?? "");
+  expect(saved.schemaVersion).toBe(2);
+  expect(
+    saved.lists[0].items.map((item: { text: string; weight: number }) => [
+      item.text,
+      item.weight,
+    ]),
+  ).toEqual([
+    ["Ramen", 1],
+    ["Ramen", 1],
+    ["Udon", 1],
+    ["Soba", 1],
+  ]);
+});
+
+test("data from a newer version asks for a reload and is never changed", async ({
+  page,
+}) => {
+  const newer = JSON.stringify({ schemaVersion: 3, lists: [] });
+  await openWithStorage(page, newer);
+
+  const title = page.getByText("Lists can’t be edited in this tab");
+  await expect(title).toBeVisible();
+  await expect(
+    page.getByRole("textbox", { name: "New list name" }),
+  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Copy data" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Delete data" }),
+  ).not.toBeAttached();
+
+  await Promise.all([
+    page.waitForEvent("load"),
+    page.getByRole("button", { name: "Reload" }).click(),
+  ]);
+  await expect(title).toBeVisible();
+  expect(
+    await page.evaluate((key) => localStorage.getItem(key), storageKey),
+  ).toBe(newer);
 });

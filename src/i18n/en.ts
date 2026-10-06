@@ -80,6 +80,10 @@ export const en = {
     invalidTitle: "Saved lists couldn’t be read",
     invalidBody:
       "The saved data is damaged or from an unknown version. Argmax left it unchanged and turned off editing.",
+    newerTitle: "Lists can’t be edited in this tab",
+    newerBody:
+      "They were saved by a newer version of Argmax and are unchanged. Reload the page to use that version.",
+    reload: "Reload",
     copy: "Copy data",
     copied: "Copied the saved data.",
     copyFailed: "Couldn’t copy. Allow clipboard access and try again.",
