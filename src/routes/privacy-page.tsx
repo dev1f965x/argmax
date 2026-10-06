@@ -26,10 +26,12 @@ export function PrivacyPage() {
       />
       <p>{t("privacy.noAccounts")}</p>
       <p>{t("privacy.localOnly")}</p>
+      <p>{t("privacy.shareLinks")}</p>
       <p>{t("privacy.analyticsIntro")}</p>
       <ul className="-mt-2 list-disc space-y-1 pl-6">
         <li>{t("privacy.analyticsScreen")}</li>
         <li>{t("privacy.analyticsEvent")}</li>
+        <li>{t("privacy.analyticsShare")}</li>
         <li>{t("privacy.analyticsDevice")}</li>
         <li>{t("privacy.analyticsReferrer")}</li>
       </ul>

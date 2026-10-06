@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Link,
@@ -26,9 +26,13 @@ export function RootLayout() {
   // A list's screen on a phone is an app screen with a fixed pick bar; site
   // links between the items and the bar read as part of the list, so they are
   // left to the Lists screen there.
+  // A shared list has the same kind of bar (Add this list) and says so
+  // through the outlet context; its broken-link screens keep the footer.
+  const [sharedBar, setSharedBar] = useState(false);
   const pickBarScreen =
-    listMatch !== null &&
-    state.lists.some((list) => list.id === listMatch.params.id);
+    sharedBar ||
+    (listMatch !== null &&
+      state.lists.some((list) => list.id === listMatch.params.id));
 
   // After client-side navigation focus moves to the new screen's heading:
   // otherwise it falls to the page body (the clicked link is gone) or stays on
@@ -86,7 +90,7 @@ export function RootLayout() {
       <main className="mx-auto w-full max-w-240 flex-1 px-4 py-6 md:py-8">
         <StorageBanner />
         <div ref={screenRef}>
-          <Outlet />
+          <Outlet context={setSharedBar} />
         </div>
       </main>
       <SiteFooter className={pickBarScreen ? "hidden md:block" : undefined} />

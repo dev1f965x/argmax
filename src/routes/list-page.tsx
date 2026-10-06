@@ -1,13 +1,15 @@
-import { Ellipsis, Pencil, Trash2 } from "lucide-react";
-import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { Check, Ellipsis, Pencil, Share2, Trash2 } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { useAnnouncer } from "@/components/announcer";
 import { BackToLists } from "@/components/back-to-lists";
+import { ChanceLine, WeightBadge } from "@/components/item-weight";
 import { type ChangeError, useLists } from "@/components/lists-provider";
 import { Note } from "@/components/note";
 import { PageHeading } from "@/components/page-heading";
 import { PickPanel } from "@/components/pick-panel";
+import { type PendingShare, ShareDialog } from "@/components/share-dialog";
 import { Snackbar } from "@/components/snackbar";
 import {
   type SubmitOutcome,
@@ -27,6 +29,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
@@ -34,6 +37,7 @@ import { useScreenView } from "@/components/use-screen-view";
 import { useShowChances } from "@/components/use-show-chances";
 import { WeightField } from "@/components/weight-field";
 import { fromEarlierVisit } from "@/lib/analytics";
+import { describeError } from "@/lib/errors";
 import {
   addItem,
   deleteList,
@@ -49,8 +53,9 @@ import {
   type WeightError,
 } from "@/lib/lists";
 import { navigationString } from "@/lib/navigation-state";
-import { type Chance, chances } from "@/lib/pick";
-import { type Item, limits } from "@/lib/storage";
+import { chances } from "@/lib/pick";
+import { shareUrl } from "@/lib/share-link";
+import { type Item, type List, limits } from "@/lib/storage";
 import { NotFoundPage } from "@/routes/not-found-page";
 
 /**
@@ -72,6 +77,18 @@ function savedText(input: string): string {
 /** Navigation state that tells the Lists screen which list was just deleted. */
 interface DeletedListState {
   deletedListName: string;
+}
+
+type SnackbarContent =
+  | { kind: "undo"; listId: string; item: Item; index: number }
+  | { kind: "message"; listId: string; text: string };
+
+/** Compression streams are in every supported browser (Safari 16.4 and later). */
+const canShare = typeof CompressionStream === "function";
+
+/** Navigation state from the shared-list screen when it opens the list it added. */
+export interface AddedListState {
+  addedListName: string;
 }
 
 /** Navigation state from the Lists screen when it opens a list it just created. */
@@ -150,13 +167,25 @@ export function ListPage() {
     navigationString(location.state, "createdListName"),
   );
   // A list just created is empty, so focus starts in the add field.
-  // The last removed item, offered for Undo until the user does something
-  // else in this list: a change, a pick, the menu, or editing a row.
-  const [undo, setUndo] = useState<{
-    listId: string;
-    item: Item;
-    index: number;
-  } | null>(null);
+  // Read once, like `created`: the list was just added from a share link.
+  const [added] = useState(() =>
+    navigationString(location.state, "addedListName"),
+  );
+  // The snackbar: the last removed item, offered for Undo, or a confirmation
+  // (a copied link, a list added from a link). It stays until the user does
+  // something else in this list: a change, a pick, the menu, or editing a row.
+  const [snackbar, setSnackbar] = useState<SnackbarContent | null>(() =>
+    added && id
+      ? {
+          kind: "message",
+          listId: id,
+          text: t("shared.added", { name: added }),
+        }
+      : null,
+  );
+  const [share, setShare] = useState<PendingShare | null>(null);
+  const [sharing, setSharing] = useState(false);
+  const shareSession = useRef(0);
   const undoId = useId();
   const [focusTarget, setFocusTarget] = useState<FocusTarget>(
     created ? "entry" : null,
@@ -175,6 +204,12 @@ export function ListPage() {
   const list = state.lists.find((candidate) => candidate.id === id);
   // An unknown list renders NotFoundPage, which reports itself.
   useScreenView(list ? "list" : null);
+
+  useEffect(() => {
+    if (!added) return;
+    announce(t("shared.added", { name: added }));
+    navigate(location.pathname, { replace: true, state: null });
+  }, [added, announce, t, navigate, location.pathname]);
 
   useEffect(() => {
     if (!created) return;
@@ -212,7 +247,7 @@ export function ListPage() {
       renameList(current, listId, name, context),
     );
     if (result.ok) {
-      setUndo(null);
+      setSnackbar(null);
       setRenaming(false);
       announce(t("list.renamed", { name: savedText(name) }));
       setFocusTarget("actions");
@@ -267,7 +302,7 @@ export function ListPage() {
       addItem(current, listId, text, context),
     );
     if (result.ok) {
-      setUndo(null);
+      setSnackbar(null);
       const added = t("list.added", { text: savedText(text) });
       if (itemCount + 1 >= limits.itemsPerList) {
         // The limit message replaces the field, so it takes focus and is announced.
@@ -291,7 +326,7 @@ export function ListPage() {
       },
     );
     if (result.ok) {
-      setUndo(null);
+      setSnackbar(null);
       setEditingId(null);
       announce(
         weight === item.weight
@@ -318,7 +353,7 @@ export function ListPage() {
       announce(t("common.saveFailed"));
       return;
     }
-    setUndo({ listId, item, index: storedIndex });
+    setSnackbar({ kind: "undo", listId, item, index: storedIndex });
     announce(t("list.removed", { text: item.text }));
     // Focus moves to the Edit button of the row that takes the removed row's
     // place (the previous one if it was last), skipping a row being edited.
@@ -339,34 +374,31 @@ export function ListPage() {
       announce(done.message);
       return;
     }
-    setUndo(null);
+    setSnackbar(null);
     announce(t("list.restored", { text: item.text }));
     setFocusTarget({ itemId: item.id });
   }
 
-  // "<" and ">" are read inconsistently by screen readers, so those chances
-  // are also spelled out for them, the way the badge adds its label.
-  function chanceText(chance: Chance): ReactNode {
-    switch (chance.kind) {
-      case "below-one":
-        return (
-          <>
-            <span aria-hidden="true">{t("list.chanceUnderOne")}</span>
-            <span className="sr-only">{t("list.chanceUnderOneSpoken")}</span>
-          </>
-        );
-      case "above-ninety-nine":
-        return (
-          <>
-            <span aria-hidden="true">{t("list.chanceOverNinetyNine")}</span>
-            <span className="sr-only">
-              {t("list.chanceOverNinetyNineSpoken")}
-            </span>
-          </>
-        );
-      case "percent":
-        return t("list.chance", { percent: chance.value });
+  async function openShare(current: List) {
+    let link: { url: string; fits: boolean };
+    try {
+      // Built before the dialog opens, so the share sheet opens within the
+      // click that asks for it, as Safari requires.
+      link = await shareUrl(window.location.origin, current);
+    } catch (error) {
+      // Compression streams exist in every supported browser, so this is a bug.
+      console.error("Creating the share link failed:", describeError(error));
+      return;
     }
+    shareSession.current += 1;
+    setShare({ name: current.name, ...link, session: shareSession.current });
+    setSharing(true);
+  }
+
+  function linkCopied() {
+    setSharing(false);
+    setSnackbar({ kind: "message", listId, text: t("share.copied") });
+    announce(t("share.copied"));
   }
 
   // Stable per item, so rows do not detach and reattach their refs on every render.
@@ -427,7 +459,7 @@ export function ListPage() {
               />
               <DropdownMenu
                 onOpenChange={(open) => {
-                  if (open) setUndo(null);
+                  if (open) setSnackbar(null);
                 }}
               >
                 <DropdownMenuTrigger
@@ -449,6 +481,13 @@ export function ListPage() {
                     <Pencil aria-hidden="true" />
                     {t("list.rename")}
                   </DropdownMenuItem>
+                  {canShare && (
+                    <DropdownMenuItem onClick={() => void openShare(list)}>
+                      <Share2 aria-hidden="true" />
+                      {t("list.share")}
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     variant="destructive"
                     onClick={() => setConfirmingDelete(true)}
@@ -460,6 +499,13 @@ export function ListPage() {
               </DropdownMenu>
             </div>
           )}
+          <ShareDialog
+            share={share}
+            open={sharing}
+            onClose={() => setSharing(false)}
+            onCopied={linkCopied}
+            finalFocus={actionsButton}
+          />
           <AlertDialog
             open={confirmingDelete}
             onOpenChange={setConfirmingDelete}
@@ -491,7 +537,7 @@ export function ListPage() {
           key={listId}
           items={items}
           announce={announce}
-          onPick={() => setUndo(null)}
+          onPick={() => setSnackbar(null)}
           earlierVisit={fromEarlierVisit(list.createdAt)}
         />
         {/* On phones the bottom padding keeps room for the Undo snackbar above
@@ -539,27 +585,42 @@ export function ListPage() {
           {region}
           {/* Shown at the bottom of the screen, but placed after the add form
               in the DOM, so Tab reaches Undo before the list. */}
-          {undo?.listId === listId && (
+          {snackbar?.listId === listId && (
             <Snackbar>
-              {/* At most two lines, so the room kept for it always suffices;
-                  a long item name is cut visually, and Undo's description
-                  still gives screen readers the whole text. */}
-              <p
-                id={undoId}
-                className="line-clamp-2 min-w-0 text-sm wrap-anywhere"
-              >
-                {t("list.removed", { text: undo.item.text })}
-              </p>
-              <Button
-                variant="ghost"
-                disabled={!editable}
-                onClick={() => restore(undo.item, undo.index)}
-                // Says what Undo restores when the button is reached on its own.
-                aria-describedby={undoId}
-                className="shrink-0"
-              >
-                {t("list.undo")}
-              </Button>
+              {snackbar.kind === "undo" ? (
+                <>
+                  {/* At most two lines, so the room kept for it always
+                      suffices; a long item name is cut visually, and Undo's
+                      description still gives screen readers the whole text. */}
+                  <p
+                    id={undoId}
+                    className="line-clamp-2 min-w-0 text-sm wrap-anywhere"
+                  >
+                    {t("list.removed", { text: snackbar.item.text })}
+                  </p>
+                  <Button
+                    variant="ghost"
+                    disabled={!editable}
+                    onClick={() => restore(snackbar.item, snackbar.index)}
+                    // Says what Undo restores when the button is reached on its own.
+                    aria-describedby={undoId}
+                    className="shrink-0"
+                  >
+                    {t("list.undo")}
+                  </Button>
+                </>
+              ) : (
+                // Announced when it appears; the live region reads it.
+                <p className="flex min-h-11 min-w-0 items-center gap-2 text-sm">
+                  <Check
+                    aria-hidden="true"
+                    className="size-4.5 shrink-0 text-primary"
+                  />
+                  <span className="line-clamp-2 min-w-0 wrap-anywhere">
+                    {snackbar.text}
+                  </span>
+                </p>
+              )}
             </Snackbar>
           )}
 
@@ -586,18 +647,10 @@ export function ListPage() {
                           <span className="block overflow-clip wrap-anywhere">
                             {item.text}
                           </span>
-                          {chance && (
-                            <span className="block text-sm text-muted-foreground tabular-nums">
-                              {chanceText(chance)}
-                            </span>
-                          )}
+                          {chance && <ChanceLine chance={chance} />}
                         </div>
                         {item.weight !== 1 && (
-                          <span className="mr-1 shrink-0 rounded-sm bg-brand-soft px-1.5 py-0.5 text-sm font-semibold text-brand-strong tabular-nums">
-                            {/* Read as "Weight ×2", so the sign is not read alone. */}
-                            <span className="sr-only">{t("list.weight")} </span>
-                            {t("list.weightValue", { weight: item.weight })}
-                          </span>
+                          <WeightBadge weight={item.weight} />
                         )}
                         <Button
                           ref={editButtonRef(item.id)}
@@ -606,7 +659,7 @@ export function ListPage() {
                           disabled={!editable}
                           aria-label={t("list.edit", { text: item.text })}
                           onClick={() => {
-                            setUndo(null);
+                            setSnackbar(null);
                             setEditingId(item.id);
                           }}
                           className="text-muted-foreground"

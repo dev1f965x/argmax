@@ -1,3 +1,4 @@
+import { deflateRawSync } from "node:zlib";
 import type { Page } from "@playwright/test";
 
 // Same value as storageKey in src/lib/storage.ts, which e2e cannot import
@@ -55,4 +56,75 @@ export async function openWithStorage(page: Page, value: string, path = "/") {
 export async function createList(page: Page, name: string) {
   await page.getByRole("textbox", { name: "New list name" }).fill(name);
   await page.keyboard.press("Enter");
+}
+
+/**
+ * A share link's fragment in format 1, built here with Node's zlib rather
+ * than the app's encoder, so the tests also check that the app reads the
+ * documented format. Items are in stored order, oldest first.
+ */
+export function sharedFragment(
+  name: string,
+  items: [text: string, weight: number][],
+): string {
+  const json = JSON.stringify({ n: name, i: items });
+  return `1.${deflateRawSync(Buffer.from(json)).toString("base64url")}`;
+}
+
+/** Replaces the clipboard with a recorder, so tests read what was copied. */
+export async function recordClipboard(page: Page) {
+  await page.addInitScript(() => {
+    const copied: string[] = [];
+    Object.defineProperty(window, "copiedTexts", { value: copied });
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: async (text: string) => {
+          copied.push(text);
+        },
+      },
+    });
+  });
+  return () =>
+    page.evaluate(() => Reflect.get(window, "copiedTexts") as string[]);
+}
+
+// The browser opens the production address, but every request to it is
+// answered by the local preview build (with its security headers), so the app
+// runs exactly as in production. Requests to Umami are intercepted and
+// inspected; nothing leaves the machine. (.dev is HTTPS-only in browsers, so
+// mapping the hostname to the plain-HTTP preview is not an option.)
+export const production = "https://argmax.dev1f965x.workers.dev";
+
+export async function serveProductionLocally(page: Page) {
+  await page.route(`${production}/**`, async (route) => {
+    const local = route
+      .request()
+      .url()
+      .replace(production, "http://127.0.0.1:4173");
+    // Firefox keeps the original Host header when the URL changes, and the
+    // preview server rejects hosts it does not serve.
+    const headers = { ...route.request().headers(), host: "127.0.0.1:4173" };
+    await route.fulfill({
+      response: await route.fetch({ url: local, headers }),
+    });
+  });
+}
+
+export type Report = {
+  payload: { url: string; title: string; name?: string; data?: object };
+};
+
+/** Answers Umami requests locally and returns the reports they carried. */
+export async function captureReports(page: Page): Promise<Report[]> {
+  const reports: Report[] = [];
+  await page.route("https://cloud.umami.is/**", async (route) => {
+    reports.push(route.request().postDataJSON() as Report);
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers: { "access-control-allow-origin": "*" },
+      body: "{}",
+    });
+  });
+  return reports;
 }

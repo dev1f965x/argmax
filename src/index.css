@@ -108,6 +108,13 @@
   grid-template-rows: auto 1fr;
 }
 
+/* Shared list on desktop: the list on the left; on the right, the in-app
+   notice when there is one, then the sticky Add panel. */
+@utility grid-shared {
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  grid-template-rows: auto auto 1fr;
+}
+
 /* Short viewports, such as a phone in landscape: the pick bar gets compact. */
 @custom-variant short (@media (max-height: 30rem));
 

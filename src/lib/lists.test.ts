@@ -3,6 +3,8 @@ import { testContext } from "@/test/fixtures";
 import { memoryStorage } from "@/test/memory-storage";
 import {
   addItem,
+  addSharedList,
+  browserContext,
   createList,
   deleteList,
   editItem,
@@ -522,5 +524,83 @@ describe("item weights", () => {
     const removed = mustOk(removeItem(weighted, "id-1", "id-2", context));
     // Weight 2 now exceeds the single item's UI maximum and is still stored.
     expect(weights(removed)).toEqual([2]);
+  });
+});
+
+describe("addSharedList", () => {
+  const shared = {
+    name: "Lunch",
+    items: [
+      { text: "Ramen", weight: 2 },
+      { text: "Udon", weight: 1 },
+    ],
+  };
+
+  it("adds a copy with new ids and the current time, after the existing lists", () => {
+    const context = testContext();
+    const before = mustOk(createList(emptyState, "Lunch", context));
+    const existing = JSON.stringify(before.lists);
+
+    const after = mustOk(addSharedList(before, shared, context));
+
+    // The existing list is byte-identical, and the same name is a separate list.
+    expect(JSON.stringify(after.lists.slice(0, 1))).toBe(existing);
+    expect(after.lists).toHaveLength(2);
+    expect(after.lists[1]).toEqual({
+      id: "id-2",
+      name: "Lunch",
+      items: [
+        { id: "id-3", text: "Ramen", weight: 2 },
+        { id: "id-4", text: "Udon", weight: 1 },
+      ],
+      createdAt: "2026-10-04T00:00:02.000Z",
+      updatedAt: "2026-10-04T00:00:02.000Z",
+    });
+  });
+
+  it("uses new UUIDs in the browser", () => {
+    const first = mustOk(addSharedList(emptyState, shared, browserContext));
+    const second = mustOk(addSharedList(first, shared, browserContext));
+    const uuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+    const ids = second.lists.flatMap((list) => [
+      list.id,
+      ...list.items.map((item) => item.id),
+    ]);
+    for (const id of ids) expect(id).toMatch(uuid);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("adds a list with no items", () => {
+    const state = mustOk(
+      addSharedList(emptyState, { name: "Empty", items: [] }, testContext()),
+    );
+    expect(state.lists[0]?.items).toEqual([]);
+  });
+
+  it("refuses the 101st list and leaves the state unchanged", () => {
+    const context = testContext();
+    let state = emptyState;
+    for (let index = 0; index < limits.lists - 1; index += 1)
+      state = mustOk(createList(state, `List ${index}`, context));
+    state = mustOk(addSharedList(state, shared, context));
+    expect(state.lists).toHaveLength(limits.lists);
+
+    expect(addSharedList(state, shared, context)).toEqual({
+      ok: false,
+      error: "list-limit",
+    });
+  });
+
+  it("produces a state that saves and reloads as valid", () => {
+    const storage = memoryStorage();
+    const repository = createRepository(() => storage.storage);
+    expect(repository.load().status).toBe("ok");
+    const state = mustOk(addSharedList(emptyState, shared, testContext()));
+    expect(repository.save(state)).toEqual({ ok: true });
+    expect(createRepository(() => storage.storage).load()).toEqual({
+      status: "ok",
+      state,
+    });
   });
 });

@@ -111,8 +111,11 @@ export function isBlank(text: string): boolean {
 
 const isNormalized = (value: string) => value === value.trim().normalize("NFC");
 
-/** Stored text is saved trimmed and NFC-normalized, so the same rule validates it on load. */
-const text = z
+/**
+ * Stored text is saved trimmed and NFC-normalized, so the same rule validates
+ * it on load. Lists from share links are held to it as well.
+ */
+export const storedTextSchema = z
   .string()
   .refine(hasOnlyAllowedCharacters, "disallowed characters")
   .refine(isNormalized, "not normalized")
@@ -131,7 +134,7 @@ export const weightRange = { min: 1, max: limits.itemsPerList } as const;
 
 const itemSchemaV1 = z.object({
   id: z.string().min(1),
-  text,
+  text: storedTextSchema,
 });
 
 const itemSchema = itemSchemaV1.extend({
@@ -141,7 +144,7 @@ const itemSchema = itemSchemaV1.extend({
 function listSchemaOf<Item extends z.ZodType<{ id: string }>>(item: Item) {
   return z.object({
     id: z.string().min(1),
-    name: text,
+    name: storedTextSchema,
     items: z
       .array(item)
       .max(limits.itemsPerList)
