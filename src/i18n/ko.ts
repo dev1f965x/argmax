@@ -101,7 +101,7 @@ export const ko: Resources = {
       "보내는 중에 링크가 잘렸을 수 있습니다. 보낸 사람에게 다시 공유해 달라고 하세요.",
     toLists: "목록 보기",
     newerTitle: "새 버전이 필요한 링크입니다",
-    newerBody: "페이지를 새로 고치면 최신 Argmax로 열립니다.",
+    newerBody: "페이지를 새로고침하면 최신 Argmax로 열립니다.",
     reload: "새로고침",
   },
   pick: {
@@ -109,13 +109,13 @@ export const ko: Resources = {
     pick: "뽑기",
     again: "다시 뽑기",
     label: "뽑힌 항목",
-    empty: "뽑힌 항목이 여기에 표시됩니다",
+    empty: "결과는 여기에 표시됩니다",
     needItem: "뽑을 항목을 추가하세요.",
     announced: "뽑힌 항목: “{{text}}”",
   },
   common: {
     saveFailed:
-      "변경 사항을 저장하지 못했습니다. 페이지를 새로 고친 뒤 다시 시도하세요.",
+      "변경 사항을 저장하지 못했습니다. 페이지를 새로고침한 뒤 다시 시도하세요.",
   },
   storage: {
     unavailableTitle: "목록을 저장할 수 없습니다",
@@ -129,8 +129,8 @@ export const ko: Resources = {
       "저장된 데이터가 손상되었거나 알 수 없는 버전입니다. 데이터는 그대로 두고 편집을 껐습니다.",
     newerTitle: "이 탭에서는 목록을 편집할 수 없습니다",
     newerBody:
-      "더 최신 버전의 Argmax에서 저장한 목록이며 그대로 있습니다. 페이지를 새로 고치세요.",
-    reload: "새로 고침",
+      "더 최신 버전의 Argmax에서 저장한 목록이며 그대로 있습니다. 페이지를 새로고침하세요.",
+    reload: "새로고침",
     copy: "데이터 복사",
     copied: "저장된 데이터를 복사했습니다.",
     copyFailed:
@@ -141,7 +141,7 @@ export const ko: Resources = {
       "읽을 수 없는 데이터를 이 브라우저에서 삭제하고 목록 없이 다시 시작합니다. 사본이 필요하면 먼저 데이터 복사를 누르세요. 되돌릴 수 없습니다.",
     discardConfirm: "데이터 삭제",
     discardFailed:
-      "데이터를 삭제하지 못했습니다. 페이지를 새로 고친 뒤 다시 시도하세요.",
+      "데이터를 삭제하지 못했습니다. 페이지를 새로고침한 뒤 다시 시도하세요.",
     cancel: "취소",
     discarded:
       "저장된 데이터를 삭제했습니다. 이제 목록을 다시 만들 수 있습니다.",

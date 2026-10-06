@@ -27,6 +27,7 @@ Use these words and no synonyms. A new product noun or verb is added here before
 | Putting an item in a list | add | 추가하다, 추가 | |
 | Changing an item's text | edit | 수정하다, 수정 | |
 | Changing a list's name | rename | 이름 바꾸기 | |
+| Loading the page again | reload | 새로고침, 새로고침하다 | Written as one word, like the browser's own button (owner, 2026-10-06) |
 | Sending a list to someone as a link | share; "Share link", "Copy link" | 공유; "링크 공유", "링크 복사" | Every share step says that anyone with the link can see the list name and items |
 | A list opened from someone else's link, before it is added | shared list | 공유받은 목록 | Also the page title on /shared, which never contains the list name |
 | Saving a copy of a shared list | add this list (button "Add this list") | 이 목록 추가 | Not "import" or "save"; the copy is a new list, not linked to the sender's |
@@ -56,7 +57,7 @@ A short title that states the situation, then one sentence that names the next a
 
 - Lists, no lists yet: "No lists yet" / "Create your first list, for example “Lunch”." (아직 목록이 없습니다 / 첫 목록을 만드세요. 예: “점심 메뉴”)
 - An empty list adds no visible message: the count reads "0 items", and Pick's reason ("Add an item to pick from.") is read only by screen readers when Pick is focused.
-- Before the first pick, the desktop result box says where the result will appear: "Your pick appears here" / "뽑힌 항목이 여기에 표시됩니다". Never "?", which reads as an unknown result.
+- Before the first pick, the desktop result box says where the result will appear: "Your pick appears here" / "결과는 여기에 표시됩니다". The Korean uses 결과 here by the owner's choice (2026-10-06); it is a placeholder, not a sentence about the picked item. Never "?", which reads as an unknown result.
 
 ### Notes with details
 
