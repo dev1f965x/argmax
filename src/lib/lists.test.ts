@@ -12,6 +12,7 @@ import {
   validateText,
 } from "./lists";
 import {
+  cleanText,
   createRepository,
   emptyState,
   limits,
@@ -85,10 +86,10 @@ describe("validateText with unsafe characters", () => {
     expect(validateText(input)).toEqual({ ok: false, error: "empty" });
   });
 
-  it("rejects one letter with thousands of combining marks as too long", () => {
+  it("keeps eight marks on one letter stacked with thousands", () => {
     expect(validateText(`x${"\u0301".repeat(5_000)}`)).toEqual({
-      ok: false,
-      error: "too-long",
+      ok: true,
+      value: `x${"\u0301".repeat(8)}`,
     });
   });
 
@@ -181,6 +182,57 @@ describe("validateText with unsafe characters", () => {
     }
     // Most inputs must pass, or the loop would prove little.
     expect(accepted).toBeGreaterThan(1_000);
+  });
+
+  it("turns every kind of line break into a space", () => {
+    expect(validateText("a\u2028b\u2029c\u0085d\ve\ff")).toEqual({
+      ok: true,
+      value: "a b c d e f",
+    });
+  });
+
+  it("cleans to the same text when run again, including over-long text", () => {
+    const next = random(2028);
+    // Mostly long stacks, so many inputs go over the cap.
+    const withStacks = [
+      ..."a가 ",
+      "\u200D",
+      "\t",
+      "\u202E",
+      "\uD800",
+      "🇰",
+      "\u0301".repeat(200),
+      "\u0E49".repeat(300),
+      " \u0301".repeat(100),
+      "\u0F90\u0F71".repeat(150),
+    ];
+    let capped = 0;
+    for (let run = 0; run < 1_000; run++) {
+      const length = Math.floor(next() * 60);
+      const input = Array.from(
+        { length },
+        () => withStacks[Math.floor(next() * withStacks.length)] ?? "",
+      ).join("");
+      const once = cleanText(input);
+      if (input.length > 1_600) capped++;
+      expect(cleanText(once), JSON.stringify(input)).toBe(once);
+    }
+    expect(capped).toBeGreaterThan(100);
+  });
+});
+
+describe("cleanText over the unit cap", () => {
+  it.each([
+    ["Vietnamese", "Tiếng Việt ngữ"],
+    ["decomposed Vietnamese", "Tiếng Việt ngữ".normalize("NFD")],
+    ["Thai", "สวัสดี น้ำ ที่ ปั้น กี่"],
+    ["Tibetan", "བསྒྲུབས་ཧཱུྃ་ཨོཾ་ཀྵྨྱཱྀ"],
+    ["Devanagari", "क्ष्म्यं श्रीमान् स्त्र्यै"],
+    ["emoji sequences", "👨‍👩‍👧‍👦👩🏻‍❤️‍💋‍👨🏼1️⃣🏴󠁧󠁢󠁳󠁣󠁴󠁿🇰🇷"],
+  ])("leaves %s unchanged even over the cap", (_, sample) => {
+    const text = `${sample} `.repeat(200).trim().normalize("NFC");
+    expect(text.length).toBeGreaterThan(1_600);
+    expect(cleanText(text)).toBe(text);
   });
 });
 

@@ -1,4 +1,9 @@
-import { act, screen, within } from "@testing-library/react";
+import {
+  act,
+  getDefaultNormalizer,
+  screen,
+  within,
+} from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { tracker } from "@/lib/analytics";
 import { limits, storageKey } from "@/lib/storage";
@@ -12,6 +17,21 @@ const createButton = () => screen.getByRole("button", { name: "Create" });
 const itemField = () => screen.getByRole("textbox", { name: "New item" });
 
 describe("ListsPage", () => {
+  it("confirms a created list by its name as saved, with a tab as a space", async () => {
+    const { user } = renderApp();
+
+    await user.click(nameField());
+    await user.paste("Late\tlunch");
+    await user.keyboard("{Enter}");
+
+    expect(
+      // The default matcher would collapse a tab into a space.
+      await screen.findByText("Created “Late lunch”.", {
+        normalizer: getDefaultNormalizer({ collapseWhitespace: false }),
+      }),
+    ).toBeInTheDocument();
+  });
+
   it("explains what to do first and where lists are stored, with details on request", async () => {
     const { user } = renderApp();
 

@@ -49,19 +49,49 @@ const disallowedCharacters =
 
 // Line breaks and tabs separate words, so they become spaces rather than
 // being removed with the other control characters.
-const controlWhitespace = /[\t\n\v\f\r\u0085]/g;
+const controlWhitespace = /[\t\n\v\f\r\u0085\u2028\u2029]/g;
+
+/**
+ * Combining marks kept per character when text is over the unit cap. The
+ * longest stacks in real text stay well below it: Thai and Vietnamese use up
+ * to 3, a Devanagari conjunct with a vowel sign and anusvara about 5, and a
+ * Tibetan Sanskrit stack about 6. UAX #15's stream-safe limit of 30 would
+ * still let one character tower over its neighbors.
+ */
+const maxMarksPerCharacter = 8;
+const combiningMark = /\p{M}/u;
+
+/** Drops the marks after the first maxMarksPerCharacter in each character. */
+function capMarks(text: string): string {
+  return Array.from(graphemes.segment(text), ({ segment }) => {
+    let marks = 0;
+    let kept = "";
+    for (const codePoint of segment) {
+      if (combiningMark.test(codePoint) && ++marks > maxMarksPerCharacter)
+        continue;
+      kept += codePoint;
+    }
+    return kept;
+  }).join("");
+}
 
 /**
  * Turns line breaks and tabs into spaces, removes the other characters stored
- * text may not contain, normalizes to NFC, and trims. Entered text and text
- * saved by 0.1.0, which allowed those characters, both pass through here.
+ * text may not contain, normalizes to NFC, and trims. Text still over the unit
+ * cap loses the marks stacked beyond maxMarksPerCharacter, which only abusive
+ * text has. Entered text and text saved by 0.1.0, which allowed all of these,
+ * both pass through here; the result may still be too long for the schema.
  */
 export function cleanText(input: string): string {
-  return input
+  const cleaned = input
     .replace(controlWhitespace, " ")
     .replace(disallowedCharacters, "")
     .normalize("NFC")
     .trim();
+  if (cleaned.length <= maxTextCodeUnits) return cleaned;
+  // Still NFC and trimmed: a mark can only block the composition of marks
+  // after it, and every character keeps its first code point.
+  return capMarks(cleaned);
 }
 
 // search() ignores the g flag's lastIndex, unlike test().
@@ -220,8 +250,11 @@ export function createRepository(getStorage: () => Storage) {
       mode = "read-only";
       return { status: "invalid", raw, cause };
     }
-    // A repaired state is not written here; the next change saves it.
-    const result = storedStateSchema.safeParse(repairState(parsed));
+    // Valid data skips the repair. A repaired state is not written here; the
+    // next change saves it.
+    let result = storedStateSchema.safeParse(parsed);
+    if (!result.success)
+      result = storedStateSchema.safeParse(repairState(parsed));
     if (!result.success) {
       mode = "read-only";
       return { status: "invalid", raw, cause: result.error };

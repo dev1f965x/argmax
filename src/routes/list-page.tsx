@@ -40,6 +40,7 @@ import {
   removeItem,
   renameList,
   restoreItem,
+  validateText,
 } from "@/lib/lists";
 import { navigationString } from "@/lib/navigation-state";
 import { type Item, limits } from "@/lib/storage";
@@ -51,6 +52,15 @@ import { NotFoundPage } from "@/routes/not-found-page";
  * when the field is gone).
  */
 type FocusTarget = { itemId: string } | "actions" | "entry" | null;
+
+/**
+ * The text as a successful change saved it, which validateText may have
+ * cleaned (a pasted tab becomes a space), so announcements match the list.
+ */
+function savedText(input: string): string {
+  const text = validateText(input);
+  return text.ok ? text.value : input;
+}
 
 /** Navigation state that tells the Lists screen which list was just deleted. */
 interface DeletedListState {
@@ -151,7 +161,7 @@ export function ListPage() {
     if (result.ok) {
       setUndo(null);
       setRenaming(false);
-      announce(t("list.renamed", { name: name.trim() }));
+      announce(t("list.renamed", { name: savedText(name) }));
       setFocusTarget("actions");
       return { ok: true };
     }
@@ -200,7 +210,7 @@ export function ListPage() {
     );
     if (result.ok) {
       setUndo(null);
-      const added = t("list.added", { text: text.trim() });
+      const added = t("list.added", { text: savedText(text) });
       if (itemCount + 1 >= limits.itemsPerList) {
         // The limit message replaces the field, so it takes focus and is announced.
         announce(`${added} ${limitMessage}`);
@@ -219,7 +229,7 @@ export function ListPage() {
     if (result.ok) {
       setUndo(null);
       setEditingId(null);
-      announce(t("list.saved", { text: text.trim() }));
+      announce(t("list.saved", { text: savedText(text) }));
       setFocusTarget({ itemId: item.id });
     }
     return outcome(result);

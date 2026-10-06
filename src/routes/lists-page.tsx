@@ -51,12 +51,13 @@ export function ListsPage() {
       );
       // A new list is empty, so the next step is adding items: open it with
       // the item field focused. The new list is the last one stored.
-      const createdId = result.state.lists.at(-1)?.id;
-      if (createdId) {
+      const created = result.state.lists.at(-1);
+      if (created) {
+        // The name as saved, which validateText may have cleaned.
         const navigationState: CreatedListState = {
-          createdListName: name.trim(),
+          createdListName: created.name,
         };
-        navigate(`/lists/${createdId}`, { state: navigationState });
+        navigate(`/lists/${created.id}`, { state: navigationState });
       }
       return { ok: true };
     }
@@ -105,7 +106,7 @@ export function ListsPage() {
                 className="flex min-h-16 items-center justify-between gap-3 rounded-md px-1 py-2 outline-none hover:bg-surface focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 <span className="min-w-0">
-                  <span className="block overflow-clip font-semibold wrap-anywhere">
+                  <span className="-my-0.5 block overflow-clip py-0.5 font-semibold wrap-anywhere">
                     {list.name}
                   </span>
                   <span className="block text-sm text-muted-foreground">

@@ -313,10 +313,17 @@ describe("stored text", () => {
   const markBomb = `x${"\u0301".repeat(5_000)}`;
 
   it("caps text at 1,600 UTF-16 units even within 100 characters", () => {
-    expect(loads(`x${"\u0301".repeat(1_599)}`)).toBe("ok");
-    expect(loads(`x${"\u0301".repeat(1_600)}`)).toBe("invalid");
+    expect(saves(`x${"\u0301".repeat(1_599)}`)).toBe(true);
+    expect(saves(`x${"\u0301".repeat(1_600)}`)).toBe(false);
     expect(characterCount(markBomb)).toBe(1);
-    expect(loads(markBomb)).toBe("invalid");
+    expect(saves(markBomb)).toBe(false);
+  });
+
+  it("keeps text invalid on load when dropping marks cannot bring it under the cap", () => {
+    // An emoji ZWJ chain is one character of any length without a single mark.
+    const chain = `👨${"\u200D👨".repeat(600)}`;
+    expect(characterCount(chain)).toBe(1);
+    expect(loads(chain)).toBe("invalid");
   });
 
   it.each([
@@ -417,6 +424,30 @@ describe("repairing text saved by 0.1.0", () => {
 
   it("cleans text and drops items left blank", () => {
     expect(repairState(legacy)).toEqual(repaired);
+  });
+
+  it("shortens a character stacked past the unit cap so it loads", () => {
+    // 0.1.0 saved NFC text, which composes the first mark into "á".
+    const stacked = `a${"\u0301".repeat(1_700)}`.normalize("NFC");
+    const raw = stored({
+      ...validState,
+      lists: [{ ...list, items: [{ id: "item-1", text: stacked }] }],
+    });
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+
+    expect(createRepository(() => storage).load()).toEqual({
+      status: "ok",
+      state: {
+        ...validState,
+        lists: [
+          {
+            ...list,
+            items: [{ id: "item-1", text: `\u00E1${"\u0301".repeat(8)}` }],
+          },
+        ],
+      },
+    });
+    expect(data.get(storageKey)).toBe(raw);
   });
 
   it("returns valid data and data of an unknown shape as they are", () => {

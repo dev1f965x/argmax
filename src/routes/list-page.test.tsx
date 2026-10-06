@@ -1,4 +1,9 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import {
+  getDefaultNormalizer,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { limits, storageKey } from "@/lib/storage";
 import { renderApp, storedState } from "@/test/fixtures";
@@ -157,6 +162,37 @@ describe("ListPage", () => {
     expect(storedItems()).toEqual(["Udon", "Sushi"]);
     expect(screen.getByRole("button", { name: "Edit “Udon”" })).toHaveFocus();
     expect(screen.getByText("Saved “Udon”.")).toBeInTheDocument();
+  });
+
+  it("announces pasted text as saved, with a tab as a space", async () => {
+    // The default matcher would collapse a tab into a space.
+    const exact = {
+      normalizer: getDefaultNormalizer({ collapseWhitespace: false }),
+    };
+    const { user, storedItems, storedLists } = renderList(["Ramen"]);
+
+    await user.click(addField());
+    await user.paste("Fried\trice");
+    await user.keyboard("{Enter}");
+    expect(screen.getByText("Added “Fried rice”.", exact)).toBeInTheDocument();
+
+    screen.getByRole("button", { name: "Edit “Ramen”" }).focus();
+    await user.keyboard("{Enter}{Control>}a{/Control}");
+    await user.paste("Ramen\tbowl");
+    await user.keyboard("{Enter}");
+    expect(screen.getByText("Saved “Ramen bowl”.", exact)).toBeInTheDocument();
+    expect(storedItems()).toEqual(["Ramen bowl", "Fried rice"]);
+
+    screen.getByRole("button", { name: "List actions" }).focus();
+    await user.keyboard("{Enter}");
+    await user.click(await screen.findByRole("menuitem", { name: "Rename" }));
+    await user.keyboard("{Control>}a{/Control}");
+    await user.paste("Late\tlunch");
+    await user.keyboard("{Enter}");
+    expect(
+      screen.getByText("Renamed the list to “Late lunch”.", exact),
+    ).toBeInTheDocument();
+    expect(storedLists()[0]?.name).toBe("Late lunch");
   });
 
   it("cancels an edit with Escape without changing the item", async () => {
