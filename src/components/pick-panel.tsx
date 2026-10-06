@@ -1,3 +1,4 @@
+import { Dices } from "lucide-react";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -173,16 +174,14 @@ export function PickPanel({
         // Desktop shows where the result will appear before the first pick, so
         // Pick sits in the same place before and after. The phone bar stays
         // small until there is a result.
+        // Hidden from screen readers, who learn about the result when it is
+        // announced; the dashed edge marks a place to fill, not a result.
         <div
           aria-hidden="true"
-          className="mb-3 hidden h-40 flex-col justify-center rounded-xl bg-surface p-5 md:flex"
+          className="mb-3 hidden h-40 flex-col items-center justify-center gap-2 rounded-xl border border-dashed bg-surface p-6 text-center md:flex"
         >
-          <p className="text-sm font-semibold text-muted-foreground">
-            {t("pick.label")}
-          </p>
-          <p className="text-result-lg font-bold text-muted-foreground">
-            {t("pick.placeholder")}
-          </p>
+          <Dices className="size-7 text-subtle-foreground" />
+          <p className="text-sm text-muted-foreground">{t("pick.empty")}</p>
         </div>
       ) : (
         <div
@@ -230,11 +229,10 @@ export function PickPanel({
         >
           {result ? t("pick.again") : t("pick.pick")}
         </Button>
+        {/* Read with the button only: on screen, the disabled Pick, the item
+            count, and the focused add field already show what to do. */}
         {empty && (
-          <p
-            id={reasonId}
-            className="mt-2 text-center text-sm text-muted-foreground"
-          >
+          <p id={reasonId} className="sr-only">
             {t("pick.needItem")}
           </p>
         )}

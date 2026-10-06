@@ -37,6 +37,8 @@ export const ko: Resources = {
     add: "추가",
     added: "“{{text}}” 항목을 추가했습니다.",
     saved: "“{{text}}” 항목을 저장했습니다.",
+    savedWithWeight:
+      "“{{text}}” 항목을 저장했습니다. 비중: ×{{weight, number}}",
     removed: "“{{text}}” 항목을 삭제했습니다.",
     undo: "되돌리기",
     restored: "“{{text}}” 항목을 되돌렸습니다.",
@@ -55,6 +57,16 @@ export const ko: Resources = {
     remove: "“{{text}}” 삭제",
     save: "저장",
     cancel: "취소",
+    weight: "비중",
+    weightValue: "×{{weight, number}}",
+    decreaseWeight: "비중 줄이기",
+    increaseWeight: "비중 늘리기",
+    showChances: "확률 보기",
+    chance: "확률 {{percent, number}}%",
+    chanceUnderOne: "확률 <1%",
+    chanceUnderOneSpoken: "확률 1% 미만",
+    chanceOverNinetyNine: "확률 >99%",
+    chanceOverNinetyNineSpoken: "확률 99% 초과",
     limitReached:
       "항목이 최대 개수인 {{limit, number}}개입니다. 추가하려면 항목을 삭제하세요.",
     errors: {
@@ -67,7 +79,7 @@ export const ko: Resources = {
     pick: "뽑기",
     again: "다시 뽑기",
     label: "뽑힌 항목",
-    placeholder: "—",
+    empty: "뽑힌 항목이 여기에 표시됩니다",
     needItem: "뽑을 항목을 추가하세요.",
     announced: "뽑힌 항목: “{{text}}”",
   },
@@ -120,7 +132,7 @@ export const ko: Resources = {
     noAccounts:
       "Argmax 자체는 계정과 쿠키를 쓰지 않으며, 개인정보를 요청하거나 저장하지 않습니다.",
     localOnly:
-      "목록과 선택한 언어는 이 브라우저의 로컬 저장소에만 저장됩니다. 어디로도 전송되지 않으며, 브라우저 데이터를 지우면 함께 지워집니다. 탭이 열려 있는 동안에는 브라우저가 뒤로·앞으로 가기에 쓸 스크롤 위치도 보관하며, 탭을 닫으면 지워집니다.",
+      "목록, 선택한 언어, 확률 보기 설정은 이 브라우저의 로컬 저장소에만 저장됩니다. 어디로도 전송되지 않으며, 브라우저 데이터를 지우면 함께 지워집니다. 탭이 열려 있는 동안에는 브라우저가 뒤로·앞으로 가기에 쓸 스크롤 위치도 보관하며, 탭을 닫으면 지워집니다.",
     analyticsIntro:
       "사용 현황을 파악하기 위해 Argmax는 미국의 Umami Software, Inc.가 운영하는 Umami Cloud로 사용 데이터를 보냅니다. 화면을 열거나 목록을 만들거나 뽑기를 할 때마다 다음 내용을 HTTPS로 보냅니다.",
     analyticsScreen: "어떤 화면을 열었는지",
@@ -139,6 +151,6 @@ export const ko: Resources = {
       "호스팅 업체인 Cloudflare는 사이트를 제공하고 보호하기 위해 IP 주소 같은 기술적인 요청 정보를 처리합니다.",
     questions: "문의나 요청은 GitHub 이슈로 남겨 주세요.",
     privacyContact: "공개하기 어려운 개인정보 문의: {{email}}",
-    updated: "최종 수정일: 2026년 10월 4일",
+    updated: "최종 수정일: 2026년 10월 6일",
   },
 };

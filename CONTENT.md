@@ -27,6 +27,8 @@ Use these words and no synonyms. A new product noun or verb is added here before
 | Putting an item in a list | add | 추가하다, 추가 | |
 | Changing an item's text | edit | 수정하다, 수정 | |
 | Changing a list's name | rename | 이름 바꾸기 | |
+| How likely an item is to be picked, set per item | weight; values "×1", "×2" | 비중 | The field's accessible name is its visible label, "Weight" / "비중", and its value is read as "×N". Not "odds", which reads like betting; "비중" is checked in UAT against "가중치" |
+| An item's share of the list's total weight | chance; "Chance 25%" | 확률; "확률 25%" | Only for the percentage, never for the control. Below 1%: "Chance <1%" / "확률 <1%"; above 99% while other items can be picked: "Chance >99%" / "확률 >99%". Screen readers hear these as "Chance under 1%" / "확률 1% 미만" and "Chance over 99%" / "확률 99% 초과". Only a single item reads 100% |
 | Taking an item out of a list | remove | 삭제하다, 삭제 | English separates remove (item) from delete (list); Korean uses 삭제 for both |
 | Erasing a list or stored data | delete | 삭제하다, 삭제 | |
 | Where lists are kept | this browser | 이 브라우저 | "local storage" only on the privacy policy |
@@ -50,7 +52,8 @@ Product name: Argmax, always in Latin letters, in both languages.
 A short title that states the situation, then one sentence that names the next action. Do not repeat what a field or a disabled button already says.
 
 - Lists, no lists yet: "No lists yet" / "Create your first list, for example “Lunch”." (아직 목록이 없습니다 / 첫 목록을 만드세요. 예: “점심 메뉴”)
-- An empty list adds no message: the count reads "0 items" and Pick states its reason. On desktop the result box shows its label and a dash ("—"), the usual mark for no value yet, never "?", which reads as an unknown result.
+- An empty list adds no visible message: the count reads "0 items", and Pick's reason ("Add an item to pick from.") is read only by screen readers when Pick is focused.
+- Before the first pick, the desktop result box says where the result will appear: "Your pick appears here" / "뽑힌 항목이 여기에 표시됩니다". Never "?", which reads as an unknown result.
 
 ### Notes with details
 
@@ -92,10 +95,12 @@ Past tense, name the object, end with a period (except the label form below). In
 
 - "Added “Ramen”." / "“라멘” 항목을 추가했습니다."
 - "Picked “Ramen”." / "뽑힌 항목: “라멘”"
+- A change of several things is one announcement: "Saved “Ramen” with weight ×3." / "“라멘” 항목을 저장했습니다. 비중: ×3"
 
 ### Numbers, quotes, and punctuation
 
 - Numbers use the locale's grouping: "1,000".
+- Weights use the multiplication sign with no space: "×3". Chances are whole percentages with no space before the sign: "Chance 25%" / "확률 25%"; each is rounded on its own, so a list's chances may add up to 99% or 101%.
 - User text and example names are in curly double quotes: “Lunch”.
 - English uses the curly apostrophe (’) in contractions and possessives. Contractions are fine ("can’t", "doesn’t").
 - Sentences end with a period; titles, labels, and buttons do not.

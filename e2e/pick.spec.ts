@@ -298,6 +298,11 @@ test("on desktop, Tab reaches Pick right after the list's actions", async ({
   await expect(
     page.getByRole("button", { name: "Pick", exact: true }),
   ).toBeFocused();
+  // The chances switch belongs to the list, so it comes after Pick.
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("switch", { name: "Show chances" }),
+  ).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("textbox", { name: "New item" })).toBeFocused();
 });

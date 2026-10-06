@@ -33,6 +33,7 @@ export const en = {
     add: "Add",
     added: "Added “{{text}}”.",
     saved: "Saved “{{text}}”.",
+    savedWithWeight: "Saved “{{text}}” with weight ×{{weight, number}}.",
     removed: "Removed “{{text}}”.",
     undo: "Undo",
     restored: "Restored “{{text}}”.",
@@ -51,6 +52,16 @@ export const en = {
     remove: "Remove “{{text}}”",
     save: "Save",
     cancel: "Cancel",
+    weight: "Weight",
+    weightValue: "×{{weight, number}}",
+    decreaseWeight: "Decrease weight",
+    increaseWeight: "Increase weight",
+    showChances: "Show chances",
+    chance: "Chance {{percent, number}}%",
+    chanceUnderOne: "Chance <1%",
+    chanceUnderOneSpoken: "Chance under 1%",
+    chanceOverNinetyNine: "Chance >99%",
+    chanceOverNinetyNineSpoken: "Chance over 99%",
     limitReached:
       "This list has {{limit, number}} items, the maximum. Remove an item to add another.",
     errors: {
@@ -63,7 +74,7 @@ export const en = {
     pick: "Pick",
     again: "Pick again",
     label: "Picked",
-    placeholder: "—",
+    empty: "Your pick appears here",
     needItem: "Add an item to pick from.",
     announced: "Picked “{{text}}”.",
   },
@@ -112,7 +123,7 @@ export const en = {
     noAccounts:
       "Argmax itself has no accounts and no cookies, and it never asks for or stores personal data.",
     localOnly:
-      "Your lists and your language choice are saved only in this browser’s local storage. They aren’t sent anywhere, and clearing your browser data deletes them. While a tab is open, the browser also keeps your scroll positions for Back and Forward; closing the tab deletes them.",
+      "Your lists, your language choice, and whether chances are shown are saved only in this browser’s local storage. They aren’t sent anywhere, and clearing your browser data deletes them. While a tab is open, the browser also keeps your scroll positions for Back and Forward; closing the tab deletes them.",
     analyticsIntro:
       "To learn how it’s used, Argmax sends usage data to Umami Cloud, run by Umami Software, Inc. in the United States. Each time you open a screen, create a list, or make a pick, it sends the following over HTTPS:",
     analyticsScreen: "Which screen was opened",
@@ -131,7 +142,7 @@ export const en = {
       "The hosting provider, Cloudflare, processes technical request data such as IP addresses to deliver and protect the site.",
     questions: "Questions or requests: open an issue on GitHub.",
     privacyContact: "Privacy requests that shouldn’t be public: {{email}}",
-    updated: "Last updated: October 4, 2026",
+    updated: "Last updated: October 6, 2026",
   },
 };
 

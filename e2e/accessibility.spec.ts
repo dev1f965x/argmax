@@ -70,6 +70,52 @@ for (const locale of ["en-US", "ko-KR"]) {
       expect(results.violations).toEqual([]);
     });
 
+    for (const { name, viewport } of [
+      { name: "phone", viewport: { width: 360, height: 740 } },
+      { name: "desktop", viewport: { width: 1280, height: 800 } },
+    ]) {
+      test(`/lists/lunch with weights, chances, and a weight at its maximum on a ${name} has no detectable WCAG 2.2 AA violations`, async ({
+        page,
+      }) => {
+        await page.setViewportSize(viewport);
+        await openWithStorage(
+          page,
+          storedState([
+            {
+              id: "lunch",
+              name: "Lunch",
+              items: ["Ramen", "Sushi", "Pho"],
+              weights: [2, 1, 1],
+            },
+          ]),
+          "/lists/lunch",
+        );
+        // The switch thumb slides; contrast is measured once it has settled.
+        const analyze = async () => {
+          await page.waitForFunction(
+            () => document.getAnimations().length === 0,
+          );
+          return new AxeBuilder({ page })
+            .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+            .analyze();
+        };
+
+        await page.getByRole("switch").click();
+        await expect(page.getByRole("switch")).toBeChecked();
+        expect((await analyze()).violations).toEqual([]);
+
+        const row = page.getByRole("listitem").first();
+        await row.getByRole("button").first().click();
+        await page.getByRole("spinbutton").press("ArrowUp");
+        await page.getByRole("spinbutton").press("ArrowUp");
+        await expect(page.getByRole("spinbutton")).toHaveAttribute(
+          "aria-valuenow",
+          "3",
+        );
+        expect((await analyze()).violations).toEqual([]);
+      });
+    }
+
     test("/lists/lunch with the menu and the delete dialog open has no detectable WCAG 2.2 AA violations", async ({
       page,
     }) => {
