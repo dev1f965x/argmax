@@ -116,6 +116,30 @@ describe("PickPanel", () => {
     expect(pickButton()).toHaveFocus();
   });
 
+  it("picks by weight", async () => {
+    reduceMotion(true);
+    // Shown newest first, the weights of [C, B, A] are [3, 1, 1]: positions
+    // 0-2 pick C, 3 picks B, and 4 picks A. Without weights, 2 and 4 would
+    // pick A and B.
+    randomValues(2, 4);
+    renderApp({
+      path: "/lists/lunch",
+      stored: storedState([
+        {
+          id: "lunch",
+          name: "Lunch",
+          items: ["A", "B", "C"],
+          weights: [1, 1, 3],
+        },
+      ]),
+    });
+
+    await userEvent.click(pickButton());
+    expect(result()).toHaveTextContent("C");
+    await userEvent.click(pickButton());
+    expect(result()).toHaveTextContent("A");
+  });
+
   it("cycles names for about 600 ms before settling, and announces only the result", async () => {
     reduceMotion(false);
     vi.useFakeTimers();

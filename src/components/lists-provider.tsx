@@ -21,7 +21,7 @@ import {
 
 /**
  * Why a change was not applied, besides the operation's own errors:
- * "read-only" while invalid stored data is kept, "invalid-state" when the
+ * "read-only" while invalid or newer stored data is kept, "invalid-state" when the
  * result failed validation and was not saved.
  */
 export type ChangeError = "read-only" | "invalid-state";
@@ -31,6 +31,8 @@ export type StorageIssue =
   | { kind: "unavailable" }
   | { kind: "full" }
   | { kind: "invalid"; raw: string }
+  /** Saved by a later version of Argmax; reloading loads that version. */
+  | { kind: "newer"; raw: string }
   | null;
 
 interface ListsContextValue {
@@ -38,7 +40,7 @@ interface ListsContextValue {
   issue: StorageIssue;
   /** True while the issue is the one found on start, which needs no interrupting announcement. */
   issueFoundAtLoad: boolean;
-  /** False while invalid stored data is kept, so nothing can overwrite it. */
+  /** False while invalid or newer stored data is kept, so nothing can overwrite it. */
   editable: boolean;
   /** Applies an operation from `@/lib/lists` and saves the result. */
   change: <E>(
@@ -49,6 +51,12 @@ interface ListsContextValue {
 }
 
 const ListsContext = createContext<ListsContextValue | null>(null);
+
+function logNewer() {
+  console.error(
+    "Stored lists were saved by a newer version and were left untouched.",
+  );
+}
 
 function logInvalid(cause: unknown) {
   console.error(
@@ -68,6 +76,9 @@ function initialize(repository: Repository): {
     case "invalid":
       logInvalid(loaded.cause);
       return { state: emptyState, issue: { kind: "invalid", raw: loaded.raw } };
+    case "newer":
+      logNewer();
+      return { state: emptyState, issue: { kind: "newer", raw: loaded.raw } };
     case "unavailable":
       console.error(
         "Stored lists could not be read:",
@@ -125,7 +136,7 @@ export function ListsProvider({
   // not kept this way: memory never saw the stored lists, so saving it could
   // replace them. Those changes are dropped when the store can be read again.
   const unsaved = useRef(false);
-  const editable = issue?.kind !== "invalid";
+  const editable = issue?.kind !== "invalid" && issue?.kind !== "newer";
 
   // A problem present on start needs no interrupting announcement, and neither
   // does a failed save repeating it (compared by kind). Once it clears, a later
@@ -145,7 +156,9 @@ export function ListsProvider({
         stateRef.current = loaded.state;
         setState(loaded.state);
         setIssue((current) =>
-          current?.kind === "invalid" || current?.kind === "unavailable"
+          current?.kind === "invalid" ||
+          current?.kind === "newer" ||
+          current?.kind === "unavailable"
             ? null
             : current,
         );
@@ -156,6 +169,13 @@ export function ListsProvider({
         unsaved.current = false;
         setState(emptyState);
         setIssue({ kind: "invalid", raw: loaded.raw });
+        return null;
+      case "newer":
+        logNewer();
+        stateRef.current = emptyState;
+        unsaved.current = false;
+        setState(emptyState);
+        setIssue({ kind: "newer", raw: loaded.raw });
         return null;
       case "unavailable":
         // Saving reports the problem; until then the lists in memory stay.

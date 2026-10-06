@@ -5,12 +5,14 @@ import {
   type List,
   limits,
   type StoredState,
+  weightRange,
   withinTextLimit,
 } from "./storage";
 
 export type TextError = "empty" | "too-long";
 export type ListError = TextError | "list-limit" | "not-found";
 export type ItemError = TextError | "item-limit" | "not-found";
+export type WeightError = "invalid-weight" | "not-found";
 
 export type Result<E> =
   | { ok: true; state: StoredState }
@@ -106,8 +108,9 @@ export function addItem(
   if (list.items.length >= limits.itemsPerList)
     return { ok: false, error: "item-limit" };
 
-  // Duplicate items are allowed without a warning (FR5).
-  const item: Item = { id: context.newId(), text: text.value };
+  // Duplicate items are allowed without a warning (FR5); new items start at
+  // weight 1 (FR13).
+  const item: Item = { id: context.newId(), text: text.value, weight: 1 };
   return replaceList(state, { ...list, items: [...list.items, item] }, context);
 }
 
@@ -129,6 +132,38 @@ export function editItem(
   return replaceList(state, { ...list, items }, context);
 }
 
+/**
+ * Sets an item's weight (FR12, FR13): a whole number from 1 to the list's item
+ * count. Removing items can leave a stored weight above the count, which
+ * storage keeps (up to 1,000); such a weight may only be lowered.
+ */
+export function setItemWeight(
+  state: StoredState,
+  listId: string,
+  itemId: string,
+  weight: number,
+  context: Context,
+): Result<WeightError> {
+  if (
+    !Number.isInteger(weight) ||
+    weight < weightRange.min ||
+    weight > weightRange.max
+  )
+    return { ok: false, error: "invalid-weight" };
+  const list = findList(state, listId);
+  const item = list?.items.find((candidate) => candidate.id === itemId);
+  if (!list || !item) return { ok: false, error: "not-found" };
+  // An unchanged weight is not an edit, so updatedAt stays as it was. This
+  // comes first: saving an item with an untouched stale weight must not fail.
+  if (item.weight === weight) return { ok: true, state };
+  if (weight > list.items.length && weight > item.weight)
+    return { ok: false, error: "invalid-weight" };
+  const items = list.items.map((candidate) =>
+    candidate.id === itemId ? { ...candidate, weight } : candidate,
+  );
+  return replaceList(state, { ...list, items }, context);
+}
+
 export function removeItem(
   state: StoredState,
   listId: string,
@@ -145,7 +180,7 @@ export function removeItem(
   );
 }
 
-/** Puts a removed item back where it was, for Undo. */
+/** Puts a removed item back where it was, with its weight, for Undo. */
 export function restoreItem(
   state: StoredState,
   listId: string,

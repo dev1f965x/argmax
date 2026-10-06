@@ -82,6 +82,28 @@ describe("ListPage", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("restores a removed item's weight with Undo", async () => {
+    const { user, data } = renderApp({
+      path: "/lists/lunch",
+      stored: storedState([
+        { id: "lunch", name: "Lunch", items: ["A", "B"], weights: [3, 2] },
+      ]),
+    });
+    const weights = () =>
+      JSON.parse(data.get(storageKey) ?? "").lists[0].items.map(
+        (item: { text: string; weight: number }) => [item.text, item.weight],
+      );
+
+    await user.click(screen.getByRole("button", { name: "Remove “A”" }));
+    expect(weights()).toEqual([["B", 2]]);
+    await user.click(screen.getByRole("button", { name: "Undo" }));
+
+    expect(weights()).toEqual([
+      ["A", 3],
+      ["B", 2],
+    ]);
+  });
+
   it("shows the list name and item count, and no list while it is empty", () => {
     renderList([]);
 

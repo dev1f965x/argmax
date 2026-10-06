@@ -85,6 +85,10 @@ export const ko: Resources = {
     invalidTitle: "저장된 목록을 읽을 수 없습니다",
     invalidBody:
       "저장된 데이터가 손상되었거나 알 수 없는 버전입니다. 데이터는 그대로 두고 편집을 껐습니다.",
+    newerTitle: "이 탭에서는 목록을 편집할 수 없습니다",
+    newerBody:
+      "더 최신 버전의 Argmax에서 저장한 목록이며 그대로 있습니다. 페이지를 새로 고치세요.",
+    reload: "새로 고침",
     copy: "데이터 복사",
     copied: "저장된 데이터를 복사했습니다.",
     copyFailed:

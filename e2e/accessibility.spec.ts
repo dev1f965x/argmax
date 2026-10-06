@@ -33,6 +33,10 @@ const storedStates = [
     ]),
   },
   { name: "invalid data", value: "{not json" },
+  {
+    name: "data from a newer version",
+    value: JSON.stringify({ schemaVersion: 3, lists: [] }),
+  },
 ];
 
 for (const locale of ["en-US", "ko-KR"]) {

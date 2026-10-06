@@ -55,11 +55,13 @@ export function StorageBanner() {
     unavailable: t("storage.unavailableTitle"),
     full: t("storage.fullTitle"),
     invalid: t("storage.invalidTitle"),
+    newer: t("storage.newerTitle"),
   };
   const bodies: Record<IssueKind, string> = {
     unavailable: t("storage.unavailableBody"),
     full: t("storage.fullBody"),
     invalid: t("storage.invalidBody"),
+    newer: t("storage.newerBody"),
   };
   const title = titles[issue.kind];
   const body = bodies[issue.kind];
@@ -85,9 +87,13 @@ export function StorageBanner() {
           <p className="font-semibold">{title}</p>
           <p className="mt-0.5 text-sm text-muted-foreground">{body}</p>
         </div>
-        {issue.kind === "invalid" && (
-          <InvalidDataActions
+        {(issue.kind === "invalid" || issue.kind === "newer") && (
+          <StoredDataActions
+            // Another tab can replace the data; a message or open dialog about
+            // the old data must not carry over to the new one.
+            key={`${issue.kind}:${issue.raw}`}
             raw={issue.raw}
+            newer={issue.kind === "newer"}
             onDiscarded={() => setDiscarded(true)}
           />
         )}
@@ -96,11 +102,18 @@ export function StorageBanner() {
   );
 }
 
-function InvalidDataActions({
+/**
+ * Recovery for stored data this version cannot use. Data from a newer version
+ * is valid there, so it gets Reload and no Delete data; Copy data stays for
+ * both, so the data can be kept even after a rollback to this version.
+ */
+function StoredDataActions({
   raw,
+  newer,
   onDiscarded,
 }: {
   raw: string;
+  newer: boolean;
   onDiscarded: () => void;
 }) {
   const { t } = useTranslation();
@@ -121,35 +134,42 @@ function InvalidDataActions({
   return (
     <>
       <div className="mt-3 flex flex-wrap gap-2">
+        {newer && (
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            {t("storage.reload")}
+          </Button>
+        )}
         <Button variant="outline" onClick={() => void copy()}>
           {t("storage.copy")}
         </Button>
-        <AlertDialog open={confirming} onOpenChange={setConfirming}>
-          <AlertDialogTrigger render={<Button variant="outline" />}>
-            {t("storage.discard")}
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{t("storage.discardTitle")}</AlertDialogTitle>
-              <AlertDialogDescription>
-                {t("storage.discardBody")}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>{t("storage.cancel")}</AlertDialogCancel>
-              <AlertDialogAction
-                variant="destructive"
-                onClick={() => {
-                  setConfirming(false);
-                  if (discardInvalidData()) onDiscarded();
-                  else setMessage(t("storage.discardFailed"));
-                }}
-              >
-                {t("storage.discardConfirm")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {!newer && (
+          <AlertDialog open={confirming} onOpenChange={setConfirming}>
+            <AlertDialogTrigger render={<Button variant="outline" />}>
+              {t("storage.discard")}
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t("storage.discardTitle")}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t("storage.discardBody")}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{t("storage.cancel")}</AlertDialogCancel>
+                <AlertDialogAction
+                  variant="destructive"
+                  onClick={() => {
+                    setConfirming(false);
+                    if (discardInvalidData()) onDiscarded();
+                    else setMessage(t("storage.discardFailed"));
+                  }}
+                >
+                  {t("storage.discardConfirm")}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
       {/* Announces the outcome of Copy or Delete without moving focus. */}
       <p aria-live="polite" className="mt-2 text-sm empty:hidden">
