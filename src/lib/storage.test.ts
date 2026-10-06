@@ -5,6 +5,7 @@ import {
   createRepository,
   emptyState,
   limits,
+  repairState,
   type StoredState,
   storageKey,
 } from "./storage";
@@ -298,6 +299,14 @@ describe("stored text", () => {
     const { storage } = memoryStorage({ [storageKey]: stored(withItem(text)) });
     return createRepository(() => storage).load().status;
   };
+  // Loading repairs text 0.1.0 could have saved, so the schema's own rules
+  // are checked through save(), which validates without repairing.
+  const saves = (text: string) => {
+    const { storage } = memoryStorage();
+    const repository = createRepository(() => storage);
+    repository.load();
+    return repository.save(withItem(text)).ok;
+  };
 
   // One base letter with combining marks is one grapheme however many follow;
   // "x" has no precomposed form, so NFC leaves the marks as they are.
@@ -325,8 +334,8 @@ describe("stored text", () => {
       `the bidi control U+${code.toString(16).toUpperCase().padStart(4, "0")}`,
       `a${String.fromCharCode(code)}b`,
     ]),
-  ])("rejects %s on load", (_, text) => {
-    expect(loads(text)).toBe("invalid");
+  ])("rejects %s in stored text", (_, text) => {
+    expect(saves(text)).toBe(false);
   });
 
   it.each([
@@ -334,8 +343,8 @@ describe("stored text", () => {
     ["a word joiner and a byte order mark", "\u2060\uFEFF"],
     ["a zero-width joiner", "\u200D"],
     ["the Hangul filler", "\u3164"],
-  ])("rejects text made only of %s", (_, text) => {
-    expect(loads(text)).toBe("invalid");
+  ])("rejects stored text made only of %s", (_, text) => {
+    expect(saves(text)).toBe(false);
   });
 
   it("accepts 100 of the longest standard emoji sequences", () => {
@@ -371,5 +380,91 @@ describe("stored text", () => {
     }
     // The refusal does not lock the store: a valid state still saves.
     expect(repository.save(emptyState)).toEqual({ ok: true });
+  });
+});
+
+describe("repairing text saved by 0.1.0", () => {
+  // 0.1.0 only trimmed and normalized, so any of these could be stored.
+  const legacy = {
+    ...validState,
+    lists: [
+      {
+        ...list,
+        name: "Lunch\u202E",
+        items: [
+          { id: "item-1", text: "Fried\trice" },
+          { id: "item-2", text: "\u200B" },
+          { id: "item-3", text: "Ramen\u2066" },
+          { id: "item-4", text: "Gyoza\uD800" },
+        ],
+      },
+    ],
+  };
+  const repaired: StoredState = {
+    ...validState,
+    lists: [
+      {
+        ...list,
+        name: "Lunch",
+        items: [
+          { id: "item-1", text: "Fried rice" },
+          { id: "item-3", text: "Ramen" },
+          { id: "item-4", text: "Gyoza" },
+        ],
+      },
+    ],
+  };
+
+  it("cleans text and drops items left blank", () => {
+    expect(repairState(legacy)).toEqual(repaired);
+  });
+
+  it("returns valid data and data of an unknown shape as they are", () => {
+    expect(repairState(validState)).toBe(validState);
+    const unknown = { schemaVersion: 1, lists: "none" };
+    expect(repairState(unknown)).toBe(unknown);
+  });
+
+  it("loads repaired data without writing it, and the next save writes it", () => {
+    const raw = stored(legacy);
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+    const repository = createRepository(() => storage);
+
+    expect(repository.load()).toEqual({ status: "ok", state: repaired });
+    expect(data.get(storageKey)).toBe(raw);
+    // The unchanged raw value is served from the cache, still repaired.
+    expect(repository.load()).toEqual({ status: "ok", state: repaired });
+
+    expect(repository.save(repaired)).toEqual({ ok: true });
+    expect(JSON.parse(data.get(storageKey) ?? "")).toEqual(repaired);
+  });
+
+  it("does not rewrite valid data on load", () => {
+    const raw = stored(validState);
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+    expect(createRepository(() => storage).load()).toEqual({
+      status: "ok",
+      state: validState,
+    });
+    expect(data.get(storageKey)).toBe(raw);
+  });
+
+  it.each([
+    ["a list name left blank", { ...list, name: "\u200B\u202E" }],
+    [
+      "an item still too long",
+      { ...list, items: [{ id: "i", text: `${"x".repeat(101)}\t` }] },
+    ],
+  ])("keeps data with %s read-only and unchanged", (_, broken) => {
+    const raw = stored({ ...validState, lists: [broken] });
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+    const repository = createRepository(() => storage);
+
+    expect(repository.load()).toMatchObject({ status: "invalid", raw });
+    expect(repository.save(emptyState)).toEqual({
+      ok: false,
+      reason: "read-only",
+    });
+    expect(data.get(storageKey)).toBe(raw);
   });
 });

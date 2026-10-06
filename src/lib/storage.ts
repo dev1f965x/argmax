@@ -47,9 +47,21 @@ export function withinTextLimit(text: string): boolean {
 const disallowedCharacters =
   /[\p{Cc}\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069\uD800-\uDFFF]/gu;
 
-/** Removes the characters stored text may not contain. */
-export function removeDisallowedCharacters(text: string): string {
-  return text.replace(disallowedCharacters, "");
+// Line breaks and tabs separate words, so they become spaces rather than
+// being removed with the other control characters.
+const controlWhitespace = /[\t\n\v\f\r\u0085]/g;
+
+/**
+ * Turns line breaks and tabs into spaces, removes the other characters stored
+ * text may not contain, normalizes to NFC, and trims. Entered text and text
+ * saved by 0.1.0, which allowed those characters, both pass through here.
+ */
+export function cleanText(input: string): string {
+  return input
+    .replace(controlWhitespace, " ")
+    .replace(disallowedCharacters, "")
+    .normalize("NFC")
+    .trim();
 }
 
 // search() ignores the g flag's lastIndex, unlike test().
@@ -67,11 +79,13 @@ export function isBlank(text: string): boolean {
   return invisibleOnly.test(text);
 }
 
+const isNormalized = (value: string) => value === value.trim().normalize("NFC");
+
 /** Stored text is saved trimmed and NFC-normalized, so the same rule validates it on load. */
 const text = z
   .string()
   .refine(hasOnlyAllowedCharacters, "disallowed characters")
-  .refine((value) => value === value.trim().normalize("NFC"), "not normalized")
+  .refine(isNormalized, "not normalized")
   .refine((value) => !isBlank(value), "empty")
   .refine(withinTextLimit, "too long");
 
@@ -101,6 +115,53 @@ const storedStateSchema = z.object({
 
 function hasUniqueIds(entries: { id: string }[]): boolean {
   return new Set(entries.map((entry) => entry.id)).size === entries.length;
+}
+
+/**
+ * The stored shape with only the fields that hold text checked, so text can be
+ * repaired before the strict schema sees it. Other fields pass through as is.
+ */
+const repairableSchema = z.looseObject({
+  lists: z.array(
+    z.looseObject({
+      name: z.string(),
+      items: z.array(z.looseObject({ text: z.string() })),
+    }),
+  ),
+});
+
+/**
+ * Cleans text 0.1.0 could have saved: it trimmed and normalized text and
+ * checked nothing else. Anything else is left for the schema to reject.
+ */
+const repairText = (value: string) =>
+  isNormalized(value) ? cleanText(value) : value;
+
+/**
+ * Cleans every list name and item text the way entered text is cleaned and
+ * drops items left blank, so data saved under 0.1.0's looser text rules still
+ * loads. Text 0.1.0 would not have saved (untrimmed or not NFC) is not data
+ * it wrote, so it is left unchanged and the data stays read-only. A list whose name is left blank is not dropped and gets no invented
+ * name, so the strict schema rejects the data and it stays read-only, as
+ * before. Returns the input itself when its shape is unknown or nothing changes.
+ */
+export function repairState(parsed: unknown): unknown {
+  const shape = repairableSchema.safeParse(parsed);
+  if (!shape.success) return parsed;
+  let changed = false;
+  const lists = shape.data.lists.map((list) => {
+    const name = repairText(list.name);
+    const items = list.items.flatMap((item) => {
+      const text = repairText(item.text);
+      if (text !== item.text) changed = true;
+      if (isBlank(text)) return [];
+      return [{ ...item, text }];
+    });
+    if (name !== list.name || items.length !== list.items.length)
+      changed = true;
+    return { ...list, name, items };
+  });
+  return changed ? { ...shape.data, lists } : parsed;
 }
 
 export type Item = z.infer<typeof itemSchema>;
@@ -159,7 +220,8 @@ export function createRepository(getStorage: () => Storage) {
       mode = "read-only";
       return { status: "invalid", raw, cause };
     }
-    const result = storedStateSchema.safeParse(parsed);
+    // A repaired state is not written here; the next change saves it.
+    const result = storedStateSchema.safeParse(repairState(parsed));
     if (!result.success) {
       mode = "read-only";
       return { status: "invalid", raw, cause: result.error };

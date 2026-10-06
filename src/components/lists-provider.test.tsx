@@ -244,3 +244,25 @@ describe("ListsProvider validation", () => {
     error.mockRestore();
   });
 });
+
+describe("ListsProvider with text saved by 0.1.0", () => {
+  it("shows repaired lists, writes nothing until a change, then saves them cleaned", () => {
+    const raw = storedState([
+      { id: "lunch", name: "Lunch\u202E", items: ["Fried\trice", "\u200B"] },
+    ]);
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+    const tab = renderTab(storage, "A");
+
+    expect(tab.names()).toEqual(["Lunch"]);
+    expect(tab.value().editable).toBe(true);
+    expect(data.get(storageKey)).toBe(raw);
+
+    tab.create("Dinner");
+    const saved = JSON.parse(data.get(storageKey) ?? "");
+    expect(saved.lists[0].name).toBe("Lunch");
+    expect(saved.lists[0].items).toEqual([
+      { id: "item-0", text: "Fried rice" },
+    ]);
+    expect(storedNames(data)).toEqual(["Lunch", "Dinner"]);
+  });
+});

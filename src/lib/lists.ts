@@ -1,9 +1,9 @@
 import {
+  cleanText,
   type Item,
   isBlank,
   type List,
   limits,
-  removeDisallowedCharacters,
   type StoredState,
   withinTextLimit,
 } from "./storage";
@@ -27,10 +27,6 @@ export const browserContext: Context = {
   now: () => new Date(),
 };
 
-// Line breaks and tabs in pasted text separate words, so they become spaces
-// rather than being removed with the other control characters.
-const controlWhitespace = /[\t\n\v\f\r\u0085]/g;
-
 /**
  * Turns line breaks and tabs into spaces and removes other control characters,
  * bidirectional controls, and lone surrogates, which pasted text can carry
@@ -41,11 +37,7 @@ const controlWhitespace = /[\t\n\v\f\r\u0085]/g;
 export function validateText(
   input: string,
 ): { ok: true; value: string } | { ok: false; error: TextError } {
-  const value = removeDisallowedCharacters(
-    input.replace(controlWhitespace, " "),
-  )
-    .normalize("NFC")
-    .trim();
+  const value = cleanText(input);
   if (isBlank(value)) return { ok: false, error: "empty" };
   if (!withinTextLimit(value)) return { ok: false, error: "too-long" };
   return { ok: true, value };
