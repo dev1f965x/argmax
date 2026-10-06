@@ -157,6 +157,41 @@ test.describe("on the production address", () => {
   });
 });
 
+test.describe("on the production address, double-clicking Add", () => {
+  test.use({ baseURL: production });
+
+  test("saves the list once and reports it once", async ({ page }) => {
+    await serveProductionLocally(page);
+    const reports = await captureReports(page);
+    await page.goto(`/shared#${sharedFragment("Lunch", [["Ramen", 1]])}`);
+
+    await page.getByRole("button", { name: "Add this list" }).dblclick();
+    await expect(page).toHaveURL(/\/lists\/[0-9a-f-]{36}$/);
+    await expect(page.getByText("Added “Lunch”.").first()).toBeVisible();
+
+    const lists = await page.evaluate(
+      (key) =>
+        (JSON.parse(localStorage.getItem(key) ?? "{}") as { lists: unknown[] })
+          .lists,
+      storageKey,
+    );
+    expect(lists).toHaveLength(1);
+    await expect
+      .poll(
+        () =>
+          reports.filter(
+            ({ payload }) => payload.name === "list_added_from_link",
+          ).length,
+      )
+      .toBe(1);
+    // No second report follows once the page has settled.
+    await page.waitForLoadState("networkidle");
+    expect(
+      reports.filter(({ payload }) => payload.name === "list_added_from_link"),
+    ).toHaveLength(1);
+  });
+});
+
 test("link text renders as text: no markup, scripts, links, or CSP violations", async ({
   page,
 }) => {

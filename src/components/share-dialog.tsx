@@ -66,7 +66,7 @@ export function ShareDialog({
         if (!next) onClose();
       }}
     >
-      <DialogContent showCloseButton={false} finalFocus={finalFocus}>
+      <DialogContent finalFocus={finalFocus}>
         {share && (
           <ShareDialogBody
             key={share.session}

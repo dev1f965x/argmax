@@ -118,6 +118,7 @@ function SharedListView({ list, link }: { list: SharedList; link: string }) {
   const bar = useRef<HTMLDivElement>(null);
   useBottomBarHeight(bar);
   const reasonId = useId();
+  const adding = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [copy, setCopy] = useState<"copied" | "failed" | null>(null);
   const setBottomBar = useOutletContext<(shown: boolean) => void>();
@@ -141,7 +142,10 @@ function SharedListView({ list, link }: { list: SharedList; link: string }) {
     : null;
 
   function add() {
-    if (unavailable) return;
+    // Set before saving, so a second click before navigation (a double
+    // click) cannot save the list twice.
+    if (unavailable || adding.current) return;
+    adding.current = true;
     const result = change((current, context) =>
       addSharedList(current, list, context),
     );
@@ -149,6 +153,7 @@ function SharedListView({ list, link }: { list: SharedList; link: string }) {
       // At the limit (another tab added a list meanwhile) the reason under
       // the button already says so.
       setError(result.error === "list-limit" ? null : t("common.saveFailed"));
+      adding.current = false;
       return;
     }
     tracker.listAddedFromLink();

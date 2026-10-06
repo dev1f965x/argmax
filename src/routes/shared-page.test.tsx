@@ -157,6 +157,22 @@ describe("SharedPage", () => {
     expect(router.state.location.hash).toBe("");
   });
 
+  it("saves a double-clicked Add once and reports it once", async () => {
+    const listAdded = vi.spyOn(tracker, "listAddedFromLink");
+    const { data } = await openLink(lunch);
+    const button = await addButton();
+
+    // Both clicks land before React re-renders or navigates, as a fast
+    // double click can.
+    act(() => {
+      button.click();
+      button.click();
+    });
+
+    expect(JSON.parse(data.get(storageKey) ?? "").lists).toHaveLength(1);
+    expect(listAdded).toHaveBeenCalledOnce();
+  });
+
   it("adds a list with no items", async () => {
     const { user, data } = await openLink({ name: "Empty", items: [] });
     expect(await screen.findByText("0 items")).toBeInTheDocument();

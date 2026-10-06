@@ -165,7 +165,7 @@ export const en = {
     analyticsReferrer: "The site that linked here, without the page address",
     analyticsNever: "List names and items are never sent.",
     shareLinks:
-      "When you share a list, the link is created on your device and contains the list name and items. It goes only where you send it: browsers don’t send the part of a link after “#” to websites, so it never reaches Argmax or Umami. Anyone with the link can see the list, and Argmax can’t remove a list from a link that someone else has.",
+      "When you share a list, the link is created on your device and contains the list itself: its name and items. The link stays wherever it is kept, such as chats and browser history, including history synced to other devices, and anyone with the link can see the list. Browsers don’t send the part of a link after “#” to websites, so the list never reaches Argmax or Umami. Argmax can’t remove a list from a link that someone else has.",
     analyticsUmami:
       "Like any website request, it reaches Umami with your IP address and browser user agent. According to Umami’s open-source data model, Umami doesn’t store the IP address. It records an approximate location from it (country, region, and city) and the browser, operating system, and device type from the user agent. Umami keeps this data for 6 months.",
     analyticsOptOut:

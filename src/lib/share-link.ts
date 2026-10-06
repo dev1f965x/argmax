@@ -164,12 +164,18 @@ export async function decodeSharedList(
 
   let json: string;
   try {
-    json = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    // ignoreBOM keeps a byte order mark in the text, so JSON.parse rejects
+    // it: Argmax never writes one.
+    json = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
+      bytes,
+    );
   } catch (cause) {
     return { status: "invalid", reason: "encoding", cause };
   }
   let parsed: unknown;
   try {
+    // A key given twice keeps its last value (JSON.parse); the schema then
+    // checks that value like any other.
     parsed = JSON.parse(json);
   } catch (cause) {
     return { status: "invalid", reason: "json", cause };

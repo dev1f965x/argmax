@@ -322,6 +322,16 @@ describe("decodeSharedList content", () => {
     expect(parse).not.toHaveBeenCalled();
   });
 
+  it("rejects a byte order mark, which Argmax never writes", async () => {
+    const bytes = new Uint8Array([
+      0xef,
+      0xbb,
+      0xbf,
+      ...encoder.encode('{"n":"Lunch","i":[]}'),
+    ]);
+    expectInvalid(await decodeSharedList(await fragmentOf(bytes)), "json");
+  });
+
   it("rejects text that is not JSON", async () => {
     expectInvalid(
       await decodeSharedList(await fragmentOf('{"n":"Lunch",')),
