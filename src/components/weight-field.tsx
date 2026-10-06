@@ -1,5 +1,6 @@
 import { NumberField } from "@base-ui/react/number-field";
 import { Minus, Plus } from "lucide-react";
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { weightRange } from "@/lib/storage";
 
@@ -22,19 +23,20 @@ export function WeightField({
   onValueChange: (value: number | null) => void;
 }) {
   const { t } = useTranslation();
+  const inputId = useId();
   // With one item there is nothing to choose, but the field stays in place
   // so every edit row has the same shape.
   const fixed = max <= weightRange.min;
 
   return (
-    <fieldset className="flex items-center gap-2.5">
-      {/* A legend does not sit in a row, so a hidden one names the group
-          and the visible label is a plain span. */}
-      <legend className="sr-only">{t("list.weight")}</legend>
-      <span aria-hidden="true" className="text-sm text-muted-foreground">
+    <div className="flex items-center gap-2.5">
+      {/* The visible label names the field itself (WCAG 2.5.3); the − and +
+          buttons carry their own names. */}
+      <label htmlFor={inputId} className="text-sm text-muted-foreground">
         {t("list.weight")}
-      </span>
+      </label>
       <NumberField.Root
+        id={inputId}
         value={value}
         min={weightRange.min}
         max={max}
@@ -58,7 +60,6 @@ export function WeightField({
               // Base UI leaves the input a plain text box; as a spinbutton it
               // tells screen readers the value, its range, and the arrow keys.
               role="spinbutton"
-              aria-label={t("list.weightName")}
               aria-valuenow={value ?? undefined}
               aria-valuemin={weightRange.min}
               aria-valuemax={max}
@@ -84,6 +85,6 @@ export function WeightField({
           </NumberField.Increment>
         </NumberField.Group>
       </NumberField.Root>
-    </fieldset>
+    </div>
   );
 }

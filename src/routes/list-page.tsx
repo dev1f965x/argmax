@@ -1,5 +1,5 @@
 import { Ellipsis, Pencil, Trash2 } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { useAnnouncer } from "@/components/announcer";
@@ -164,6 +164,7 @@ export function ListPage() {
   const { announce, region } = useAnnouncer();
   const [showChances, setShowChances] = useShowChances();
   const chancesSwitchId = useId();
+  const itemCountId = useId();
   const editButtons = useRef(new Map<string, HTMLButtonElement>());
   const editButtonRefs = useRef(
     new Map<string, (element: HTMLButtonElement | null) => void>(),
@@ -343,12 +344,26 @@ export function ListPage() {
     setFocusTarget({ itemId: item.id });
   }
 
-  function chanceText(chance: Chance): string {
+  // "<" and ">" are read inconsistently by screen readers, so those chances
+  // are also spelled out for them, the way the badge adds its label.
+  function chanceText(chance: Chance): ReactNode {
     switch (chance.kind) {
       case "below-one":
-        return t("list.chanceUnderOne");
+        return (
+          <>
+            <span aria-hidden="true">{t("list.chanceUnderOne")}</span>
+            <span className="sr-only">{t("list.chanceUnderOneSpoken")}</span>
+          </>
+        );
       case "above-ninety-nine":
-        return t("list.chanceOverNinetyNine");
+        return (
+          <>
+            <span aria-hidden="true">{t("list.chanceOverNinetyNine")}</span>
+            <span className="sr-only">
+              {t("list.chanceOverNinetyNineSpoken")}
+            </span>
+          </>
+        );
       case "percent":
         return t("list.chance", { percent: chance.value });
     }
@@ -405,6 +420,9 @@ export function ListPage() {
             <div className="flex items-start justify-between gap-2">
               <PageHeading
                 title={list.name}
+                // The count follows the pick panel in the DOM, so the heading
+                // points to it to keep it read right after the name.
+                describedBy={itemCountId}
                 className="overflow-clip pt-1 text-title font-bold wrap-anywhere"
               />
               <DropdownMenu
@@ -484,12 +502,17 @@ export function ListPage() {
           {/* After the pick panel in the DOM, so Tab still reaches Pick right
               after the list's actions; shown under the title. */}
           {!renaming && (
-            <div className="flex flex-wrap items-center justify-between gap-x-3 text-sm text-muted-foreground">
-              <p>{t("list.itemCount", { count: itemCount })}</p>
+            <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-3 text-sm text-muted-foreground">
+              <p id={itemCountId}>
+                {t("list.itemCount", { count: itemCount })}
+              </p>
               {/* The whole label is the 44 px target, not only the small track. */}
               <label
                 htmlFor={chancesSwitchId}
-                className="flex min-h-11 cursor-pointer items-center gap-2"
+                // Negative margins (balanced on the row) keep the row as
+                // compact as in the wireframes while the label stays a 44 px
+                // target.
+                className="-my-1.5 flex min-h-11 cursor-pointer items-center gap-2"
               >
                 {t("list.showChances")}
                 <Switch
@@ -570,7 +593,7 @@ export function ListPage() {
                           )}
                         </div>
                         {item.weight !== 1 && (
-                          <span className="mr-1 shrink-0 rounded-sm bg-brand-soft px-1.5 text-sm font-semibold text-brand-strong tabular-nums">
+                          <span className="mr-1 shrink-0 rounded-sm bg-brand-soft px-1.5 py-0.5 text-sm font-semibold text-brand-strong tabular-nums">
                             {/* Read as "Weight ×2", so the sign is not read alone. */}
                             <span className="sr-only">{t("list.weight")} </span>
                             {t("list.weightValue", { weight: item.weight })}

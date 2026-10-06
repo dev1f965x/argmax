@@ -66,3 +66,23 @@ test("a weight can be set with the keyboard alone", async ({ page }) => {
   await page.keyboard.press("Space");
   await expect(item(page, "Pho")).toContainText("Chance 50%");
 });
+
+test("a typed weight above the item count is shown and saved as the maximum", async ({
+  page,
+}) => {
+  await openWithStorage(page, lunch, "/lists/lunch");
+
+  await page.getByRole("button", { name: "Edit “Ramen”" }).click();
+  // An empty text keeps the editor open after Enter.
+  await page.getByRole("textbox", { name: "Item text" }).fill("");
+  const weight = page.getByRole("spinbutton", { name: "Weight" });
+  await weight.fill("10");
+  await weight.press("Enter");
+  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(weight).toHaveValue("3");
+
+  await page.getByRole("textbox", { name: "Item text" }).fill("Ramen");
+  await weight.fill("10");
+  await weight.press("Enter");
+  await expect(item(page, "Ramen")).toContainText("Weight ×3");
+});

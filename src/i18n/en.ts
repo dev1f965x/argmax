@@ -53,15 +53,15 @@ export const en = {
     save: "Save",
     cancel: "Cancel",
     weight: "Weight",
-    // The weight field's accessible name; Korean adds a word there.
-    weightName: "Weight",
     weightValue: "×{{weight, number}}",
     decreaseWeight: "Decrease weight",
     increaseWeight: "Increase weight",
     showChances: "Show chances",
     chance: "Chance {{percent, number}}%",
     chanceUnderOne: "Chance <1%",
+    chanceUnderOneSpoken: "Chance under 1%",
     chanceOverNinetyNine: "Chance >99%",
+    chanceOverNinetyNineSpoken: "Chance over 99%",
     limitReached:
       "This list has {{limit, number}} items, the maximum. Remove an item to add another.",
     errors: {

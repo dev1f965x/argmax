@@ -58,14 +58,15 @@ export const ko: Resources = {
     save: "저장",
     cancel: "취소",
     weight: "비중",
-    weightName: "뽑힐 비중",
     weightValue: "×{{weight, number}}",
     decreaseWeight: "비중 줄이기",
     increaseWeight: "비중 늘리기",
     showChances: "확률 보기",
     chance: "확률 {{percent, number}}%",
     chanceUnderOne: "확률 <1%",
+    chanceUnderOneSpoken: "확률 1% 미만",
     chanceOverNinetyNine: "확률 >99%",
+    chanceOverNinetyNineSpoken: "확률 99% 초과",
     limitReached:
       "항목이 최대 개수인 {{limit, number}}개입니다. 추가하려면 항목을 삭제하세요.",
     errors: {

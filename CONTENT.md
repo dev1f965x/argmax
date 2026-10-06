@@ -27,8 +27,8 @@ Use these words and no synonyms. A new product noun or verb is added here before
 | Putting an item in a list | add | 추가하다, 추가 | |
 | Changing an item's text | edit | 수정하다, 수정 | |
 | Changing a list's name | rename | 이름 바꾸기 | |
-| How likely an item is to be picked, set per item | weight; values "×1", "×2" | 비중 | The control's accessible name is "뽑힐 비중" in Korean. Not "odds", which reads like betting; "비중" is checked in UAT against "가중치" |
-| An item's share of the list's total weight | chance; "Chance 25%" | 확률; "확률 25%" | Only for the percentage, never for the control. Below 1%: "Chance <1%" / "확률 <1%"; above 99% while other items can be picked: "Chance >99%" / "확률 >99%". Only a single item reads 100% |
+| How likely an item is to be picked, set per item | weight; values "×1", "×2" | 비중 | The field's accessible name is its visible label, "Weight" / "비중", and its value is read as "×N". Not "odds", which reads like betting; "비중" is checked in UAT against "가중치" |
+| An item's share of the list's total weight | chance; "Chance 25%" | 확률; "확률 25%" | Only for the percentage, never for the control. Below 1%: "Chance <1%" / "확률 <1%"; above 99% while other items can be picked: "Chance >99%" / "확률 >99%". Screen readers hear these as "Chance under 1%" / "확률 1% 미만" and "Chance over 99%" / "확률 99% 초과". Only a single item reads 100% |
 | Taking an item out of a list | remove | 삭제하다, 삭제 | English separates remove (item) from delete (list); Korean uses 삭제 for both |
 | Erasing a list or stored data | delete | 삭제하다, 삭제 | |
 | Where lists are kept | this browser | 이 브라우저 | "local storage" only on the privacy policy |

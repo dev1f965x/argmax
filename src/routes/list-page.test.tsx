@@ -108,6 +108,10 @@ describe("ListPage", () => {
 
   it("shows the list name and item count, and no list while it is empty", () => {
     renderList([]);
+    // The count comes later in the DOM; the heading still leads to it.
+    expect(
+      screen.getByRole("heading", { name: "Lunch" }),
+    ).toHaveAccessibleDescription("0 items");
 
     expect(screen.getByRole("heading", { name: "Lunch" })).toBeInTheDocument();
     expect(screen.getByText("0 items")).toBeInTheDocument();
@@ -446,9 +450,10 @@ describe("ListPage weights", () => {
     const { user, stored } = renderWeighted(["A", "B", "C"], [1, 1, 1]);
 
     await user.click(screen.getByRole("button", { name: "Edit “B”" }));
-    expect(screen.getByRole("group", { name: "Weight" })).toContainElement(
-      weightField(),
-    );
+    // Named by its visible label, with no group repeating the name.
+    expect(screen.queryByRole("group", { name: "Weight" })).toBeNull();
+    await user.click(screen.getByText("Weight"));
+    expect(weightField()).toHaveFocus();
     expect(weightField()).toHaveAttribute("aria-valuetext", "×1");
     await user.click(increase());
     await user.click(increase());
@@ -507,6 +512,29 @@ describe("ListPage weights", () => {
     await user.type(weightField(), "9");
     await user.tab();
     expect(weightField()).toHaveAttribute("aria-valuetext", "×3");
+  });
+
+  it("shows the clamped weight that Save will use after Enter", async () => {
+    const { user, stored } = renderWeighted(["A", "B", "C"], [1, 1, 1]);
+
+    await user.click(screen.getByRole("button", { name: "Edit “A”" }));
+    // An empty text keeps the editor open, so the weight field stays visible.
+    await user.clear(screen.getByRole("textbox", { name: "Item text" }));
+    await user.clear(weightField());
+    await user.type(weightField(), "10{Enter}");
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Enter an item.");
+    expect(weightField()).toHaveValue("3");
+    expect(weightField()).toHaveAttribute("aria-valuetext", "×3");
+
+    await user.type(screen.getByRole("textbox", { name: "Item text" }), "A");
+    await user.clear(weightField());
+    await user.type(weightField(), "10{Enter}");
+    expect(stored()).toEqual([
+      ["A", 3],
+      ["B", 1],
+      ["C", 1],
+    ]);
   });
 
   it("shows a weight above the item count and only lets it be lowered", async () => {
@@ -607,7 +635,17 @@ describe("ListPage weights", () => {
 
     expect(screen.getByRole("switch", { name: "Show chances" })).toBeChecked();
     expect(row("A")).toHaveTextContent("AChance <1%");
-    expect(row("B")).toHaveTextContent("BChance >99%Weight ×150");
+    expect(row("B")).toHaveTextContent("BChance >99%");
+    expect(row("B")).toHaveTextContent("Weight ×150");
+    // The signs are shown, and spelled out for screen readers instead.
+    for (const [text, visible, spoken] of [
+      ["A", "Chance <1%", "Chance under 1%"],
+      ["B", "Chance >99%", "Chance over 99%"],
+    ] as const) {
+      const cells = within(row(text) ?? document.body);
+      expect(cells.getByText(visible)).toHaveAttribute("aria-hidden", "true");
+      expect(cells.getByText(spoken)).toHaveClass("sr-only");
+    }
   });
 
   it("keeps the switch working for this visit when it cannot be saved", async () => {
@@ -632,8 +670,9 @@ describe("ListPage weights", () => {
       await user.click(screen.getByRole("switch", { name: "확률 보기" }));
       expect(row("B")).toHaveTextContent("B확률 67%비중 ×2");
       await user.click(screen.getByRole("button", { name: "“B” 수정" }));
-      expect(screen.getByRole("group", { name: "비중" })).toBeInTheDocument();
-      const field = screen.getByRole("spinbutton", { name: "뽑힐 비중" });
+      // Named by its visible label alone, with no group repeating it.
+      expect(screen.queryByRole("group", { name: "비중" })).toBeNull();
+      const field = screen.getByRole("spinbutton", { name: "비중" });
       expect(field).toHaveAttribute("aria-valuetext", "×2");
       expect(field).not.toHaveAttribute("aria-roledescription");
       expect(
@@ -667,7 +706,13 @@ describe("ListPage weights", () => {
     try {
       renderWeighted(["A", "B"], [1, 999]);
       expect(row("A")).toHaveTextContent("A확률 <1%");
-      expect(row("B")).toHaveTextContent("B확률 >99%비중 ×999");
+      expect(row("B")).toHaveTextContent("B확률 >99%");
+      expect(
+        within(row("A") ?? document.body).getByText("확률 1% 미만"),
+      ).toHaveClass("sr-only");
+      expect(
+        within(row("B") ?? document.body).getByText("확률 99% 초과"),
+      ).toHaveClass("sr-only");
     } finally {
       await i18n.changeLanguage("en");
     }

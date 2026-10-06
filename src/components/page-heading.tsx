@@ -10,18 +10,25 @@ export function PageHeading({
   title,
   className,
   children,
+  describedBy,
 }: {
   /** The screen name used in the document title. */
   title: string;
   className?: string;
   children?: ReactNode;
+  /** Id of text read right after the heading, such as a list's item count. */
+  describedBy?: string;
 }) {
   useEffect(() => {
     document.title = `${title} – Argmax`;
   }, [title]);
 
   return (
-    <h1 tabIndex={-1} className={cn("outline-none", className)}>
+    <h1
+      tabIndex={-1}
+      aria-describedby={describedBy}
+      className={cn("outline-none", className)}
+    >
       {children ?? title}
     </h1>
   );
