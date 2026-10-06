@@ -3,7 +3,7 @@
 @import "shadcn/tailwind.css";
 @import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 
-/* Light only in 0.1.0 (see DESIGN.md). Without this, Tailwind maps dark: to
+/* Light only (see DESIGN.md). Without this, Tailwind maps dark: to
    prefers-color-scheme and shadcn's dark: classes would switch on by themselves. */
 @custom-variant dark (&:is(.dark *));
 

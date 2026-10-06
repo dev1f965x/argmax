@@ -194,7 +194,7 @@ Flat by default: separation comes from dividers and tinted surfaces, not shadows
 
 ### Dark mode
 
-Not in 0.1.0. Argmax is used mostly in daylight with other people, the light palette was tuned and checked for contrast, and supporting a second theme would double visual QA for little benefit at this stage. `color-scheme: light` is set so browser controls match. Revisit if users ask for it.
+Not supported yet. Argmax is used mostly in daylight with other people, the light palette was tuned and checked for contrast, and supporting a second theme would double visual QA for little benefit at this stage. `color-scheme: light` is set so browser controls match. Revisit if users ask for it.
 
 ## Do's and Don'ts
 
