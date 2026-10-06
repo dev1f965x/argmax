@@ -4,7 +4,9 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { i18n } from "@/i18n";
+import { showChancesStorageKey } from "@/lib/preferences";
 import { limits, storageKey } from "@/lib/storage";
 import { renderApp, storedState } from "@/test/fixtures";
 
@@ -402,5 +404,265 @@ describe("ListPage", () => {
       await router.navigate(-1);
       expect(router.state.location.pathname).toBe("/");
     });
+  });
+});
+
+describe("ListPage weights", () => {
+  afterEach(() => {
+    localStorage.clear();
+    vi.restoreAllMocks();
+  });
+
+  function renderWeighted(items: string[], weights: number[]) {
+    const { user, data } = renderApp({
+      path: "/lists/lunch",
+      stored: storedState([{ id: "lunch", name: "Lunch", items, weights }]),
+    });
+    const stored = () =>
+      (
+        JSON.parse(data.get(storageKey) ?? "").lists[0].items as {
+          text: string;
+          weight: number;
+        }[]
+      ).map((item) => [item.text, item.weight]);
+    return { user, stored };
+  }
+
+  const weightField = () => screen.getByRole("spinbutton", { name: "Weight" });
+  const decrease = () =>
+    screen.getByRole("button", { name: "Decrease weight" });
+  const increase = () =>
+    screen.getByRole("button", { name: "Increase weight" });
+  const row = (text: string) =>
+    within(screen.getByRole("list"))
+      .getAllByRole("listitem")
+      .find((item) =>
+        item.firstElementChild?.firstElementChild?.textContent?.startsWith(
+          text,
+        ),
+      );
+
+  it("raises a weight with + and saves it with the text in one change", async () => {
+    const { user, stored } = renderWeighted(["A", "B", "C"], [1, 1, 1]);
+
+    await user.click(screen.getByRole("button", { name: "Edit “B”" }));
+    expect(screen.getByRole("group", { name: "Weight" })).toContainElement(
+      weightField(),
+    );
+    expect(weightField()).toHaveAttribute("aria-valuetext", "×1");
+    await user.click(increase());
+    await user.click(increase());
+    expect(weightField()).toHaveAttribute("aria-valuetext", "×3");
+    await user.click(screen.getByRole("textbox", { name: "Item text" }));
+    await user.keyboard("{Control>}a{/Control}Udon");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(stored()).toEqual([
+      ["A", 1],
+      ["Udon", 3],
+      ["C", 1],
+    ]);
+    // One announcement names both changes.
+    expect(
+      screen.getByText("Saved “Udon” with weight ×3."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Saved “Udon”.")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit “Udon”" })).toHaveFocus();
+  });
+
+  it("lowers a weight with the arrow keys and saves with Enter", async () => {
+    const { user, stored } = renderWeighted(["A", "B", "C"], [1, 3, 1]);
+
+    await user.click(screen.getByRole("button", { name: "Edit “B”" }));
+    await user.click(weightField());
+    await user.keyboard("{ArrowDown}");
+    expect(weightField()).toHaveAttribute("aria-valuetext", "×2");
+    await user.keyboard("{Enter}");
+
+    expect(stored()).toEqual([
+      ["A", 1],
+      ["B", 2],
+      ["C", 1],
+    ]);
+    expect(screen.getByText("Saved “B” with weight ×2.")).toBeInTheDocument();
+  });
+
+  it("keeps the weight between 1 and the item count", async () => {
+    const { user } = renderWeighted(["A", "B", "C"], [1, 1, 1]);
+
+    await user.click(screen.getByRole("button", { name: "Edit “A”" }));
+    expect(weightField()).toHaveAttribute("aria-valuemin", "1");
+    expect(weightField()).toHaveAttribute("aria-valuemax", "3");
+    expect(decrease()).toBeDisabled();
+    expect(increase()).toBeEnabled();
+
+    await user.click(increase());
+    await user.click(increase());
+    expect(weightField()).toHaveAttribute("aria-valuetext", "×3");
+    expect(increase()).toBeDisabled();
+    expect(decrease()).toBeEnabled();
+
+    // Typed values are clamped to the range when the field is left.
+    await user.clear(weightField());
+    await user.type(weightField(), "9");
+    await user.tab();
+    expect(weightField()).toHaveAttribute("aria-valuetext", "×3");
+  });
+
+  it("shows a weight above the item count and only lets it be lowered", async () => {
+    // Left by removing items: 5 is above the 2 items now in the list.
+    const { user, stored } = renderWeighted(["A", "B"], [5, 1]);
+
+    await user.click(screen.getByRole("button", { name: "Edit “A”" }));
+    expect(weightField()).toHaveAttribute("aria-valuetext", "×5");
+    expect(increase()).toBeDisabled();
+    await user.click(decrease());
+    expect(weightField()).toHaveAttribute("aria-valuetext", "×4");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(stored()).toEqual([
+      ["A", 4],
+      ["B", 1],
+    ]);
+  });
+
+  it("saves text alone without touching a weight above the item count", async () => {
+    const { user, stored } = renderWeighted(["A", "B"], [5, 1]);
+
+    await user.click(screen.getByRole("button", { name: "Edit “A”" }));
+    await user.keyboard("{Control>}a{/Control}Udon{Enter}");
+
+    expect(stored()).toEqual([
+      ["Udon", 5],
+      ["B", 1],
+    ]);
+    expect(screen.getByText("Saved “Udon”.")).toBeInTheDocument();
+  });
+
+  it.each([
+    ["Cancel", "cancel"],
+    ["Escape in the weight field", "escape"],
+  ])("discards a changed weight on %s", async (_, how) => {
+    const { user, stored } = renderWeighted(["A", "B"], [1, 2]);
+
+    await user.click(screen.getByRole("button", { name: "Edit “B”" }));
+    await user.click(decrease());
+    if (how === "escape") {
+      await user.click(weightField());
+      await user.keyboard("{Escape}");
+    } else {
+      await user.click(screen.getByRole("button", { name: "Cancel" }));
+    }
+
+    expect(stored()).toEqual([
+      ["A", 1],
+      ["B", 2],
+    ]);
+    expect(screen.getByRole("button", { name: "Edit “B”" })).toHaveFocus();
+    await user.click(screen.getByRole("button", { name: "Edit “B”" }));
+    expect(weightField()).toHaveAttribute("aria-valuetext", "×2");
+  });
+
+  it("shows the weight field disabled at ×1 when the list has one item", async () => {
+    const { user } = renderWeighted(["A"], [1]);
+
+    await user.click(screen.getByRole("button", { name: "Edit “A”" }));
+    expect(weightField()).toBeDisabled();
+    expect(weightField()).toHaveAttribute("aria-valuetext", "×1");
+    expect(decrease()).toBeDisabled();
+    expect(increase()).toBeDisabled();
+  });
+
+  it("shows a ×N badge, read with its label, only on weights other than 1", () => {
+    renderWeighted(["A", "B"], [1, 2]);
+
+    expect(row("B")).toHaveTextContent("BWeight ×2");
+    expect(row("A")).toHaveTextContent(/^A$/);
+  });
+
+  it("shows chances only after the switch is turned on, and remembers it", async () => {
+    const { user } = renderWeighted(["A", "B", "C"], [1, 1, 2]);
+    const toggle = screen.getByRole("switch", { name: "Show chances" });
+
+    expect(toggle).not.toBeChecked();
+    expect(screen.queryByText(/^Chance/)).not.toBeInTheDocument();
+
+    await user.click(toggle);
+    expect(toggle).toBeChecked();
+    expect(localStorage.getItem(showChancesStorageKey)).toBe("true");
+    expect(row("A")).toHaveTextContent("AChance 25%");
+    expect(row("B")).toHaveTextContent("BChance 25%");
+    expect(row("C")).toHaveTextContent("CChance 50%Weight ×2");
+
+    // The label text also toggles it, as a larger target than the track.
+    await user.click(screen.getByText("Show chances"));
+    expect(toggle).not.toBeChecked();
+    expect(localStorage.getItem(showChancesStorageKey)).toBe("false");
+    expect(screen.queryByText(/^Chance/)).not.toBeInTheDocument();
+  });
+
+  it("starts with chances shown when this browser saved the switch on", () => {
+    localStorage.setItem(showChancesStorageKey, "true");
+    renderWeighted(["A", "B"], [1, 150]);
+
+    expect(screen.getByRole("switch", { name: "Show chances" })).toBeChecked();
+    expect(row("A")).toHaveTextContent("AChance <1%");
+    expect(row("B")).toHaveTextContent("BChance 99%Weight ×150");
+  });
+
+  it("keeps the switch working for this visit when it cannot be saved", async () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("Full", "QuotaExceededError");
+    });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { user } = renderWeighted(["A", "B"], [1, 1]);
+
+    await user.click(screen.getByRole("switch", { name: "Show chances" }));
+
+    expect(screen.getByRole("switch", { name: "Show chances" })).toBeChecked();
+    expect(row("A")).toHaveTextContent("AChance 50%");
+    expect(warn).toHaveBeenCalledOnce();
+  });
+
+  it("names the weight controls and chances in Korean", async () => {
+    await i18n.changeLanguage("ko");
+    try {
+      const { user, stored } = renderWeighted(["A", "B"], [1, 2]);
+
+      await user.click(screen.getByRole("switch", { name: "확률 보기" }));
+      expect(row("B")).toHaveTextContent("B확률 67%비중 ×2");
+      await user.click(screen.getByRole("button", { name: "“B” 수정" }));
+      expect(screen.getByRole("group", { name: "비중" })).toBeInTheDocument();
+      const field = screen.getByRole("spinbutton", { name: "뽑힐 비중" });
+      expect(field).toHaveAttribute("aria-valuetext", "×2");
+      expect(field).not.toHaveAttribute("aria-roledescription");
+      expect(
+        screen.getByRole("button", { name: "비중 늘리기" }),
+      ).toBeDisabled();
+      await user.click(screen.getByRole("button", { name: "비중 줄이기" }));
+      await user.click(screen.getByRole("button", { name: "저장" }));
+
+      expect(stored()).toEqual([
+        ["A", 1],
+        ["B", 1],
+      ]);
+      expect(
+        screen.getByText("“B” 항목을 저장했습니다. 비중: ×1"),
+      ).toBeInTheDocument();
+    } finally {
+      await i18n.changeLanguage("en");
+    }
+  });
+
+  it("updates chances when a weight changes", async () => {
+    localStorage.setItem(showChancesStorageKey, "true");
+    const { user } = renderWeighted(["A", "B"], [1, 1]);
+
+    await user.click(screen.getByRole("button", { name: "Edit “B”" }));
+    await user.click(increase());
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(row("A")).toHaveTextContent("AChance 33%");
+    expect(row("B")).toHaveTextContent("BChance 67%Weight ×2");
   });
 });

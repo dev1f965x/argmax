@@ -9,10 +9,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - Items have a weight, 1 by default, and a pick selects each item with a chance of its weight divided by the list's total weight, still using the browser's cryptographic random source without bias.
+- The weight is set while editing an item, with − and + buttons, the arrow keys, or by typing, from ×1 to the number of items in the list; a weight left above that number after removing items can only be lowered. Save applies the text and the weight together. Items with a weight other than 1 show a ×N badge.
+- A "Show chances" switch on the list screen shows each item's chance as a whole percentage, or "<1%" below 1%. It is off by default and remembered in this browser.
 - Saved data from a newer version of Argmax shows a message that lists can't be edited in this tab, with Reload and Copy data; the data is left unchanged and cannot be deleted from this tab.
 
 ### Changed
 
+- Before the first pick, the desktop result box shows a dice icon and "Your pick appears here" instead of a dash.
+- In an item's edit row, Cancel comes before Save and is a text button.
+- The privacy policy says the "Show chances" setting is saved in this browser along with the language.
 - Saved data moves to schema version 2, which stores each item's weight. Lists saved by 0.1.0 load with weight 1 on every item and are written in the new format only with the next change.
 
 ### Security

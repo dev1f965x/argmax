@@ -29,7 +29,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Switch } from "@/components/ui/switch";
 import { useScreenView } from "@/components/use-screen-view";
+import { useShowChances } from "@/components/use-show-chances";
+import { WeightField } from "@/components/weight-field";
 import { fromEarlierVisit } from "@/lib/analytics";
 import {
   addItem,
@@ -37,12 +40,16 @@ import {
   editItem,
   type ItemError,
   type ListError,
+  type Result,
   removeItem,
   renameList,
   restoreItem,
+  setItemWeight,
   validateText,
+  type WeightError,
 } from "@/lib/lists";
 import { navigationString } from "@/lib/navigation-state";
+import { type Chance, chances } from "@/lib/pick";
 import { type Item, limits } from "@/lib/storage";
 import { NotFoundPage } from "@/routes/not-found-page";
 
@@ -83,6 +90,46 @@ function moveFocus(element: HTMLElement) {
     element.scrollIntoView({ block: "nearest" });
 }
 
+/**
+ * An item's edit row: its text, its weight, Cancel, and Save. The weight is a
+ * draft until Save, which applies both; Cancel discards both.
+ */
+function ItemEditor({
+  item,
+  itemCount,
+  onSave,
+  onCancel,
+}: {
+  item: Item;
+  itemCount: number;
+  onSave: (text: string, weight: number) => SubmitOutcome;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+  const [weight, setWeight] = useState<number | null>(item.weight);
+  return (
+    <TextEntryForm
+      label={t("list.editLabel")}
+      submitLabel={t("list.save")}
+      initialValue={item.text}
+      autoFocus
+      stacked
+      accessory={
+        <WeightField
+          value={weight}
+          // A stored weight above the item count (left by removals) stays
+          // reachable, so it can be kept or lowered, never raised (FR12).
+          max={Math.max(itemCount, item.weight)}
+          onValueChange={setWeight}
+        />
+      }
+      // A cleared weight field keeps the stored weight.
+      onSubmit={(text) => onSave(text, weight ?? item.weight)}
+      cancel={{ label: t("list.cancel"), onCancel }}
+    />
+  );
+}
+
 export function ListPage() {
   const { t } = useTranslation();
   const { id } = useParams();
@@ -115,6 +162,8 @@ export function ListPage() {
     created ? "entry" : null,
   );
   const { announce, region } = useAnnouncer();
+  const [showChances, setShowChances] = useShowChances();
+  const chancesSwitchId = useId();
   const editButtons = useRef(new Map<string, HTMLButtonElement>());
   const editButtonRefs = useRef(
     new Map<string, (element: HTMLButtonElement | null) => void>(),
@@ -150,6 +199,9 @@ export function ListPage() {
   const listId = list.id;
   // Newest first, matching the Lists screen, so an added item appears right under the form.
   const items = list.items.toReversed();
+  const itemChances = showChances
+    ? chances(items.map((item) => item.weight))
+    : null;
   const itemCount = list.items.length;
   const atLimit = itemCount >= limits.itemsPerList;
   const limitMessage = t("list.limitReached", { limit: limits.itemsPerList });
@@ -190,13 +242,18 @@ export function ListPage() {
   }
 
   function outcome(
-    result: { ok: true } | { ok: false; error: ItemError | ChangeError },
+    result:
+      | { ok: true }
+      | { ok: false; error: ItemError | WeightError | ChangeError },
   ): SubmitOutcome {
     if (result.ok) return { ok: true };
-    const message: Record<ItemError | ChangeError, string> = {
+    const message: Record<ItemError | WeightError | ChangeError, string> = {
       empty: t("list.errors.empty"),
       "too-long": t("list.errors.tooLong", { limit: limits.textLength }),
       "item-limit": limitMessage,
+      // The field keeps the weight in range, so this means the list changed
+      // meanwhile, for example in another tab.
+      "invalid-weight": t("common.saveFailed"),
       "not-found": t("common.saveFailed"),
       "read-only": t("common.saveFailed"),
       "invalid-state": t("common.saveFailed"),
@@ -222,14 +279,24 @@ export function ListPage() {
     return outcome(result);
   }
 
-  function save(item: Item, text: string): SubmitOutcome {
-    const result = change((current, context) =>
-      editItem(current, listId, item.id, text, context),
+  function save(item: Item, text: string, weight: number): SubmitOutcome {
+    // One change, so text and weight are saved together or not at all.
+    const result = change(
+      (current, context): Result<ItemError | WeightError> => {
+        const edited = editItem(current, listId, item.id, text, context);
+        return edited.ok
+          ? setItemWeight(edited.state, listId, item.id, weight, context)
+          : edited;
+      },
     );
     if (result.ok) {
       setUndo(null);
       setEditingId(null);
-      announce(t("list.saved", { text: savedText(text) }));
+      announce(
+        weight === item.weight
+          ? t("list.saved", { text: savedText(text) })
+          : t("list.savedWithWeight", { text: savedText(text), weight }),
+      );
       setFocusTarget({ itemId: item.id });
     }
     return outcome(result);
@@ -274,6 +341,12 @@ export function ListPage() {
     setUndo(null);
     announce(t("list.restored", { text: item.text }));
     setFocusTarget({ itemId: item.id });
+  }
+
+  function chanceText(chance: Chance): string {
+    return chance.kind === "below-one"
+      ? t("list.chanceUnderOne")
+      : t("list.chance", { percent: chance.value });
   }
 
   // Stable per item, so rows do not detach and reattach their refs on every render.
@@ -389,11 +462,6 @@ export function ListPage() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-          {!renaming && (
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {t("list.itemCount", { count: itemCount })}
-            </p>
-          )}
         </div>
         {/* Keyed by list, so a result or a running cycle never carries over to another list. */}
         <PickPanel
@@ -408,6 +476,25 @@ export function ListPage() {
             scrolled to, and showing or hiding it never moves the page. On
             desktop the layout keeps that room below the footer instead. */}
         <div className="min-w-0 pb-24 md:pb-0">
+          {/* After the pick panel in the DOM, so Tab still reaches Pick right
+              after the list's actions; shown under the title. */}
+          {!renaming && (
+            <div className="flex flex-wrap items-center justify-between gap-x-3 text-sm text-muted-foreground">
+              <p>{t("list.itemCount", { count: itemCount })}</p>
+              {/* The whole label is the 44 px target, not only the small track. */}
+              <label
+                htmlFor={chancesSwitchId}
+                className="flex min-h-11 cursor-pointer items-center gap-2"
+              >
+                {t("list.showChances")}
+                <Switch
+                  id={chancesSwitchId}
+                  checked={showChances}
+                  onCheckedChange={(checked) => setShowChances(checked)}
+                />
+              </label>
+            </div>
+          )}
           <div className="mt-5">
             {atLimit ? (
               <Note ref={limitNote}>{limitMessage}</Note>
@@ -452,56 +539,67 @@ export function ListPage() {
               focus is in the add field, and Pick says why it is unavailable. */}
           {items.length > 0 && (
             <ul className="mt-4 border-t">
-              {items.map((item, index) => (
-                <li key={item.id} className="border-b">
-                  {editingId === item.id ? (
-                    <div className="py-2">
-                      <TextEntryForm
-                        label={t("list.editLabel")}
-                        submitLabel={t("list.save")}
-                        initialValue={item.text}
-                        autoFocus
-                        stacked
-                        onSubmit={(text) => save(item, text)}
-                        cancel={{
-                          label: t("list.cancel"),
-                          onCancel: () => cancelEdit(item),
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex min-h-14 items-center gap-1 py-1 pl-1">
-                      <span className="min-w-0 flex-1 overflow-clip py-2 wrap-anywhere">
-                        {item.text}
-                      </span>
-                      <Button
-                        ref={editButtonRef(item.id)}
-                        variant="ghost"
-                        size="icon"
-                        disabled={!editable}
-                        aria-label={t("list.edit", { text: item.text })}
-                        onClick={() => {
-                          setUndo(null);
-                          setEditingId(item.id);
-                        }}
-                        className="text-muted-foreground"
-                      >
-                        <Pencil aria-hidden="true" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        disabled={!editable}
-                        aria-label={t("list.remove", { text: item.text })}
-                        onClick={() => remove(item, index)}
-                        className="text-muted-foreground"
-                      >
-                        <Trash2 aria-hidden="true" />
-                      </Button>
-                    </div>
-                  )}
-                </li>
-              ))}
+              {items.map((item, index) => {
+                const chance = itemChances?.[index];
+                return (
+                  <li key={item.id} className="border-b">
+                    {editingId === item.id ? (
+                      <div className="py-2">
+                        <ItemEditor
+                          item={item}
+                          itemCount={itemCount}
+                          onSave={(text, weight) => save(item, text, weight)}
+                          onCancel={() => cancelEdit(item)}
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex min-h-14 items-center gap-1 py-1 pl-1">
+                        <div className="min-w-0 flex-1 py-2">
+                          <span className="block overflow-clip wrap-anywhere">
+                            {item.text}
+                          </span>
+                          {chance && (
+                            <span className="block text-sm text-muted-foreground tabular-nums">
+                              {chanceText(chance)}
+                            </span>
+                          )}
+                        </div>
+                        {item.weight !== 1 && (
+                          <span className="mr-1 shrink-0 rounded-sm bg-brand-soft px-1.5 text-sm font-semibold text-brand-strong tabular-nums">
+                            {/* Read as "Weight ×2", so the sign is not read alone. */}
+                            <span className="sr-only">{t("list.weight")} </span>
+                            {t("list.weightValue", { weight: item.weight })}
+                          </span>
+                        )}
+                        <Button
+                          ref={editButtonRef(item.id)}
+                          variant="ghost"
+                          size="icon"
+                          disabled={!editable}
+                          aria-label={t("list.edit", { text: item.text })}
+                          onClick={() => {
+                            setUndo(null);
+                            setEditingId(item.id);
+                          }}
+                          className="text-muted-foreground"
+                        >
+                          <Pencil aria-hidden="true" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          disabled={!editable}
+                          aria-label={t("list.remove", { text: item.text })}
+                          onClick={() => remove(item, index)}
+                          className="text-muted-foreground"
+                        >
+                          <Trash2 aria-hidden="true" />
+                        </Button>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

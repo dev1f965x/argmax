@@ -1,17 +1,9 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
+import { localStorageIfAllowed } from "@/lib/preferences";
 import { en } from "./en";
 import { ko } from "./ko";
 import { detectLocale, type Locale, locales, storeLocale } from "./locale";
-
-function localStorageIfAllowed(): Storage | undefined {
-  try {
-    return window.localStorage;
-  } catch {
-    // Accessing localStorage throws when the browser blocks site data.
-    return undefined;
-  }
-}
 
 const initialLocale = detectLocale(
   localStorageIfAllowed(),

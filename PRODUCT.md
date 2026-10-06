@@ -29,7 +29,8 @@ Differentiation from existing tools (Wheel of Names, Picker Wheel, random.org Li
 ## Capabilities and Constraints
 
 - First release (0.1.0): create, rename, and delete lists; add, edit, and remove items; pick one item; English and Korean UI.
-- Later: item weights; picking several items at once. Not in 0.1.0: accounts, syncing, pick history, monetization.
+- 0.2.0: item weights, a whole number from 1 to the list's item count, set while editing an item; a pick selects each item with its weight's share of the total, and a "Show chances" switch, off by default and remembered in this browser, shows each item's chance.
+- Later: picking several items at once. Not in 0.1.0 or 0.2.0: accounts, syncing, pick history, monetization.
 - Lists live only in this browser's `localStorage`. Clearing browser data or switching devices loses them, and the UI must say so where lists are created.
 - Limits: names and items up to 100 characters, up to 1,000 items per list, up to 100 lists. Reaching a limit shows a message.
 - Empty or whitespace-only names and items, including those made only of invisible characters such as zero-width spaces, are rejected with a message. Control characters and bidirectional formatting characters are removed from what users enter; line breaks and tabs become spaces. Text whose stacked combining marks push it past the length limit keeps at most eight marks per character. Lists saved by 0.1.0 get the same cleaning when loaded, and items left empty are dropped; a list whose name would be left empty keeps the data read-only rather than getting an invented name. Duplicate items are allowed without a warning.

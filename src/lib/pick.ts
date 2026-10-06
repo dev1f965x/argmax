@@ -66,3 +66,21 @@ export function pickWeightedIndex(
   }
   throw new Error("A position below the total falls within some weight");
 }
+
+/**
+ * Each item's chance as shown (FR14): a whole percentage, or "below-one" when
+ * the exact chance is under 1%, which rounding would otherwise show as 0% or
+ * as 1%. Each chance is rounded on its own, so the shown values can add up to
+ * 99% or 101%; adjusting them to total 100% would misstate some items.
+ */
+export type Chance = { kind: "percent"; value: number } | { kind: "below-one" };
+
+export function chances(weights: readonly number[]): Chance[] {
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  return weights.map((weight) => {
+    const percent = (weight / total) * 100;
+    return percent < 1
+      ? { kind: "below-one" }
+      : { kind: "percent", value: Math.round(percent) };
+  });
+}

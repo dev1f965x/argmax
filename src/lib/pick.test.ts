@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { pickIndex, pickWeightedIndex, type RandomSource } from "./pick";
+import {
+  chances,
+  pickIndex,
+  pickWeightedIndex,
+  type RandomSource,
+} from "./pick";
 
 /** Returns the given values in order, one per call. */
 function fakeRandom(values: number[]): RandomSource {
@@ -139,5 +144,41 @@ describe("pickWeightedIndex", () => {
       return sum + (count - expected) ** 2 / expected;
     }, 0);
     expect(chiSquare).toBeLessThan(30.66);
+  });
+});
+
+describe("chances", () => {
+  it("gives each item its weight's share as a whole percentage", () => {
+    expect(chances([2, 1, 1, 3, 1, 2])).toEqual(
+      [20, 10, 10, 30, 10, 20].map((value) => ({ kind: "percent", value })),
+    );
+  });
+
+  it("rounds each chance on its own, so the total can differ from 100", () => {
+    // 33.3% three times: 99 in total, not adjusted to 100.
+    expect(chances([1, 1, 1])).toEqual(
+      [33, 33, 33].map((value) => ({ kind: "percent", value })),
+    );
+    // 16.7% six times: 102 in total.
+    expect(chances([1, 1, 1, 1, 1, 1])).toEqual(
+      Array.from({ length: 6 }, () => ({ kind: "percent", value: 17 })),
+    );
+  });
+
+  it("marks a chance under 1% instead of rounding it to 0% or 1%", () => {
+    // 1 / 151 is 0.66%, which plain rounding would show as 1%.
+    expect(chances([1, 150])).toEqual([
+      { kind: "below-one" },
+      { kind: "percent", value: 99 },
+    ]);
+    // Exactly 1% is shown as 1%.
+    expect(chances([1, 99])).toEqual([
+      { kind: "percent", value: 1 },
+      { kind: "percent", value: 99 },
+    ]);
+  });
+
+  it("gives a single item 100%", () => {
+    expect(chances([4])).toEqual([{ kind: "percent", value: 100 }]);
   });
 });

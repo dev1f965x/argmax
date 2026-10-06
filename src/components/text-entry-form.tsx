@@ -2,6 +2,7 @@ import { CircleAlert } from "lucide-react";
 import {
   type FormEvent,
   type KeyboardEvent,
+  type ReactNode,
   type RefObject,
   useEffect,
   useId,
@@ -26,8 +27,14 @@ interface TextEntryFormProps {
   autoFocus?: boolean;
   /** Shows the label above the field instead of only to screen readers. */
   visibleLabel?: boolean;
-  /** Puts the buttons under a full-width field, for long text such as items. */
+  /**
+   * Puts a row under a full-width field, for long text such as items:
+   * `accessory` on the left, and Cancel and the submit button on the right,
+   * which move to a line of their own when the row is too narrow.
+   */
   stacked?: boolean;
+  /** Another control in the stacked row, such as an item's weight. */
+  accessory?: ReactNode;
   /** Shows a Cancel button and lets Escape cancel. */
   cancel?: { label: string; onCancel: () => void };
   /** Lets the parent move focus to the field, for example after removing a row. */
@@ -50,6 +57,7 @@ export function TextEntryForm({
   fieldRef,
   visibleLabel = false,
   stacked = false,
+  accessory,
 }: TextEntryFormProps) {
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +90,8 @@ export function TextEntryForm({
     inputRef.current?.focus();
   }
 
-  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+  // On the form, so Escape also cancels from an accessory such as the weight.
+  function handleKeyDown(event: KeyboardEvent<HTMLFormElement>) {
     if (event.key === "Escape" && cancel) {
       event.preventDefault();
       cancel.onCancel();
@@ -104,6 +113,7 @@ export function TextEntryForm({
   return (
     <form
       onSubmit={submit}
+      onKeyDown={handleKeyDown}
       noValidate
       className={cn("flex flex-wrap gap-x-2 gap-y-1.5", stacked && "gap-y-2")}
     >
@@ -123,7 +133,6 @@ export function TextEntryForm({
           setValue(event.target.value);
           setError(null);
         }}
-        onKeyDown={handleKeyDown}
         placeholder={label}
         autoComplete="off"
         disabled={disabled}
@@ -131,19 +140,40 @@ export function TextEntryForm({
         aria-describedby={error ? errorId : undefined}
         className={stacked ? "basis-full" : "flex-1 basis-0"}
       />
-      {stacked && errorMessage && (
-        <div className="basis-full">{errorMessage}</div>
-      )}
-      <Button type="submit" disabled={disabled}>
-        {submitLabel}
-      </Button>
-      {cancel && (
-        <Button type="button" variant="outline" onClick={cancel.onCancel}>
-          {cancel.label}
-        </Button>
-      )}
-      {!stacked && errorMessage && (
-        <div className="basis-full">{errorMessage}</div>
+      {stacked ? (
+        <>
+          {errorMessage && <div className="basis-full">{errorMessage}</div>}
+          <div className="flex basis-full flex-wrap items-center gap-2">
+            {accessory}
+            <div className="ml-auto flex gap-1">
+              {cancel && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={cancel.onCancel}
+                  className="text-muted-foreground"
+                >
+                  {cancel.label}
+                </Button>
+              )}
+              <Button type="submit" disabled={disabled}>
+                {submitLabel}
+              </Button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <Button type="submit" disabled={disabled}>
+            {submitLabel}
+          </Button>
+          {cancel && (
+            <Button type="button" variant="outline" onClick={cancel.onCancel}>
+              {cancel.label}
+            </Button>
+          )}
+          {errorMessage && <div className="basis-full">{errorMessage}</div>}
+        </>
       )}
     </form>
   );

@@ -8,6 +8,8 @@ interface ListFixture {
   id: string;
   name: string;
   items?: string[];
+  /** Weights in the order of items; 1 where missing. */
+  weights?: number[];
 }
 
 function listsOf(lists: ListFixture[]) {
@@ -20,13 +22,16 @@ function listsOf(lists: ListFixture[]) {
   }));
 }
 
-/** Stored lists as the app saves them, every item at weight 1. */
+/** Stored lists as the app saves them. */
 export function storedState(lists: ListFixture[]): string {
   return JSON.stringify({
     schemaVersion: 2,
-    lists: listsOf(lists).map((list) => ({
+    lists: listsOf(lists).map((list, listIndex) => ({
       ...list,
-      items: list.items.map((item) => ({ ...item, weight: 1 })),
+      items: list.items.map((item, index) => ({
+        ...item,
+        weight: lists[listIndex]?.weights?.[index] ?? 1,
+      })),
     })),
   });
 }

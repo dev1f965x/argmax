@@ -41,10 +41,10 @@ function reduceMotion(reduce: boolean) {
 
 const pickButton = () => screen.getByRole("button", { name: /^Pick/ });
 const result = () => screen.getByText("Picked").nextElementSibling;
-// The empty box before a pick repeats the label but is hidden from assistive
-// technology; a shown result is not.
+// A shown result is the "Picked" label outside the hidden empty box.
 const shownResult = () =>
   screen.queryByText("Picked", { ignore: "[aria-hidden='true'] *" });
+const emptyBoxText = "Your pick appears here";
 
 describe("PickPanel", () => {
   it("shows an empty result box before the first pick, hidden from screen readers", async () => {
@@ -52,15 +52,17 @@ describe("PickPanel", () => {
     renderList(["Ramen"]);
 
     expect(
-      screen.getByText("—").closest("[aria-hidden='true']"),
+      screen.getByText(emptyBoxText).closest("[aria-hidden='true']"),
     ).not.toBeNull();
-    expect(shownResult()).not.toBeInTheDocument();
+    // Neither a dash nor the label stands in for a result any more.
+    expect(screen.queryByText("—")).not.toBeInTheDocument();
+    expect(screen.queryByText("Picked")).not.toBeInTheDocument();
 
     await user.click(pickButton());
     expect(
       await screen.findByText("Ramen", { selector: "p" }),
     ).toBeInTheDocument();
-    expect(screen.queryByText("—")).not.toBeInTheDocument();
+    expect(screen.queryByText(emptyBoxText)).not.toBeInTheDocument();
   });
 
   afterEach(() => {
