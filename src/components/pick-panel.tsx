@@ -229,11 +229,10 @@ export function PickPanel({
         >
           {result ? t("pick.again") : t("pick.pick")}
         </Button>
+        {/* Read with the button only: on screen, the disabled Pick, the item
+            count, and the focused add field already show what to do. */}
         {empty && (
-          <p
-            id={reasonId}
-            className="mt-2 text-center text-sm text-muted-foreground"
-          >
+          <p id={reasonId} className="sr-only">
             {t("pick.needItem")}
           </p>
         )}

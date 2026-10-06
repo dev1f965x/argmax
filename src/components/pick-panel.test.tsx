@@ -77,6 +77,10 @@ describe("PickPanel", () => {
     expect(pickButton()).toHaveAccessibleDescription(
       "Add an item to pick from.",
     );
+    // Screen readers only; the owner asked for no visible message under Pick.
+    expect(screen.getByText("Add an item to pick from.")).toHaveClass(
+      "sr-only",
+    );
     // The reason is the only hint; the idle hint would ask for a pick that cannot happen.
     expect(screen.queryByText(/^Select Pick/)).not.toBeInTheDocument();
     fireEvent.click(pickButton());

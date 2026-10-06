@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Before the first pick, the desktop result box shows a dice icon and "Your pick appears here" instead of a dash.
 - In an item's edit row, Cancel comes before Save and is a text button.
+- With an empty list, the "Add an item to pick from." hint under Pick is read only by screen readers.
 - The privacy policy says the "Show chances" setting is saved in this browser along with the language.
 - Saved data moves to schema version 2, which stores each item's weight. Lists saved by 0.1.0 load with weight 1 on every item and are written in the new format only with the next change.
 

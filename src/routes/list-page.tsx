@@ -564,7 +564,7 @@ export function ListPage() {
           )}
 
           {/* An empty list needs no empty state: the count says "0 items",
-              focus is in the add field, and Pick says why it is unavailable. */}
+              focus is in the add field, and Pick tells screen readers why it is unavailable. */}
           {items.length > 0 && (
             <ul className="mt-4 border-t">
               {items.map((item, index) => {

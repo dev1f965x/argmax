@@ -52,7 +52,7 @@ Product name: Argmax, always in Latin letters, in both languages.
 A short title that states the situation, then one sentence that names the next action. Do not repeat what a field or a disabled button already says.
 
 - Lists, no lists yet: "No lists yet" / "Create your first list, for example “Lunch”." (아직 목록이 없습니다 / 첫 목록을 만드세요. 예: “점심 메뉴”)
-- An empty list adds no message: the count reads "0 items" and Pick states its reason.
+- An empty list adds no visible message: the count reads "0 items", and Pick's reason ("Add an item to pick from.") is read only by screen readers when Pick is focused.
 - Before the first pick, the desktop result box says where the result will appear: "Your pick appears here" / "뽑힌 항목이 여기에 표시됩니다". Never "?", which reads as an unknown result.
 
 ### Notes with details
