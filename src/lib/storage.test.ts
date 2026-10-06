@@ -5,6 +5,7 @@ import {
   createRepository,
   emptyState,
   limits,
+  repairState,
   type StoredState,
   storageKey,
 } from "./storage";
@@ -286,5 +287,215 @@ describe("createRepository", () => {
     const changed = stateOf(repository.load());
     expect(changed).not.toBe(first);
     expect(changed?.lists).toEqual([]);
+  });
+});
+
+describe("stored text", () => {
+  const withItem = (text: string): StoredState => ({
+    ...validState,
+    lists: [{ ...list, items: [{ id: "item-1", text }] }],
+  });
+  const loads = (text: string) => {
+    const { storage } = memoryStorage({ [storageKey]: stored(withItem(text)) });
+    return createRepository(() => storage).load().status;
+  };
+  // Loading repairs text 0.1.0 could have saved, so the schema's own rules
+  // are checked through save(), which validates without repairing.
+  const saves = (text: string) => {
+    const { storage } = memoryStorage();
+    const repository = createRepository(() => storage);
+    repository.load();
+    return repository.save(withItem(text)).ok;
+  };
+
+  // One base letter with combining marks is one grapheme however many follow;
+  // "x" has no precomposed form, so NFC leaves the marks as they are.
+  const markBomb = `x${"\u0301".repeat(5_000)}`;
+
+  it("caps text at 1,600 UTF-16 units even within 100 characters", () => {
+    expect(saves(`x${"\u0301".repeat(1_599)}`)).toBe(true);
+    expect(saves(`x${"\u0301".repeat(1_600)}`)).toBe(false);
+    expect(characterCount(markBomb)).toBe(1);
+    expect(saves(markBomb)).toBe(false);
+  });
+
+  it("keeps text invalid on load when dropping marks cannot bring it under the cap", () => {
+    // An emoji ZWJ chain is one character of any length without a single mark.
+    const chain = `👨${"\u200D👨".repeat(600)}`;
+    expect(characterCount(chain)).toBe(1);
+    expect(loads(chain)).toBe("invalid");
+  });
+
+  it.each([
+    ["a lone high surrogate", "a\uD800b"],
+    ["a lone low surrogate", "a\uDC00b"],
+    ["a NUL character", "a\u0000b"],
+    ["a tab", "a\tb"],
+    ["DEL", "a\u007Fb"],
+    ["a C1 control", "a\u0085b"],
+    ["another C1 control", "a\u009Fb"],
+    ...[
+      0x061c, 0x200e, 0x200f, 0x202a, 0x202b, 0x202c, 0x202d, 0x202e, 0x2066,
+      0x2067, 0x2068, 0x2069,
+    ].map((code): [string, string] => [
+      `the bidi control U+${code.toString(16).toUpperCase().padStart(4, "0")}`,
+      `a${String.fromCharCode(code)}b`,
+    ]),
+  ])("rejects %s in stored text", (_, text) => {
+    expect(saves(text)).toBe(false);
+  });
+
+  it.each([
+    ["a zero-width space", "\u200B"],
+    ["a word joiner and a byte order mark", "\u2060\uFEFF"],
+    ["a zero-width joiner", "\u200D"],
+    ["the Hangul filler", "\u3164"],
+  ])("rejects stored text made only of %s", (_, text) => {
+    expect(saves(text)).toBe(false);
+  });
+
+  it("accepts 100 of the longest standard emoji sequences", () => {
+    const kiss = "👩🏻‍❤️‍💋‍👨🏼";
+    expect(kiss.length).toBe(15);
+    expect(loads(kiss.repeat(limits.textLength))).toBe("ok");
+  });
+
+  it.each([
+    ["a family emoji (ZWJ sequence)", "👨‍👩‍👧‍👦"],
+    ["a flag", "🇰🇷"],
+    ["Hangul compatibility jamo", "ㄱㄴㄷ"],
+    ["old Hangul as conjoining jamo, which NFC keeps", "\u1100\u119E"],
+    ["a zero-width non-joiner between letters", "می\u200Cخواهم"],
+    ["Arabic", "غداء"],
+    ["a combining mark on a letter", "e\u0301".normalize("NFC")],
+  ])("accepts %s", (_, text) => {
+    expect(loads(text)).toBe("ok");
+  });
+
+  it("refuses to save an invalid state and leaves storage byte-identical", () => {
+    const raw = stored(validState);
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+    const repository = createRepository(() => storage);
+    repository.load();
+
+    for (const text of [markBomb, "a\u202Eb", "\u200B", " Lunch"]) {
+      expect(repository.save(withItem(text))).toMatchObject({
+        ok: false,
+        reason: "invalid",
+      });
+      expect(data.get(storageKey)).toBe(raw);
+    }
+    // The refusal does not lock the store: a valid state still saves.
+    expect(repository.save(emptyState)).toEqual({ ok: true });
+  });
+});
+
+describe("repairing text saved by 0.1.0", () => {
+  // 0.1.0 only trimmed and normalized, so any of these could be stored.
+  const legacy = {
+    ...validState,
+    lists: [
+      {
+        ...list,
+        name: "Lunch\u202E",
+        items: [
+          { id: "item-1", text: "Fried\trice" },
+          { id: "item-2", text: "\u200B" },
+          { id: "item-3", text: "Ramen\u2066" },
+          { id: "item-4", text: "Gyoza\uD800" },
+        ],
+      },
+    ],
+  };
+  const repaired: StoredState = {
+    ...validState,
+    lists: [
+      {
+        ...list,
+        name: "Lunch",
+        items: [
+          { id: "item-1", text: "Fried rice" },
+          { id: "item-3", text: "Ramen" },
+          { id: "item-4", text: "Gyoza" },
+        ],
+      },
+    ],
+  };
+
+  it("cleans text and drops items left blank", () => {
+    expect(repairState(legacy)).toEqual(repaired);
+  });
+
+  it("shortens a character stacked past the unit cap so it loads", () => {
+    // 0.1.0 saved NFC text, which composes the first mark into "á".
+    const stacked = `a${"\u0301".repeat(1_700)}`.normalize("NFC");
+    const raw = stored({
+      ...validState,
+      lists: [{ ...list, items: [{ id: "item-1", text: stacked }] }],
+    });
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+
+    expect(createRepository(() => storage).load()).toEqual({
+      status: "ok",
+      state: {
+        ...validState,
+        lists: [
+          {
+            ...list,
+            items: [{ id: "item-1", text: `\u00E1${"\u0301".repeat(8)}` }],
+          },
+        ],
+      },
+    });
+    expect(data.get(storageKey)).toBe(raw);
+  });
+
+  it("returns valid data and data of an unknown shape as they are", () => {
+    expect(repairState(validState)).toBe(validState);
+    const unknown = { schemaVersion: 1, lists: "none" };
+    expect(repairState(unknown)).toBe(unknown);
+  });
+
+  it("loads repaired data without writing it, and the next save writes it", () => {
+    const raw = stored(legacy);
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+    const repository = createRepository(() => storage);
+
+    expect(repository.load()).toEqual({ status: "ok", state: repaired });
+    expect(data.get(storageKey)).toBe(raw);
+    // The unchanged raw value is served from the cache, still repaired.
+    expect(repository.load()).toEqual({ status: "ok", state: repaired });
+
+    expect(repository.save(repaired)).toEqual({ ok: true });
+    expect(JSON.parse(data.get(storageKey) ?? "")).toEqual(repaired);
+  });
+
+  it("does not rewrite valid data on load", () => {
+    const raw = stored(validState);
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+    expect(createRepository(() => storage).load()).toEqual({
+      status: "ok",
+      state: validState,
+    });
+    expect(data.get(storageKey)).toBe(raw);
+  });
+
+  it.each([
+    ["a list name left blank", { ...list, name: "\u200B\u202E" }],
+    [
+      "an item still too long",
+      { ...list, items: [{ id: "i", text: `${"x".repeat(101)}\t` }] },
+    ],
+  ])("keeps data with %s read-only and unchanged", (_, broken) => {
+    const raw = stored({ ...validState, lists: [broken] });
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+    const repository = createRepository(() => storage);
+
+    expect(repository.load()).toMatchObject({ status: "invalid", raw });
+    expect(repository.save(emptyState)).toEqual({
+      ok: false,
+      reason: "read-only",
+    });
+    expect(data.get(storageKey)).toBe(raw);
   });
 });

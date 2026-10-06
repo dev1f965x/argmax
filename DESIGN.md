@@ -175,6 +175,7 @@ Flat by default: separation comes from dividers and tinted surfaces, not shadows
 
 - Components come from shadcn/ui on Base UI and use only the tokens above. App components may not use raw colors or arbitrary values; `pnpm check` enforces this with `scripts/check-design-tokens.mjs`. Generated files in `src/components/ui` are excluded from that check and changed only to apply this file: 44 px buttons, inputs, and menu items, 16 px semibold button text, `primary-hover`, `input` borders on outline buttons, a solid destructive button, the dialog scrim, shadow, 20 px bold title, and one right-aligned row of buttons at every width, the menu shadow, width, and a `primary` focus ring on items, the disabled input surface, and the popover shadow and ring. Review those edits when regenerating a component.
 - Disabled controls use `surface` or `surface-2` with `subtle-foreground` text, so they read as unavailable at a glance.
+- User text (list names, items, the pick result) is a block element of its own, so right-to-left text cannot reorder the labels around it, and it uses `overflow-clip`, so a character stacked with combining marks cannot draw over neighboring rows or controls. The line height leaves room for descenders and Hangul, which the clip does not cut.
 - Icons: Lucide only, 20 px in rows and buttons, 16 to 18 px inline, stroke width 2.
 - Mark and wordmark: `src/components/wordmark.tsx`. Three dots, one raised and green: the argument that maximizes. Favicon, Apple touch icon, and Open Graph image in `public/` use the same mark.
 

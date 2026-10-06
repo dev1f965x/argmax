@@ -1,5 +1,7 @@
 import {
+  cleanText,
   type Item,
+  isBlank,
   type List,
   limits,
   type StoredState,
@@ -26,14 +28,17 @@ export const browserContext: Context = {
 };
 
 /**
- * Trims surrounding whitespace, normalizes to NFC, and rejects empty or
- * over-long text (FR2, FR5, FR11). All stored text passes through here.
+ * Turns line breaks and tabs into spaces and removes other control characters,
+ * bidirectional controls, and lone surrogates, which pasted text can carry
+ * unseen; then trims surrounding whitespace, normalizes to NFC, and rejects
+ * empty, invisible, or over-long text (FR2, FR5, FR11). All stored text passes
+ * through here, and its result always passes the stored-data schema.
  */
 export function validateText(
   input: string,
 ): { ok: true; value: string } | { ok: false; error: TextError } {
-  const value = input.normalize("NFC").trim();
-  if (value.length === 0) return { ok: false, error: "empty" };
+  const value = cleanText(input);
+  if (isBlank(value)) return { ok: false, error: "empty" };
   if (!withinTextLimit(value)) return { ok: false, error: "too-long" };
   return { ok: true, value };
 }

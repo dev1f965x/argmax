@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { testContext } from "@/test/fixtures";
+import { memoryStorage } from "@/test/memory-storage";
 import {
   addItem,
   createList,
@@ -10,7 +11,13 @@ import {
   restoreItem,
   validateText,
 } from "./lists";
-import { emptyState, limits, type StoredState } from "./storage";
+import {
+  cleanText,
+  createRepository,
+  emptyState,
+  limits,
+  type StoredState,
+} from "./storage";
 
 function mustOk<E>(
   result: { ok: true; state: StoredState } | { ok: false; error: E },
@@ -52,6 +59,180 @@ describe("validateText normalization", () => {
       value: "점심",
     });
     expect(validateText("👨‍👩‍👧‍👦".repeat(limits.textLength)).ok).toBe(true);
+  });
+});
+
+describe("validateText with unsafe characters", () => {
+  it.each([
+    ["bidi controls", "a\u202Eb\u2066c\u061C", "abc"],
+    ["C0 and C1 controls", "a\u0000b\u007Fc\u009F", "abc"],
+    ["lone surrogates", "\uDC00a\uD800b", "ab"],
+    [
+      "line breaks and tabs, as spaces",
+      "Fried\r\nrice\tbowl",
+      "Fried  rice bowl",
+    ],
+  ])("removes %s", (_, input, value) => {
+    expect(validateText(input)).toEqual({ ok: true, value });
+  });
+
+  it.each([
+    "\u200B",
+    "\u2060\uFEFF\u200D",
+    " \u3164 ",
+    "\u202E\u2066",
+    "\uD800",
+  ])("rejects %j as empty", (input) => {
+    expect(validateText(input)).toEqual({ ok: false, error: "empty" });
+  });
+
+  it("keeps eight marks on one letter stacked with thousands", () => {
+    expect(validateText(`x${"\u0301".repeat(5_000)}`)).toEqual({
+      ok: true,
+      value: `x${"\u0301".repeat(8)}`,
+    });
+  });
+
+  it("keeps joiners inside emoji sequences and words", () => {
+    expect(validateText("👨‍👩‍👧‍👦")).toEqual({ ok: true, value: "👨‍👩‍👧‍👦" });
+    expect(validateText("می\u200Cخواهم")).toEqual({
+      ok: true,
+      value: "می\u200Cخواهم",
+    });
+  });
+
+  /** Seeded so a failure reproduces (mulberry32). */
+  function random(seed: number) {
+    let state = seed;
+    return () => {
+      state = (state + 0x6d2b79f5) | 0;
+      let t = Math.imul(state ^ (state >>> 15), 1 | state);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296;
+    };
+  }
+
+  const pieces = [
+    ..."a가ㄱ ",
+    "\u1100\u1161\u11A8",
+    "\u1100",
+    "\u0301",
+    "\u0300",
+    "\u200B",
+    "\u200C",
+    "\u200D",
+    "\u2060",
+    "\uFEFF",
+    "\u00AD",
+    "\u3164",
+    "\u00A0",
+    "\u3000",
+    "\t",
+    "\n",
+    "\r",
+    "\u0000",
+    "\u007F",
+    "\u0085",
+    "\u061C",
+    "\u200E",
+    "\u202E",
+    "\u2066",
+    "\u2069",
+    "\uD800",
+    "\uDC00",
+    "😀",
+    "\uFE0F",
+    "🇰",
+    "👨‍👩‍👧",
+    "غ",
+  ];
+
+  function acceptedByStorage(text: string): boolean {
+    const { storage } = memoryStorage();
+    const repository = createRepository(() => storage);
+    repository.load();
+    const timestamp = "2026-10-06T00:00:00.000Z";
+    return repository.save({
+      schemaVersion: 1,
+      lists: [
+        {
+          id: "list",
+          name: text,
+          items: [{ id: "item", text }],
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+      ],
+    }).ok;
+  }
+
+  it("only returns text that the stored-data schema accepts", () => {
+    const next = random(46);
+    let accepted = 0;
+    for (let run = 0; run < 2_000; run++) {
+      const length = Math.floor(next() * 140);
+      const input = Array.from(
+        { length },
+        () => pieces[Math.floor(next() * pieces.length)] ?? "",
+      ).join("");
+      const result = validateText(input);
+      if (!result.ok) continue;
+      accepted++;
+      expect(acceptedByStorage(result.value), JSON.stringify(input)).toBe(true);
+    }
+    // Most inputs must pass, or the loop would prove little.
+    expect(accepted).toBeGreaterThan(1_000);
+  });
+
+  it("turns every kind of line break into a space", () => {
+    expect(validateText("a\u2028b\u2029c\u0085d\ve\ff")).toEqual({
+      ok: true,
+      value: "a b c d e f",
+    });
+  });
+
+  it("cleans to the same text when run again, including over-long text", () => {
+    const next = random(2028);
+    // Mostly long stacks, so many inputs go over the cap.
+    const withStacks = [
+      ..."a가 ",
+      "\u200D",
+      "\t",
+      "\u202E",
+      "\uD800",
+      "🇰",
+      "\u0301".repeat(200),
+      "\u0E49".repeat(300),
+      " \u0301".repeat(100),
+      "\u0F90\u0F71".repeat(150),
+    ];
+    let capped = 0;
+    for (let run = 0; run < 1_000; run++) {
+      const length = Math.floor(next() * 60);
+      const input = Array.from(
+        { length },
+        () => withStacks[Math.floor(next() * withStacks.length)] ?? "",
+      ).join("");
+      const once = cleanText(input);
+      if (input.length > 1_600) capped++;
+      expect(cleanText(once), JSON.stringify(input)).toBe(once);
+    }
+    expect(capped).toBeGreaterThan(100);
+  });
+});
+
+describe("cleanText over the unit cap", () => {
+  it.each([
+    ["Vietnamese", "Tiếng Việt ngữ"],
+    ["decomposed Vietnamese", "Tiếng Việt ngữ".normalize("NFD")],
+    ["Thai", "สวัสดี น้ำ ที่ ปั้น กี่"],
+    ["Tibetan", "བསྒྲུབས་ཧཱུྃ་ཨོཾ་ཀྵྨྱཱྀ"],
+    ["Devanagari", "क्ष्म्यं श्रीमान् स्त्र्यै"],
+    ["emoji sequences", "👨‍👩‍👧‍👦👩🏻‍❤️‍💋‍👨🏼1️⃣🏴󠁧󠁢󠁳󠁣󠁴󠁿🇰🇷"],
+  ])("leaves %s unchanged even over the cap", (_, sample) => {
+    const text = `${sample} `.repeat(200).trim().normalize("NFC");
+    expect(text.length).toBeGreaterThan(1_600);
+    expect(cleanText(text)).toBe(text);
   });
 });
 

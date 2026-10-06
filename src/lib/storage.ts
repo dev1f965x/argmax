@@ -9,6 +9,15 @@ export const limits = {
   lists: 100,
 } as const;
 
+/**
+ * A hard cap in UTF-16 units under the character limit. One grapheme can hold
+ * any number of combining marks, so counting graphemes alone would let a single
+ * "character" grow without bound. 16 units per character fit 100 of the
+ * longest standard emoji sequences (15 units, such as a kiss with two skin
+ * tones), so the 100-character promise holds for every visible character.
+ */
+const maxTextCodeUnits = 16 * limits.textLength;
+
 const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
 /**
@@ -21,17 +30,93 @@ export function characterCount(text: string): number {
 
 /** Text no longer than the limit in UTF-16 units cannot exceed it in characters. */
 export function withinTextLimit(text: string): boolean {
+  if (text.length > maxTextCodeUnits) return false;
   return (
     text.length <= limits.textLength ||
     characterCount(text) <= limits.textLength
   );
 }
 
+/**
+ * Characters stored text may not contain: C0 and C1 controls, bidirectional
+ * formatting controls, which can reorder the text around a name, and lone
+ * surrogates, which are not valid Unicode. With the u flag a surrogate pair is
+ * one code point outside the surrogate range, so only lone halves match; this
+ * also avoids String.prototype.isWellFormed, which the ES2023 lib lacks.
+ */
+const disallowedCharacters =
+  /[\p{Cc}\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069\uD800-\uDFFF]/gu;
+
+// Line breaks and tabs separate words, so they become spaces rather than
+// being removed with the other control characters.
+const controlWhitespace = /[\t\n\v\f\r\u0085\u2028\u2029]/g;
+
+/**
+ * Combining marks kept per character when text is over the unit cap. The
+ * longest stacks in real text stay well below it: Thai and Vietnamese use up
+ * to 3, a Devanagari conjunct with a vowel sign and anusvara about 5, and a
+ * Tibetan Sanskrit stack about 6. UAX #15's stream-safe limit of 30 would
+ * still let one character tower over its neighbors.
+ */
+const maxMarksPerCharacter = 8;
+const combiningMark = /\p{M}/u;
+
+/** Drops the marks after the first maxMarksPerCharacter in each character. */
+function capMarks(text: string): string {
+  return Array.from(graphemes.segment(text), ({ segment }) => {
+    let marks = 0;
+    let kept = "";
+    for (const codePoint of segment) {
+      if (combiningMark.test(codePoint) && ++marks > maxMarksPerCharacter)
+        continue;
+      kept += codePoint;
+    }
+    return kept;
+  }).join("");
+}
+
+/**
+ * Turns line breaks and tabs into spaces, removes the other characters stored
+ * text may not contain, normalizes to NFC, and trims. Text still over the unit
+ * cap loses the marks stacked beyond maxMarksPerCharacter, which only abusive
+ * text has. Entered text and text saved by 0.1.0, which allowed all of these,
+ * both pass through here; the result may still be too long for the schema.
+ */
+export function cleanText(input: string): string {
+  const cleaned = input
+    .replace(controlWhitespace, " ")
+    .replace(disallowedCharacters, "")
+    .normalize("NFC")
+    .trim();
+  if (cleaned.length <= maxTextCodeUnits) return cleaned;
+  // Still NFC and trimmed: a mark can only block the composition of marks
+  // after it, and every character keeps its first code point.
+  return capMarks(cleaned);
+}
+
+// search() ignores the g flag's lastIndex, unlike test().
+const hasOnlyAllowedCharacters = (text: string) =>
+  text.search(disallowedCharacters) === -1;
+
+const invisibleOnly = /^[\s\p{Default_Ignorable_Code_Point}]*$/u;
+
+/**
+ * True when nothing would show: only whitespace and default-ignorable
+ * characters such as zero-width spaces and joiners. A joiner inside an emoji
+ * sequence or between letters is fine; text made only of them is not.
+ */
+export function isBlank(text: string): boolean {
+  return invisibleOnly.test(text);
+}
+
+const isNormalized = (value: string) => value === value.trim().normalize("NFC");
+
 /** Stored text is saved trimmed and NFC-normalized, so the same rule validates it on load. */
 const text = z
   .string()
-  .refine((value) => value === value.trim().normalize("NFC"), "not normalized")
-  .refine((value) => value.length > 0, "empty")
+  .refine(hasOnlyAllowedCharacters, "disallowed characters")
+  .refine(isNormalized, "not normalized")
+  .refine((value) => !isBlank(value), "empty")
   .refine(withinTextLimit, "too long");
 
 const itemSchema = z.object({
@@ -62,6 +147,53 @@ function hasUniqueIds(entries: { id: string }[]): boolean {
   return new Set(entries.map((entry) => entry.id)).size === entries.length;
 }
 
+/**
+ * The stored shape with only the fields that hold text checked, so text can be
+ * repaired before the strict schema sees it. Other fields pass through as is.
+ */
+const repairableSchema = z.looseObject({
+  lists: z.array(
+    z.looseObject({
+      name: z.string(),
+      items: z.array(z.looseObject({ text: z.string() })),
+    }),
+  ),
+});
+
+/**
+ * Cleans text 0.1.0 could have saved: it trimmed and normalized text and
+ * checked nothing else. Anything else is left for the schema to reject.
+ */
+const repairText = (value: string) =>
+  isNormalized(value) ? cleanText(value) : value;
+
+/**
+ * Cleans every list name and item text the way entered text is cleaned and
+ * drops items left blank, so data saved under 0.1.0's looser text rules still
+ * loads. Text 0.1.0 would not have saved (untrimmed or not NFC) is not data
+ * it wrote, so it is left unchanged and the data stays read-only. A list whose name is left blank is not dropped and gets no invented
+ * name, so the strict schema rejects the data and it stays read-only, as
+ * before. Returns the input itself when its shape is unknown or nothing changes.
+ */
+export function repairState(parsed: unknown): unknown {
+  const shape = repairableSchema.safeParse(parsed);
+  if (!shape.success) return parsed;
+  let changed = false;
+  const lists = shape.data.lists.map((list) => {
+    const name = repairText(list.name);
+    const items = list.items.flatMap((item) => {
+      const text = repairText(item.text);
+      if (text !== item.text) changed = true;
+      if (isBlank(text)) return [];
+      return [{ ...item, text }];
+    });
+    if (name !== list.name || items.length !== list.items.length)
+      changed = true;
+    return { ...list, name, items };
+  });
+  return changed ? { ...shape.data, lists } : parsed;
+}
+
 export type Item = z.infer<typeof itemSchema>;
 export type List = z.infer<typeof listSchema>;
 export type StoredState = z.infer<typeof storedStateSchema>;
@@ -76,6 +208,7 @@ export type LoadResult =
 export type SaveResult =
   | { ok: true }
   | { ok: false; reason: "unavailable" | "full"; cause: unknown }
+  | { ok: false; reason: "invalid"; cause: z.ZodError }
   | { ok: false; reason: "read-only" | "not-loaded" };
 
 type Mode = "unloaded" | "writable" | "read-only";
@@ -117,7 +250,11 @@ export function createRepository(getStorage: () => Storage) {
       mode = "read-only";
       return { status: "invalid", raw, cause };
     }
-    const result = storedStateSchema.safeParse(parsed);
+    // Valid data skips the repair. A repaired state is not written here; the
+    // next change saves it.
+    let result = storedStateSchema.safeParse(parsed);
+    if (!result.success)
+      result = storedStateSchema.safeParse(repairState(parsed));
     if (!result.success) {
       mode = "read-only";
       return { status: "invalid", raw, cause: result.error };
@@ -130,6 +267,11 @@ export function createRepository(getStorage: () => Storage) {
   function save(state: StoredState): SaveResult {
     if (mode === "unloaded") return { ok: false, reason: "not-loaded" };
     if (mode === "read-only") return { ok: false, reason: "read-only" };
+    // Every change goes through validateText, so this guards against a bug
+    // writing data that the next load would reject and lock as read-only.
+    const checked = storedStateSchema.safeParse(state);
+    if (!checked.success)
+      return { ok: false, reason: "invalid", cause: checked.error };
     try {
       const raw = JSON.stringify(state);
       getStorage().setItem(storageKey, raw);

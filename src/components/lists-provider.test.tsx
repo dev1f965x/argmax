@@ -1,7 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createList } from "@/lib/lists";
 import { createRepository, emptyState, storageKey } from "@/lib/storage";
 import { ListsPage } from "@/routes/lists-page";
@@ -212,5 +212,57 @@ describe("ListsProvider across tabs", () => {
     a.create("After recovery");
 
     expect(storedNames(data)).toEqual(["Precious", "After recovery"]);
+  });
+});
+
+describe("ListsProvider validation", () => {
+  it("keeps memory and storage unchanged when a change produces invalid text, and logs no text", () => {
+    const { storage, data } = memoryStorage();
+    const tab = renderTab(storage, "A");
+    tab.create("Lunch");
+    const before = data.get(storageKey);
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const secret = "Secret\u202E";
+    let attempt: ReturnType<Lists["change"]> | undefined;
+    act(() => {
+      attempt = tab.value().change((state) => ({
+        ok: true,
+        state: {
+          ...state,
+          lists: state.lists.map((list) => ({ ...list, name: secret })),
+        },
+      }));
+    });
+
+    expect(attempt).toEqual({ ok: false, error: "invalid-state" });
+    expect(tab.names()).toEqual(["Lunch"]);
+    expect(tab.value().issue).toBeNull();
+    expect(data.get(storageKey)).toBe(before);
+    expect(error).toHaveBeenCalledOnce();
+    expect(JSON.stringify(error.mock.calls)).not.toContain("Secret");
+    error.mockRestore();
+  });
+});
+
+describe("ListsProvider with text saved by 0.1.0", () => {
+  it("shows repaired lists, writes nothing until a change, then saves them cleaned", () => {
+    const raw = storedState([
+      { id: "lunch", name: "Lunch\u202E", items: ["Fried\trice", "\u200B"] },
+    ]);
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+    const tab = renderTab(storage, "A");
+
+    expect(tab.names()).toEqual(["Lunch"]);
+    expect(tab.value().editable).toBe(true);
+    expect(data.get(storageKey)).toBe(raw);
+
+    tab.create("Dinner");
+    const saved = JSON.parse(data.get(storageKey) ?? "");
+    expect(saved.lists[0].name).toBe("Lunch");
+    expect(saved.lists[0].items).toEqual([
+      { id: "item-0", text: "Fried rice" },
+    ]);
+    expect(storedNames(data)).toEqual(["Lunch", "Dinner"]);
   });
 });

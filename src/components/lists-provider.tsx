@@ -19,6 +19,13 @@ import {
   storageKey,
 } from "@/lib/storage";
 
+/**
+ * Why a change was not applied, besides the operation's own errors:
+ * "read-only" while invalid stored data is kept, "invalid-state" when the
+ * result failed validation and was not saved.
+ */
+export type ChangeError = "read-only" | "invalid-state";
+
 /** A storage problem the user must know about; null when storage works. */
 export type StorageIssue =
   | { kind: "unavailable" }
@@ -36,7 +43,7 @@ interface ListsContextValue {
   /** Applies an operation from `@/lib/lists` and saves the result. */
   change: <E>(
     operation: (state: StoredState, context: Context) => Result<E>,
-  ) => Result<E | "read-only">;
+  ) => Result<E | ChangeError>;
   /** Deletes invalid stored data after the user confirmed it; returns whether it worked. */
   discardInvalidData: () => boolean;
 }
@@ -82,6 +89,7 @@ function issueAfterSave(
     case "not-loaded":
       return { kind: "unavailable" };
     case "read-only":
+    case "invalid":
       return current;
   }
 }
@@ -168,7 +176,7 @@ export function ListsProvider({
   const change = useCallback(
     <E,>(
       operation: (state: StoredState, context: Context) => Result<E>,
-    ): Result<E | "read-only"> => {
+    ): Result<E | ChangeError> => {
       if (!editable) return { ok: false, error: "read-only" };
       // Reading first also lets a tab whose read failed recover once storage
       // works again. Two tabs changing within the same few milliseconds can
@@ -178,9 +186,18 @@ export function ListsProvider({
       const result = operation(base, context);
       if (!result.ok) return result;
 
+      const saved = repository.save(result.state);
+      if (!saved.ok && saved.reason === "invalid") {
+        // Only a bug in an operation gets here. Memory keeps the last valid
+        // state, so the next save cannot write the invalid one either.
+        console.error(
+          "Lists failed validation and were not saved:",
+          describeError(saved.cause),
+        );
+        return { ok: false, error: "invalid-state" };
+      }
       stateRef.current = result.state;
       setState(result.state);
-      const saved = repository.save(result.state);
       if (saved.ok) unsaved.current = false;
       // Only a failed write carries a cause; "read-only" and "not-loaded" leave
       // what was saved before as it is.
