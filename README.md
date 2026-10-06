@@ -9,15 +9,16 @@ Argmax is a web app for making picks: create a list, add items, and pick one at 
 
 **Use it:** <https://argmax.dev1f965x.workers.dev>
 
-![The list screen with five lunch options and "Bibimbap" picked](docs/screenshot-en.png)
+![The list screen with five lunch options, two of them weighted, chances shown, and "Bibimbap" picked](docs/screenshot-en.png)
 
 ## Features
 
 - Lists of up to 1,000 items, each up to 100 characters; up to 100 lists.
 - Pick one item at random, with a short animation, and pick again as often as you like.
+- Give an item a higher weight to make it more likely to be picked, and turn on "Show chances" to see each item's chance.
 - Add, edit, and remove items, with Undo after a removal; rename and delete lists.
 - Lists stay in this browser only, with no account, and stay in step across open tabs.
-- Share a list as a link that carries the list itself, made on the device with no server; the recipient sees it first and can add a copy.
+- Share a list as a link. The link is built on the device and carries the list in the part after `#`, so no server stores it; the recipient sees the list first and can add a copy.
 - English and Korean, following the browser's language, with a switch in the header.
 - Works with a keyboard and screen readers, checked with automated axe scans against WCAG 2.2 AA and an NVDA pass; on phones from 360 px wide to desktops.
 
@@ -69,7 +70,7 @@ To roll back, open the Worker's **Deployments** in the Cloudflare dashboard and 
 
 ## Privacy
 
-Argmax has no accounts and no cookies, and it never asks for or stores personal data. Lists and the language choice are saved only in the browser's local storage and are never sent anywhere. A share link is created on the device and holds the list in the part after `#`, which browsers do not send to servers, but the link itself stays wherever it is kept, such as chats and browser history; Argmax cannot remove a list from a link someone else has. The hosting provider, Cloudflare, processes technical request data such as IP addresses to deliver and protect the site.
+Argmax has no accounts and no cookies, and it never asks for or stores personal data. Lists, the language choice, and whether chances are shown are saved only in the browser's local storage and are never sent anywhere. A share link is created on the device and holds the list in the part after `#`, which browsers do not send to servers, but the link itself stays wherever it is kept, such as chats and browser history; Argmax cannot remove a list from a link someone else has. The hosting provider, Cloudflare, processes technical request data such as IP addresses to deliver and protect the site.
 
 The production site sends usage data without names or account details to [Umami Cloud](https://umami.is) (United States, 6-month retention) to measure how Argmax is used: screen views, list creation, picks, sharing (share sheet or copy) and adding a shared list, with first-visit flags computed from the creation times of lists stored in the browser, the browser language, the screen size, and the referring site without its path. According to Umami's open-source data model ([schema](https://github.com/umami-software/umami/blob/master/prisma/schema.prisma), checked 2026-10-04), Umami does not store IP addresses; it records the approximate location (country, region, city) derived from the IP address and the browser, operating system, and device type derived from the user agent. List names, items, and list ids are never sent; nothing is sent from development, tests, or previews, or when the browser sends Global Privacy Control or Do Not Track. The app calls Umami's event API directly, without Umami's script. The privacy page in the app has the full notice. Privacy requests that should not be public go to argmax.contact@proton.me.
 
