@@ -288,3 +288,88 @@ describe("createRepository", () => {
     expect(changed?.lists).toEqual([]);
   });
 });
+
+describe("stored text", () => {
+  const withItem = (text: string): StoredState => ({
+    ...validState,
+    lists: [{ ...list, items: [{ id: "item-1", text }] }],
+  });
+  const loads = (text: string) => {
+    const { storage } = memoryStorage({ [storageKey]: stored(withItem(text)) });
+    return createRepository(() => storage).load().status;
+  };
+
+  // One base letter with combining marks is one grapheme however many follow;
+  // "x" has no precomposed form, so NFC leaves the marks as they are.
+  const markBomb = `x${"\u0301".repeat(5_000)}`;
+
+  it("caps text at 1,600 UTF-16 units even within 100 characters", () => {
+    expect(loads(`x${"\u0301".repeat(1_599)}`)).toBe("ok");
+    expect(loads(`x${"\u0301".repeat(1_600)}`)).toBe("invalid");
+    expect(characterCount(markBomb)).toBe(1);
+    expect(loads(markBomb)).toBe("invalid");
+  });
+
+  it.each([
+    ["a lone high surrogate", "a\uD800b"],
+    ["a lone low surrogate", "a\uDC00b"],
+    ["a NUL character", "a\u0000b"],
+    ["a tab", "a\tb"],
+    ["DEL", "a\u007Fb"],
+    ["a C1 control", "a\u0085b"],
+    ["another C1 control", "a\u009Fb"],
+    ...[
+      0x061c, 0x200e, 0x200f, 0x202a, 0x202b, 0x202c, 0x202d, 0x202e, 0x2066,
+      0x2067, 0x2068, 0x2069,
+    ].map((code): [string, string] => [
+      `the bidi control U+${code.toString(16).toUpperCase().padStart(4, "0")}`,
+      `a${String.fromCharCode(code)}b`,
+    ]),
+  ])("rejects %s on load", (_, text) => {
+    expect(loads(text)).toBe("invalid");
+  });
+
+  it.each([
+    ["a zero-width space", "\u200B"],
+    ["a word joiner and a byte order mark", "\u2060\uFEFF"],
+    ["a zero-width joiner", "\u200D"],
+    ["the Hangul filler", "\u3164"],
+  ])("rejects text made only of %s", (_, text) => {
+    expect(loads(text)).toBe("invalid");
+  });
+
+  it("accepts 100 of the longest standard emoji sequences", () => {
+    const kiss = "👩🏻‍❤️‍💋‍👨🏼";
+    expect(kiss.length).toBe(15);
+    expect(loads(kiss.repeat(limits.textLength))).toBe("ok");
+  });
+
+  it.each([
+    ["a family emoji (ZWJ sequence)", "👨‍👩‍👧‍👦"],
+    ["a flag", "🇰🇷"],
+    ["Hangul compatibility jamo", "ㄱㄴㄷ"],
+    ["old Hangul as conjoining jamo, which NFC keeps", "\u1100\u119E"],
+    ["a zero-width non-joiner between letters", "می\u200Cخواهم"],
+    ["Arabic", "غداء"],
+    ["a combining mark on a letter", "e\u0301".normalize("NFC")],
+  ])("accepts %s", (_, text) => {
+    expect(loads(text)).toBe("ok");
+  });
+
+  it("refuses to save an invalid state and leaves storage byte-identical", () => {
+    const raw = stored(validState);
+    const { storage, data } = memoryStorage({ [storageKey]: raw });
+    const repository = createRepository(() => storage);
+    repository.load();
+
+    for (const text of [markBomb, "a\u202Eb", "\u200B", " Lunch"]) {
+      expect(repository.save(withItem(text))).toMatchObject({
+        ok: false,
+        reason: "invalid",
+      });
+      expect(data.get(storageKey)).toBe(raw);
+    }
+    // The refusal does not lock the store: a valid state still saves.
+    expect(repository.save(emptyState)).toEqual({ ok: true });
+  });
+});

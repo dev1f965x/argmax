@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Security
+
+- Names and items are limited to 1,600 UTF-16 code units in addition to 100 characters, so one character with thousands of combining marks is rejected, and stacked marks are clipped so they cannot cover neighboring rows or buttons.
+- Control characters, bidirectional formatting characters, and unpaired surrogates are removed from entered names and items; text made only of invisible characters counts as empty. Stored data containing them is reported as unreadable and left unchanged.
+- The app validates lists before saving them and never writes data that it would reject when loading.
+
 ## [0.1.0] - 2026-10-05
 
 First release.

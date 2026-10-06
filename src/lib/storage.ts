@@ -9,6 +9,15 @@ export const limits = {
   lists: 100,
 } as const;
 
+/**
+ * A hard cap in UTF-16 units under the character limit. One grapheme can hold
+ * any number of combining marks, so counting graphemes alone would let a single
+ * "character" grow without bound. 16 units per character fit 100 of the
+ * longest standard emoji sequences (15 units, such as a kiss with two skin
+ * tones), so the 100-character promise holds for every visible character.
+ */
+const maxTextCodeUnits = 16 * limits.textLength;
+
 const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
 /**
@@ -21,17 +30,49 @@ export function characterCount(text: string): number {
 
 /** Text no longer than the limit in UTF-16 units cannot exceed it in characters. */
 export function withinTextLimit(text: string): boolean {
+  if (text.length > maxTextCodeUnits) return false;
   return (
     text.length <= limits.textLength ||
     characterCount(text) <= limits.textLength
   );
 }
 
+/**
+ * Characters stored text may not contain: C0 and C1 controls, bidirectional
+ * formatting controls, which can reorder the text around a name, and lone
+ * surrogates, which are not valid Unicode. With the u flag a surrogate pair is
+ * one code point outside the surrogate range, so only lone halves match; this
+ * also avoids String.prototype.isWellFormed, which the ES2023 lib lacks.
+ */
+const disallowedCharacters =
+  /[\p{Cc}\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069\uD800-\uDFFF]/gu;
+
+/** Removes the characters stored text may not contain. */
+export function removeDisallowedCharacters(text: string): string {
+  return text.replace(disallowedCharacters, "");
+}
+
+// search() ignores the g flag's lastIndex, unlike test().
+const hasOnlyAllowedCharacters = (text: string) =>
+  text.search(disallowedCharacters) === -1;
+
+const invisibleOnly = /^[\s\p{Default_Ignorable_Code_Point}]*$/u;
+
+/**
+ * True when nothing would show: only whitespace and default-ignorable
+ * characters such as zero-width spaces and joiners. A joiner inside an emoji
+ * sequence or between letters is fine; text made only of them is not.
+ */
+export function isBlank(text: string): boolean {
+  return invisibleOnly.test(text);
+}
+
 /** Stored text is saved trimmed and NFC-normalized, so the same rule validates it on load. */
 const text = z
   .string()
+  .refine(hasOnlyAllowedCharacters, "disallowed characters")
   .refine((value) => value === value.trim().normalize("NFC"), "not normalized")
-  .refine((value) => value.length > 0, "empty")
+  .refine((value) => !isBlank(value), "empty")
   .refine(withinTextLimit, "too long");
 
 const itemSchema = z.object({
@@ -76,6 +117,7 @@ export type LoadResult =
 export type SaveResult =
   | { ok: true }
   | { ok: false; reason: "unavailable" | "full"; cause: unknown }
+  | { ok: false; reason: "invalid"; cause: z.ZodError }
   | { ok: false; reason: "read-only" | "not-loaded" };
 
 type Mode = "unloaded" | "writable" | "read-only";
@@ -130,6 +172,11 @@ export function createRepository(getStorage: () => Storage) {
   function save(state: StoredState): SaveResult {
     if (mode === "unloaded") return { ok: false, reason: "not-loaded" };
     if (mode === "read-only") return { ok: false, reason: "read-only" };
+    // Every change goes through validateText, so this guards against a bug
+    // writing data that the next load would reject and lock as read-only.
+    const checked = storedStateSchema.safeParse(state);
+    if (!checked.success)
+      return { ok: false, reason: "invalid", cause: checked.error };
     try {
       const raw = JSON.stringify(state);
       getStorage().setItem(storageKey, raw);

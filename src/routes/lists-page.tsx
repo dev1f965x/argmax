@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router";
 import { EmptyState } from "@/components/empty-state";
-import { useLists } from "@/components/lists-provider";
+import { type ChangeError, useLists } from "@/components/lists-provider";
 import { Note } from "@/components/note";
 import { PageHeading } from "@/components/page-heading";
 import { StatusNotice } from "@/components/status-notice";
@@ -60,12 +60,13 @@ export function ListsPage() {
       }
       return { ok: true };
     }
-    const message: Record<ListError | "read-only", string> = {
+    const message: Record<ListError | ChangeError, string> = {
       empty: t("lists.errors.empty"),
       "too-long": t("lists.errors.tooLong", { limit: limits.textLength }),
       "list-limit": limitMessage,
       "not-found": t("common.saveFailed"),
       "read-only": t("common.saveFailed"),
+      "invalid-state": t("common.saveFailed"),
     };
     return { ok: false, message: message[result.error] };
   }
@@ -104,7 +105,7 @@ export function ListsPage() {
                 className="flex min-h-16 items-center justify-between gap-3 rounded-md px-1 py-2 outline-none hover:bg-surface focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 <span className="min-w-0">
-                  <span className="block font-semibold wrap-anywhere">
+                  <span className="block overflow-clip font-semibold wrap-anywhere">
                     {list.name}
                   </span>
                   <span className="block text-sm text-muted-foreground">

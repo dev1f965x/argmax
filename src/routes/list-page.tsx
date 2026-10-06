@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { useAnnouncer } from "@/components/announcer";
 import { BackToLists } from "@/components/back-to-lists";
-import { useLists } from "@/components/lists-provider";
+import { type ChangeError, useLists } from "@/components/lists-provider";
 import { Note } from "@/components/note";
 import { PageHeading } from "@/components/page-heading";
 import { PickPanel } from "@/components/pick-panel";
@@ -155,12 +155,13 @@ export function ListPage() {
       setFocusTarget("actions");
       return { ok: true };
     }
-    const message: Record<ListError | "read-only", string> = {
+    const message: Record<ListError | ChangeError, string> = {
       empty: t("lists.errors.empty"),
       "too-long": t("lists.errors.tooLong", { limit: limits.textLength }),
       "list-limit": t("common.saveFailed"),
       "not-found": t("common.saveFailed"),
       "read-only": t("common.saveFailed"),
+      "invalid-state": t("common.saveFailed"),
     };
     return { ok: false, message: message[result.error] };
   }
@@ -179,15 +180,16 @@ export function ListPage() {
   }
 
   function outcome(
-    result: { ok: true } | { ok: false; error: ItemError | "read-only" },
+    result: { ok: true } | { ok: false; error: ItemError | ChangeError },
   ): SubmitOutcome {
     if (result.ok) return { ok: true };
-    const message: Record<ItemError | "read-only", string> = {
+    const message: Record<ItemError | ChangeError, string> = {
       empty: t("list.errors.empty"),
       "too-long": t("list.errors.tooLong", { limit: limits.textLength }),
       "item-limit": limitMessage,
       "not-found": t("common.saveFailed"),
       "read-only": t("common.saveFailed"),
+      "invalid-state": t("common.saveFailed"),
     };
     return { ok: false, message: message[result.error] };
   }
@@ -315,7 +317,7 @@ export function ListPage() {
             <div className="flex items-start justify-between gap-2">
               <PageHeading
                 title={list.name}
-                className="pt-1 text-title font-bold wrap-anywhere"
+                className="overflow-clip pt-1 text-title font-bold wrap-anywhere"
               />
               <DropdownMenu
                 onOpenChange={(open) => {
@@ -459,7 +461,7 @@ export function ListPage() {
                     </div>
                   ) : (
                     <div className="flex min-h-14 items-center gap-1 py-1 pl-1">
-                      <span className="min-w-0 flex-1 py-2 wrap-anywhere">
+                      <span className="min-w-0 flex-1 overflow-clip py-2 wrap-anywhere">
                         {item.text}
                       </span>
                       <Button

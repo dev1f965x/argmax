@@ -204,7 +204,7 @@ export function PickPanel({
           </p>
           <p
             className={cn(
-              "text-result font-bold wrap-anywhere transition-colors duration-150 ease-out-expo short:max-md:text-lg",
+              "overflow-clip text-result font-bold wrap-anywhere transition-colors duration-150 ease-out-expo short:max-md:text-lg",
               cycling === null
                 ? desktopResultSizes[step]
                 : desktopResultSizes[0],
