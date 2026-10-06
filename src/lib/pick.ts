@@ -68,19 +68,24 @@ export function pickWeightedIndex(
 }
 
 /**
- * Each item's chance as shown (FR14): a whole percentage, or "below-one" when
- * the exact chance is under 1%, which rounding would otherwise show as 0% or
- * as 1%. Each chance is rounded on its own, so the shown values can add up to
- * 99% or 101%; adjusting them to total 100% would misstate some items.
+ * Each item's chance as shown (FR14): a whole percentage, "below-one" when
+ * the exact chance is under 1%, or "above-ninety-nine" when it is over 99%
+ * but not certain. Rounding would otherwise show 0%, or 100% for an item
+ * that can still lose. Only a single item shows 100%. Each chance is rounded
+ * on its own, so the shown values can add up to 99% or 101%; adjusting them
+ * to total 100% would misstate some items.
  */
-export type Chance = { kind: "percent"; value: number } | { kind: "below-one" };
+export type Chance =
+  | { kind: "percent"; value: number }
+  | { kind: "below-one" }
+  | { kind: "above-ninety-nine" };
 
 export function chances(weights: readonly number[]): Chance[] {
   const total = weights.reduce((sum, weight) => sum + weight, 0);
   return weights.map((weight) => {
     const percent = (weight / total) * 100;
-    return percent < 1
-      ? { kind: "below-one" }
-      : { kind: "percent", value: Math.round(percent) };
+    if (percent < 1) return { kind: "below-one" };
+    if (percent > 99 && percent < 100) return { kind: "above-ninety-nine" };
+    return { kind: "percent", value: Math.round(percent) };
   });
 }

@@ -61,6 +61,7 @@ export const en = {
     showChances: "Show chances",
     chance: "Chance {{percent, number}}%",
     chanceUnderOne: "Chance <1%",
+    chanceOverNinetyNine: "Chance >99%",
     limitReached:
       "This list has {{limit, number}} items, the maximum. Remove an item to add another.",
     errors: {

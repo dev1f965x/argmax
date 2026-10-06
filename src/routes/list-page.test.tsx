@@ -607,7 +607,7 @@ describe("ListPage weights", () => {
 
     expect(screen.getByRole("switch", { name: "Show chances" })).toBeChecked();
     expect(row("A")).toHaveTextContent("AChance <1%");
-    expect(row("B")).toHaveTextContent("BChance 99%Weight ×150");
+    expect(row("B")).toHaveTextContent("BChance >99%Weight ×150");
   });
 
   it("keeps the switch working for this visit when it cannot be saved", async () => {
@@ -649,6 +649,25 @@ describe("ListPage weights", () => {
       expect(
         screen.getByText("“B” 항목을 저장했습니다. 비중: ×1"),
       ).toBeInTheDocument();
+    } finally {
+      await i18n.changeLanguage("en");
+    }
+  });
+
+  it("reads 100% only for a single item", () => {
+    localStorage.setItem(showChancesStorageKey, "true");
+    renderWeighted(["A"], [3]);
+
+    expect(row("A")).toHaveTextContent("AChance 100%Weight ×3");
+  });
+
+  it("reads >99% for a near-certain item in Korean too", async () => {
+    localStorage.setItem(showChancesStorageKey, "true");
+    await i18n.changeLanguage("ko");
+    try {
+      renderWeighted(["A", "B"], [1, 999]);
+      expect(row("A")).toHaveTextContent("A확률 <1%");
+      expect(row("B")).toHaveTextContent("B확률 >99%비중 ×999");
     } finally {
       await i18n.changeLanguage("en");
     }

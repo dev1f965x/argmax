@@ -169,12 +169,26 @@ describe("chances", () => {
     // 1 / 151 is 0.66%, which plain rounding would show as 1%.
     expect(chances([1, 150])).toEqual([
       { kind: "below-one" },
-      { kind: "percent", value: 99 },
+      { kind: "above-ninety-nine" },
     ]);
     // Exactly 1% is shown as 1%.
     expect(chances([1, 99])).toEqual([
       { kind: "percent", value: 1 },
       { kind: "percent", value: 99 },
+    ]);
+  });
+
+  it("marks a chance over 99% instead of rounding it to 100% while other items can win", () => {
+    // 999 / 1,000 is 99.9%, which plain rounding would show as 100%.
+    expect(chances([1, 999])).toEqual([
+      { kind: "below-one" },
+      { kind: "above-ninety-nine" },
+    ]);
+    // 99.4% would round to 99%, but is still over 99%, mirroring "<1%".
+    expect(chances([1, 1, 330])).toEqual([
+      { kind: "below-one" },
+      { kind: "below-one" },
+      { kind: "above-ninety-nine" },
     ]);
   });
 

@@ -344,9 +344,14 @@ export function ListPage() {
   }
 
   function chanceText(chance: Chance): string {
-    return chance.kind === "below-one"
-      ? t("list.chanceUnderOne")
-      : t("list.chance", { percent: chance.value });
+    switch (chance.kind) {
+      case "below-one":
+        return t("list.chanceUnderOne");
+      case "above-ninety-nine":
+        return t("list.chanceOverNinetyNine");
+      case "percent":
+        return t("list.chance", { percent: chance.value });
+    }
   }
 
   // Stable per item, so rows do not detach and reattach their refs on every render.
