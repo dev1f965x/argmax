@@ -1,17 +1,61 @@
-# Argmax
+<a id="readme-top"></a>
 
-English | [한국어](README.ko.md)
+[![CI][ci-shield]][ci-url]
+[![Release][release-shield]][release-url]
+[![Issues][issues-shield]][issues-url]
+[![License][license-shield]][license-url]
 
-[![CI](https://github.com/dev1f965x/argmax/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dev1f965x/argmax/actions/workflows/ci.yml)
-[![License](https://img.shields.io/github/license/dev1f965x/argmax)](LICENSE)
+<br />
+<div align="center">
+  <a href="https://argmax.dev1f965x.workers.dev">
+    <img src="public/favicon.svg" alt="Argmax logo" width="80" height="80">
+  </a>
+
+<h3 align="center">Argmax</h3>
+
+  <p align="center">
+    Keep lists in your browser and pick one at random.
+    <br />
+    English | <a href="README.ko.md">한국어</a>
+    <br />
+    <br />
+    <a href="https://argmax.dev1f965x.workers.dev"><strong>Use Argmax »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/dev1f965x/argmax/issues/new?template=bug_report.yml">Report a bug</a>
+    &middot;
+    <a href="https://github.com/dev1f965x/argmax/issues/new?template=feature_request.yml">Request a feature</a>
+  </p>
+</div>
+
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#about-the-project">About The Project</a>
+      <ul>
+        <li><a href="#built-with">Built With</a></li>
+      </ul>
+    </li>
+    <li><a href="#getting-started">Getting Started</a></li>
+    <li><a href="#usage">Usage</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#development">Development</a></li>
+    <li><a href="#deployment">Deployment</a></li>
+    <li><a href="#privacy">Privacy</a></li>
+    <li><a href="#services-and-terms">Services and terms</a></li>
+    <li><a href="#contributing">Contributing</a></li>
+    <li><a href="#license">License</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#acknowledgments">Acknowledgments</a></li>
+  </ol>
+</details>
+
+## About The Project
+
+![The list screen with five lunch options, two of them weighted, chances shown, and "Bibimbap" picked][product-screenshot]
 
 Argmax is a web app for making picks: create a list, add items, and pick one at random.
-
-**Use it:** <https://argmax.dev1f965x.workers.dev>
-
-![The list screen with five lunch options, two of them weighted, chances shown, and "Bibimbap" picked](docs/screenshot-en.png)
-
-## Features
 
 - Lists of up to 1,000 items, each up to 100 characters; up to 100 lists.
 - Pick one item at random, with a short animation, and pick again as often as you like.
@@ -23,6 +67,42 @@ Argmax is a web app for making picks: create a list, add items, and pick one at 
 - Works with a keyboard and screen readers, checked with automated axe scans against WCAG 2.2 AA and an NVDA pass; on phones from 360 px wide to desktops.
 
 Changes are listed in the [changelog](CHANGELOG.md).
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+### Built With
+
+* [![React][React-shield]][React-url]
+* [![TypeScript][TypeScript-shield]][TypeScript-url]
+* [![Vite][Vite-shield]][Vite-url]
+* [![Tailwind CSS][Tailwind-shield]][Tailwind-url]
+* [![Cloudflare Workers][Cloudflare-shield]][Cloudflare-url]
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Getting Started
+
+Argmax runs in the browser; there is nothing to install. Open <https://argmax.dev1f965x.workers.dev> in a web browser. To work on the code, see [Development](#development).
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Usage
+
+1. Create a list, such as "Lunch", and add items.
+2. Select **Pick** to choose one at random, and **Pick again** as often as you like.
+3. To make an item more likely, edit it, raise its **Weight**, and select **Save**. Turn on **Show chances** to see each item's chance.
+4. To share the list, open the list menu (**List actions**), select **Share**, and send the link. The recipient selects **Add this list** to keep a copy.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Roadmap
+
+- [x] Lists and random picks (0.1.0)
+- [x] Weights, chances, and share links (0.2.0)
+- [ ] Edit long items in a field that shows the whole text
+- [ ] Clearer steps when saved data cannot be read
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Development
 
@@ -49,6 +129,8 @@ pnpm dev
 | `pnpm check:content` | Banned-pattern check for UI text only |
 | `pnpm knip` | Find unused files, exports, and dependencies |
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ## Deployment
 
 The app is deployed to Cloudflare Workers as static assets, configured in `wrangler.jsonc`. When Cloudflare Workers Builds is connected to this repository, a merge to `main` deploys to production at <https://argmax.dev1f965x.workers.dev>.
@@ -68,11 +150,15 @@ Node.js comes from `.node-version`. Production deploys do not wait for GitHub CI
 
 To roll back, open the Worker's **Deployments** in the Cloudflare dashboard and roll back to an earlier version, or run `pnpm exec wrangler rollback` after `pnpm exec wrangler login`. The next merge to `main` deploys again over a rollback.
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ## Privacy
 
 Argmax has no accounts and no cookies, and it never asks for or stores personal data. Lists, the language choice, and whether chances are shown are saved only in the browser's local storage and are never sent anywhere. A share link is created on the device and holds the list in the part after `#`, which browsers do not send to servers, but the link itself stays wherever it is kept, such as chats and browser history; Argmax cannot remove a list from a link someone else has. The hosting provider, Cloudflare, processes technical request data such as IP addresses to deliver and protect the site.
 
 The production site sends usage data without names or account details to [Umami Cloud](https://umami.is) (United States, 6-month retention) to measure how Argmax is used: screen views, list creation, picks, sharing (share sheet or copy) and adding a shared list, with first-visit flags computed from the creation times of lists stored in the browser, the browser language, the screen size, and the referring site without its path. According to Umami's open-source data model ([schema](https://github.com/umami-software/umami/blob/master/prisma/schema.prisma), checked 2026-10-04), Umami does not store IP addresses; it records the approximate location (country, region, city) derived from the IP address and the browser, operating system, and device type derived from the user agent. List names, items, and list ids are never sent; nothing is sent from development, tests, or previews, or when the browser sends Global Privacy Control or Do Not Track. The app calls Umami's event API directly, without Umami's script. The privacy page in the app has the full notice. Privacy requests that should not be public go to argmax.contact@proton.me.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Services and terms
 
@@ -84,13 +170,56 @@ Terms were checked on 2026-10-04. Argmax is a non-commercial project; before any
 | Umami Cloud | Usage analytics | Hobby, $0: 100K events per month, 1 website, 6-month retention; per-event overage applies only to paid plans; no payment method | Not confirmed | [Terms](https://umami.is/terms), [privacy](https://umami.is/privacy) |
 | GitHub | Repository, Actions, CodeQL, secret scanning, Dependabot alerts | Free for public repositories | Allowed | [Terms](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) |
 | Mend Renovate (GitHub App) | Dependency update pull requests | Free | Allowed | [Terms](https://www.mend.io/terms-of-service/), [privacy](https://www.mend.io/privacy-policy/) |
-| Shields.io | License badge in this README; the CI badge is served by GitHub | Free | Not confirmed (no terms published) | [Shields.io](https://shields.io/) |
+| Shields.io | Badges in this README (CI, release, issues, license) | Free | Not confirmed (no terms published) | [Shields.io](https://shields.io/) |
 | Dev Container image and Claude Code feature | Development environment | `mcr.microsoft.com/devcontainers/typescript-node` and `ghcr.io/anthropics/devcontainer-features/claude-code`, both MIT | Allowed | [Image license](https://github.com/devcontainers/images/blob/main/LICENSE), [feature repository](https://github.com/anthropics/devcontainer-features) |
 
-## Feedback and security
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Contributing
 
 Questions, bug reports, and requests go to [GitHub Issues](https://github.com/dev1f965x/argmax/issues/new/choose), which has a template for each; the app's footer links there as "Feedback". Report security issues privately as described in [SECURITY.md](SECURITY.md).
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ## License
 
-[MIT](LICENSE). Third-party licenses are listed in `third-party-notices.txt`, generated with each build and linked from the app's footer.
+Distributed under the [MIT License](LICENSE). Third-party licenses are listed in `third-party-notices.txt`, generated with each build and linked from the app's footer.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Contact
+
+Project link: <https://github.com/dev1f965x/argmax>
+
+Privacy requests: argmax.contact@proton.me
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Acknowledgments
+
+* [Best-README-Template](https://github.com/othneildrew/Best-README-Template), the layout of this README
+* [shadcn/ui](https://ui.shadcn.com) and [Base UI](https://base-ui.com), the UI components
+* [Lucide](https://lucide.dev), the icons
+* [Pretendard](https://github.com/orioncactus/pretendard), the typeface
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+[ci-shield]: https://img.shields.io/github/actions/workflow/status/dev1f965x/argmax/ci.yml?branch=main&style=for-the-badge&label=CI
+[ci-url]: https://github.com/dev1f965x/argmax/actions/workflows/ci.yml
+[release-shield]: https://img.shields.io/github/v/release/dev1f965x/argmax?style=for-the-badge
+[release-url]: https://github.com/dev1f965x/argmax/releases
+[issues-shield]: https://img.shields.io/github/issues/dev1f965x/argmax?style=for-the-badge
+[issues-url]: https://github.com/dev1f965x/argmax/issues
+[license-shield]: https://img.shields.io/github/license/dev1f965x/argmax?style=for-the-badge
+[license-url]: LICENSE
+[product-screenshot]: docs/screenshot-en.png
+[React-shield]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
+[React-url]: https://react.dev/
+[TypeScript-shield]: https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white
+[TypeScript-url]: https://www.typescriptlang.org/
+[Vite-shield]: https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white
+[Vite-url]: https://vite.dev/
+[Tailwind-shield]: https://img.shields.io/badge/Tailwind_CSS-0F172A?style=for-the-badge&logo=tailwindcss&logoColor=38BDF8
+[Tailwind-url]: https://tailwindcss.com/
+[Cloudflare-shield]: https://img.shields.io/badge/Cloudflare_Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white
+[Cloudflare-url]: https://workers.cloudflare.com/
