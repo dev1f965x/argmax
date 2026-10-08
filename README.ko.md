@@ -40,10 +40,14 @@
     <li><a href="#시작하기">시작하기</a></li>
     <li><a href="#사용법">사용법</a></li>
     <li><a href="#로드맵">로드맵</a></li>
-    <li><a href="#개발">개발</a></li>
-    <li><a href="#배포">배포</a></li>
     <li><a href="#개인정보">개인정보</a></li>
     <li><a href="#서비스와-약관">서비스와 약관</a></li>
+    <li>
+      <a href="#개발">개발</a>
+      <ul>
+        <li><a href="#배포">배포</a></li>
+      </ul>
+    </li>
     <li><a href="#기여">기여</a></li>
     <li><a href="#라이선스">라이선스</a></li>
     <li><a href="#연락처">연락처</a></li>
@@ -72,11 +76,11 @@ Argmax는 목록을 만들고 항목을 추가하면 그중 하나를 무작위�
 
 ### 사용한 기술
 
-* [![React][React-shield]][React-url]
-* [![TypeScript][TypeScript-shield]][TypeScript-url]
-* [![Vite][Vite-shield]][Vite-url]
-* [![Tailwind CSS][Tailwind-shield]][Tailwind-url]
-* [![Cloudflare Workers][Cloudflare-shield]][Cloudflare-url]
+* [![React][react-shield]][react-url]
+* [![TypeScript][typescript-shield]][typescript-url]
+* [![Vite][vite-shield]][vite-url]
+* [![Tailwind CSS][tailwind-shield]][tailwind-url]
+* [![Cloudflare Workers][cloudflare-shield]][cloudflare-url]
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
@@ -104,54 +108,6 @@ Argmax는 브라우저에서 동작하므로 설치할 것이 없습니다. 웹 
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
-## 개발
-
-저장소를 Dev Container로 엽니다. Node.js와 pnpm은 컨테이너에 설치되어 있습니다.
-
-```sh
-pnpm install
-pnpm dev
-```
-
-| 스크립트 | 용도 |
-| --- | --- |
-| `pnpm dev` | 개발 서버 실행(http://127.0.0.1:5173) |
-| `pnpm build` | 타입 검사 후 `dist/`에 빌드하고 `dist/third-party-notices.txt` 생성 |
-| `pnpm preview` | 운영 보안 헤더를 붙여 운영 빌드 미리보기 |
-| `pnpm check` | 포맷 검사와 린트(Biome), 디자인 토큰·문구 검사, 의존성 라이선스 검사, knip |
-| `pnpm lint` | 린트만 실행 |
-| `pnpm format` | 파일 포맷 |
-| `pnpm typecheck` | 타입 검사 |
-| `pnpm test` | 단위·컴포넌트 테스트 실행(Vitest) |
-| `pnpm test:watch` | 단위·컴포넌트 테스트를 감시 모드로 실행 |
-| `pnpm test:e2e` | 빌드 후 Chromium·Firefox·WebKit에서 E2E·접근성·보안 헤더 테스트 실행(Playwright, axe-core) |
-| `pnpm check:licenses` | 의존성 라이선스 검사만 실행 |
-| `pnpm check:content` | UI 문구 금지 패턴 검사만 실행 |
-| `pnpm knip` | 쓰지 않는 파일, export, 의존성 찾기 |
-
-<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
-
-## 배포
-
-앱은 Cloudflare Workers에 정적 파일로 배포되며, 설정은 `wrangler.jsonc`에 있습니다. Cloudflare Workers Builds가 이 저장소에 연결되어 있으면, `main`에 머지할 때 <https://argmax.dev1f965x.workers.dev>에 운영 배포됩니다.
-
-다른 브랜치는 Worker Preview로 배포되며, 그 URL이 풀 리퀘스트에 달립니다. 미리보기는 `wrangler.jsonc`의 `previews` 블록으로 켜며, Wrangler에서는 `wrangler preview`가 오픈 베타 명령입니다. 미리보기 URL은 공개됩니다. 미리보기에서는 첫 화면에서 앱 안으로 이동해야 하며, `/lists/...` 같은 앱 경로로 바로 접속하면 운영과 달리 404가 납니다.
-
-Workers Builds 설정:
-
-| 항목 | 값 |
-| --- | --- |
-| 빌드 명령 | `pnpm build` |
-| 배포 명령 | `npx wrangler deploy` |
-| 운영 외 브랜치 배포 명령 | `npx wrangler preview` |
-| 빌드 변수 | `PNPM_VERSION=12.8.1` (빌드 이미지의 기본 pnpm이 더 오래된 버전이므로 `packageManager`와 같게 유지) |
-
-Node.js 버전은 `.node-version`을 따릅니다. 운영 배포는 GitHub CI를 기다리지 않으며, `main` 규칙셋이 머지 전에 CI 통과를 강제합니다.
-
-롤백은 Cloudflare 대시보드에서 Worker의 **Deployments**를 열고 이전 버전으로 되돌리거나, `pnpm exec wrangler login` 후 `pnpm exec wrangler rollback`을 실행합니다. 롤백한 뒤에도 다음 `main` 머지가 배포되면 롤백 상태는 덮어쓰입니다.
-
-<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
-
 ## 개인정보
 
 Argmax에는 계정과 쿠키가 없으며, 개인정보를 요청하거나 저장하지 않습니다. 목록, 선택한 언어, 확률 보기 설정은 브라우저의 로컬 저장소에만 저장되며 어디로도 전송되지 않습니다. 공유 링크는 기기에서 만들어지며 목록을 `#` 뒷부분에 담습니다. 브라우저는 이 부분을 서버로 보내지 않으므로 목록은 Argmax로 전송되지 않지만 링크는 대화방이나 방문 기록처럼 저장된 곳에 남으며, Argmax는 다른 사람이 가진 링크에서 목록을 지울 수 없습니다. 호스팅 업체인 Cloudflare는 사이트를 제공하고 보호하기 위해 IP 주소 같은 기술적인 요청 정보를 처리합니다.
@@ -172,6 +128,40 @@ Argmax에는 계정과 쿠키가 없으며, 개인정보를 요청하거나 저�
 | Mend Renovate(GitHub App) | 의존성 업데이트 풀 리퀘스트 | 무료 | 가능 | [약관](https://www.mend.io/terms-of-service/), [개인정보](https://www.mend.io/privacy-policy/) |
 | Shields.io | 이 README의 배지(CI, 릴리스, 이슈, 라이선스) | 무료 | 확인 안 됨(약관 미게시) | [Shields.io](https://shields.io/) |
 | Dev Container 이미지와 Claude Code 기능 | 개발 환경 | `mcr.microsoft.com/devcontainers/typescript-node`, `ghcr.io/anthropics/devcontainer-features/claude-code`, 모두 MIT | 가능 | [이미지 라이선스](https://github.com/devcontainers/images/blob/main/LICENSE), [기능 저장소](https://github.com/anthropics/devcontainer-features) |
+
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
+
+## 개발
+
+저장소를 Dev Container로 엽니다. Node.js와 pnpm은 컨테이너에 설치되어 있습니다.
+
+```sh
+pnpm install
+pnpm dev
+```
+
+명령 목록은 [README.md](README.md#development)의 표를 따릅니다.
+
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
+
+### 배포
+
+앱은 Cloudflare Workers에 정적 파일로 배포되며, 설정은 `wrangler.jsonc`에 있습니다. Cloudflare Workers Builds가 이 저장소에 연결되어 있으면, `main`에 머지할 때 <https://argmax.dev1f965x.workers.dev>에 운영 배포됩니다.
+
+다른 브랜치는 Worker Preview로 배포되며, 그 URL이 풀 리퀘스트에 달립니다. 미리보기는 `wrangler.jsonc`의 `previews` 블록으로 켜며, Wrangler에서는 `wrangler preview`가 오픈 베타 명령입니다. 미리보기 URL은 공개됩니다. 미리보기에서는 첫 화면에서 앱 안으로 이동해야 하며, `/lists/...` 같은 앱 경로로 바로 접속하면 운영과 달리 404가 납니다.
+
+Workers Builds 설정:
+
+| 항목 | 값 |
+| --- | --- |
+| 빌드 명령 | `pnpm build` |
+| 배포 명령 | `npx wrangler deploy` |
+| 운영 외 브랜치 배포 명령 | `npx wrangler preview` |
+| 빌드 변수 | `PNPM_VERSION=12.8.1` (빌드 이미지의 기본 pnpm이 더 오래된 버전이므로 `packageManager`와 같게 유지) |
+
+Node.js 버전은 `.node-version`을 따릅니다. 운영 배포는 GitHub CI를 기다리지 않으며, `main` 규칙셋이 머지 전에 CI 통과를 강제합니다.
+
+롤백은 Cloudflare 대시보드에서 Worker의 **Deployments**를 열고 이전 버전으로 되돌리거나, `pnpm exec wrangler login` 후 `pnpm exec wrangler rollback`을 실행합니다. 롤백한 뒤에도 다음 `main` 머지가 배포되면 롤백 상태는 덮어쓰입니다.
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
@@ -213,13 +203,13 @@ Argmax에는 계정과 쿠키가 없으며, 개인정보를 요청하거나 저�
 [license-shield]: https://img.shields.io/github/license/dev1f965x/argmax?style=for-the-badge
 [license-url]: LICENSE
 [product-screenshot]: docs/screenshot-ko.png
-[React-shield]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
-[React-url]: https://react.dev/
-[TypeScript-shield]: https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white
-[TypeScript-url]: https://www.typescriptlang.org/
-[Vite-shield]: https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white
-[Vite-url]: https://vite.dev/
-[Tailwind-shield]: https://img.shields.io/badge/Tailwind_CSS-0F172A?style=for-the-badge&logo=tailwindcss&logoColor=38BDF8
-[Tailwind-url]: https://tailwindcss.com/
-[Cloudflare-shield]: https://img.shields.io/badge/Cloudflare_Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white
-[Cloudflare-url]: https://workers.cloudflare.com/
+[react-shield]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
+[react-url]: https://react.dev/
+[typescript-shield]: https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white
+[typescript-url]: https://www.typescriptlang.org/
+[vite-shield]: https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white
+[vite-url]: https://vite.dev/
+[tailwind-shield]: https://img.shields.io/badge/Tailwind_CSS-0F172A?style=for-the-badge&logo=tailwindcss&logoColor=38BDF8
+[tailwind-url]: https://tailwindcss.com/
+[cloudflare-shield]: https://img.shields.io/badge/Cloudflare_Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white
+[cloudflare-url]: https://workers.cloudflare.com/
